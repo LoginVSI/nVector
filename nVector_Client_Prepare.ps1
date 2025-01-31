@@ -49,10 +49,10 @@ $ApiEndpoint  = "publicApi/v7-preview/platform-metrics"
 $EnvironmentId= "abcd1234-abcd1234-abcd1234-abcd1"
 $MetricId     = "nVectorMetricId"
 $DisplayName  = "nVectorDisplayName"
-$Unit         = "Latency"
-$Instance     = "nVectorInstanceName"
+$Unit         = "Latency (ms)"
+$Instance     = $env:COMPUTERNAME #"nVectorInstanceName"
 $Group        = "nVectorGroup"
-$ComponentType= $env:COMPUTERNAME
+$ComponentType= "vm"
 
 # -----------------------------
 # Helper Functions
