@@ -29,7 +29,7 @@ $NvectorAgentExePath = "" # Place the full path to the nvector-agent.exe here
 
 # Polling intervals and thresholds
 $PollingInterval       = 10     # How often this script checks for new CSV lines (in seconds)
-$MaxLatencyThreshold   = 10000  # Exclude latencies above 10s as spurious outliers
+$MaxLatencyThreshold   = 1500  # Exclude latencies above 10s as spurious outliers
 
 # CSV existence check parameters
 $CsvCheckTimeoutSeconds = 5  # How many seconds we wait for the CSV file to appear
