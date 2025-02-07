@@ -1,2 +1,0 @@
-# nVector
-nVector Development
