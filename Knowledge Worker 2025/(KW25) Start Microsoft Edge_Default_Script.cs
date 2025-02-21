@@ -28,7 +28,7 @@ public class Start_Browser_DefaultScript : ScriptBase
         // Get the current user's TEMP folder path.
         string tempPath = GetEnvironmentVariable("TEMP");
         
-        // Copy the PDF file from a known source to the TEMP folder as "loginvsi.pdf".
+        // Copy the PDF file from the Login Enterprise appliance to the TEMP folder as "loginvsi.pdf".
         CopyFile(KnownFiles.PdfFile, tempPath + "\\loginvsi.pdf", continueOnError: false, overwrite: true);
 
         // Build the URL list with the local PDF file path as the second URL.

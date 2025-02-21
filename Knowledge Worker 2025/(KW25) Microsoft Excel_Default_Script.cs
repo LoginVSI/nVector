@@ -1,4 +1,4 @@
-// TARGET:excel.exe
+// TARGET:excel.exe "C:\Users\NVtestuser\Desktop\loginvsi.xlsx"
 // START_IN:
 
 /////////////
@@ -10,6 +10,7 @@
 using LoginPI.Engine.ScriptBase;
 using LoginPI.Engine.ScriptBase.Components;
 using System;
+using System.Runtime.InteropServices;
 
 public class M365Excel_DefaultScript : ScriptBase
 {
@@ -23,8 +24,18 @@ public class M365Excel_DefaultScript : ScriptBase
     Location _row1Location;
     bool _isOffice365;
     
+    // Import the user32.dll function to simulate mouse events.
+    [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+    public static extern void mouse_event(uint dwFlags, uint dx, uint dy, int dwData, UIntPtr dwExtraInfo);
+
+    public const uint MOUSEEVENTF_WHEEL = 0x0800; // Constant for a mouse wheel event
+    
     private void Execute()
+    
     {
+    int ctrlTabIterations = 10; // Number of iterations for scrolling interactions
+int ctrlTabWaitSecondsBeforeScroll = 3; // Wait time (in seconds) before scrolling to allow the page to load
+int ctrlTabWaitSecondsAfterScroll = 1;  // Wait time (in seconds) after scrolling before next iteration
         // This is a language dependent script. English is required.
 
         _tempFolder = GetEnvironmentVariable("TEMP");
@@ -36,7 +47,7 @@ public class M365Excel_DefaultScript : ScriptBase
         Log(_tempFolder);
 
         // Download file from the appliance through the KnownFiles method, if it already exists: Skip Download.
-        Wait(seconds: 3, showOnScreen: true, onScreenText: "Get .xlsx file");
+        /*Wait(seconds: 1, showOnScreen: true, onScreenText: "Get .xlsx file");
         if (!(FileExists($"{_tempFolder}\\LoginPI\\loginvsi.xlsx")))
         {
             Log("Downloading File");
@@ -46,25 +57,67 @@ public class M365Excel_DefaultScript : ScriptBase
         {
             Log("File already exists");
         }
+        */
 
         // Click the Start Menu
-        Wait(seconds: 3, showOnScreen: true, onScreenText: "Start Menu");
-        Type("{LWIN}");
-        Wait(3);
-        Type("{ESC}");
+        Wait(seconds: 1, showOnScreen: true, onScreenText: "Start Menu");
+        /*Type("{LWIN}");
+        Wait(2);
+        Type("{ESC}");*/
 
         // Start Application
-        Wait(seconds: 3, showOnScreen: true, onScreenText: "Starting Excel");
-        START(mainWindowTitle: "*Excel*", mainWindowClass: "*XLMAIN*", timeout: 30);
+        Wait(seconds: 1, showOnScreen: true, onScreenText: "Starting Excel");
+        // START(mainWindowTitle: "*Excel*", mainWindowClass: "*XLMAIN*", timeout: 30);
+        ShellExecute(@"excel.exe C:\Users\NVtestuser\Desktop\loginvsi.xlsx",forceKillOnExit:true,waitForProcessEnd:false);        
+        //START(mainWindowTitle: "*Excel*", timeout: 30);
+        var MainWindow = FindWindow(title:"*Excel*");
+        Wait(1);
         MainWindow.Maximize();
+        MainWindow.Focus();
+        MainWindow.MoveMouseToCenter();
+        Wait(1);
+        MainWindow.Click();
+        // Wait(999);
+        Wait(1);
+        
+        
 
         // This is going to be the name of document when we save it later on
-        InitialiseSharedInformation();
+        // InitialiseSharedInformation();
         
-        DoScrolling();
+        //DoScrolling();
+        // Usage of Scroll():
+//   - direction: "Down" to scroll down or "Up" to scroll up.
+//   - scrollCount: Number of scroll events to send.
+//   - notches: Number of notches per event (1 notch is typically 120).
+//   - waitTime: Time in seconds to wait between each scroll event.
+// Example:
+//   Scroll("Down", 20, 1, 0.2);
+//   Scroll("Up", 10, 2, 0.3);
+Type("{ctrl+a}{ctrl+c}{ctrl+v}{ctrl+v}{ctrl+v}",cpm:50);
+Scroll("Down", 10, 1, 0.2);
+Scroll("Up", 5, 2, 0.3);
+Type("{alt}nr",cpm:50);
+Wait(1);
+Type("{enter}");
+Wait(1);
+MainWindow.FindControl(className : "Text:NetUISimpleButton", title : "Zoom 100%").Click();
+Wait(1);
+Type("{alt+0}{enter}",cpm:50);
+Wait(1);
+MainWindow.FindControl(className : "DataItem:XLSpreadsheetCell", title : "F10").Click();
+Type("{ctrl+a}{ctrl+c}{ctrl+v}{ctrl+v}{ctrl+v}",cpm:50);
+Scroll("Down", 10, 1, 0.2);
+Scroll("Up", 5, 2, 0.3);
+Wait(1);
+MainWindow.Close();
+
+
+/*
+
 
         _activeDocument.Minimize();
-        Wait(2);
+        Wait(1);
         _activeDocument.Maximize();
 
         DoCopyPaste();
@@ -74,8 +127,9 @@ public class M365Excel_DefaultScript : ScriptBase
         SaveAs();
         
         // Stop the application
-        Wait(seconds: 3, showOnScreen: true, onScreenText: "Stop App");
-        STOP();
+        Wait(seconds: 1, showOnScreen: true, onScreenText: "Stop App");
+        MainWindow.Close();
+        // STOP();
 
     }
 
@@ -98,7 +152,7 @@ public class M365Excel_DefaultScript : ScriptBase
     void SaveAs()
     {
         // Saving the file in temp
-        Wait(seconds: 3, showOnScreen: true, onScreenText: "Saving File");
+        Wait(seconds: 1, showOnScreen: true, onScreenText: "Saving File");
         _activeDocument.Type("{F12}", cpm: 0);
         Wait(1);
 
@@ -121,40 +175,41 @@ public class M365Excel_DefaultScript : ScriptBase
         var fileNameBox = SaveAs.FindControl(className: "Edit:Edit", title: "File name:");
         fileNameBox.Click();
         Wait(1);
-        SetTextBoxText(fileNameBox, filename, cpm: 300);
+        SetTextBoxText(fileNameBox, filename, cpm: 1000);
         StartTimer("Saving_file");
         SaveAs.Type("{ENTER}");
         FindWindow(title: $"{_newDocName}*", processName: ProcessName);
         StopTimer("Saving_file");
+        */
     }
     
     void CreateChart()
     {
         //Create a Chart
-        Wait(seconds: 3, showOnScreen: true, onScreenText: "Create a chart");
+        Wait(seconds: 1, showOnScreen: true, onScreenText: "Create a chart");
         _row1Location.Click();
         Wait(1);
         KeyDown(KeyCode.SHIFT);
-        _activeDocument.Type("{DOWN}".Repeat(10), cpm: 300);
+        _activeDocument.Type("{DOWN}".Repeat(10), cpm: 1000);
         KeyUp(KeyCode.SHIFT); 
         Wait(1);
         var chartShortcut = _isOffice365 ? "{ALT+N}C1" : "{ALT+N}C";
-        _activeDocument.Type(chartShortcut, cpm: 120); Wait(3);
+        _activeDocument.Type(chartShortcut, cpm: 120); Wait(1);
         Type("{ENTER}"); // we do not use the window to type here, because that would force a 'focus window', which breaks the chart selector focus
         KeyDown(KeyCode.SHIFT);
         _activeDocument.Type("{UP}".Repeat(5), cpm: 100);
         _activeDocument.Type("{RIGHT}".Repeat(5), cpm: 100);
         KeyUp(KeyCode.SHIFT);
-        Wait(5);
+        Wait(2);
     }
     
     void DoCopyPaste()
     {
         //Copy a row and paste
-        Wait(seconds: 3, showOnScreen: true, onScreenText: "Copy & Paste");
+        Wait(seconds: 1, showOnScreen: true, onScreenText: "Copy & Paste");
         var row5Location = _dataSheetArea.GetBounds().LeftTop.Move(12, 111);
         row5Location.RightClick();
-        Wait(2);
+        Wait(1);
         Type("i"); // Type without window reference to avoid focus setting. Focus setting closes the context menu
         _activeDocument.Type("{CTRL+Y}".Repeat(15), cpm: 100);
         Wait(1);
@@ -164,7 +219,7 @@ public class M365Excel_DefaultScript : ScriptBase
         KeyDown(KeyCode.SHIFT); Wait(1);
         _activeDocument.Type("{DOWN}".Repeat(15), cpm: 100);
         KeyUp(KeyCode.SHIFT); Wait(1);
-        _activeDocument.Type("{CTRL+V}"); Wait(3);
+        _activeDocument.Type("{CTRL+V}"); Wait(1);
 
         _activeDocument.Type("{ESC}"); Wait(1);
     }
@@ -172,19 +227,19 @@ public class M365Excel_DefaultScript : ScriptBase
     void DoScrolling()
     {
         //Scroll through excel document
-        Wait(seconds: 3, showOnScreen: true, onScreenText: "Scroll");
+        Wait(seconds: 1, showOnScreen: true, onScreenText: "Scroll");
         _activeDocument.MoveMouseToCenter();
         MouseDown();
         Wait(1);
         MouseUp();
-        _activeDocument.Type("{PAGEDOWN}".Repeat(6), cpm: 300);
+        _activeDocument.Type("{PAGEDOWN}".Repeat(6), cpm: 1000);
         Wait(1);
-        _activeDocument.Type("{PAGEUP}".Repeat(5), cpm: 300);
-        Wait(3);
-        _activeDocument.Type("{PAGEDOWN}".Repeat(5), cpm: 300);
+        _activeDocument.Type("{PAGEUP}".Repeat(5), cpm: 1000);
         Wait(1);
-        _activeDocument.Type("{PAGEUP}".Repeat(6), cpm: 300);
-        Wait(2);
+        _activeDocument.Type("{PAGEDOWN}".Repeat(5), cpm: 1000);
+        Wait(1);
+        _activeDocument.Type("{PAGEUP}".Repeat(6), cpm: 1000);
+        Wait(1);
     }
     
     IWindow OpenLoginVsiDoc()
@@ -205,7 +260,7 @@ public class M365Excel_DefaultScript : ScriptBase
         }
 
             // Open "Open File" window and start measurement.
-        Wait(seconds: 3, showOnScreen: true, onScreenText: "Open File Window");
+        Wait(seconds: 1, showOnScreen: true, onScreenText: "Open File Window");
         MainWindow.Type("{CTRL+O}");
         MainWindow.Type("{ALT+O+O}");
         StartTimer("Open_Window");
@@ -215,11 +270,11 @@ public class M365Excel_DefaultScript : ScriptBase
         openWindow.Click();
 
         //Navigate to copied XLSX file and press Open, measure time to open the file.
-        Wait(seconds: 3, showOnScreen: true, onScreenText: "Open File");
+        Wait(seconds: 1, showOnScreen: true, onScreenText: "Open File");
         var fileNameBox = openWindow.FindControl(className: "Edit:Edit", title: "File name:");
         fileNameBox.Click();
         Wait(1);
-        SetTextBoxText(fileNameBox, $"{_tempFolder}\\LoginPI\\loginvsi.xlsx", cpm: 300);
+        SetTextBoxText(fileNameBox, $"{_tempFolder}\\LoginPI\\loginvsi.xlsx", cpm: 1000);
         Wait(1);
         openWindow.FindControl(className: "SplitButton:Button", title: "&Open").Click();
         StartTimer("Open_Excel_Document");
@@ -291,6 +346,23 @@ public class M365Excel_DefaultScript : ScriptBase
         if (currentText != text)
             ABORT($"Unable to set the correct text '{text}', got '{currentText}'");
     }
+        void Scroll(string direction, int scrollCount, int notches, double waitTime)
+{
+if (waitTime <= 0)
+{
+throw new ArgumentException("Scroll waitTime must be greater than 0 seconds.");
+}
+
+int sign = direction.Equals("Down", StringComparison.OrdinalIgnoreCase) ? -1 : 1;
+int delta = sign * 120 * notches;
+
+Log($"Scrolling mouse {direction} {scrollCount} times, {notches} notch(es) per scroll, with {waitTime} sec between each scroll.");
+for (int i = 0; i < scrollCount; i++)
+{
+mouse_event(MOUSEEVENTF_WHEEL, 0, 0, delta, UIntPtr.Zero);
+Wait(waitTime);
+}
+}
 
 }
 
