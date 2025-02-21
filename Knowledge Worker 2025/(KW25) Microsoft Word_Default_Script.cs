@@ -1,4 +1,4 @@
-// TARGET:winword.exe
+// TARGET:winword.exe C:\Users\NVtestuser\Desktop\loginvsi.docx
 // START_IN:
 
 /////////////
@@ -10,11 +10,24 @@
 using LoginPI.Engine.ScriptBase;
 using LoginPI.Engine.ScriptBase.Components;
 using System;
+using System.Runtime.InteropServices;
 
 public class M365Word_DefaultScript : ScriptBase
+
 {
+// Import the user32.dll function to simulate mouse events.
+[DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+public static extern void mouse_event(uint dwFlags, uint dx, uint dy, int dwData, UIntPtr dwExtraInfo);
+
+public const uint MOUSEEVENTF_WHEEL = 0x0800; // Constant for a mouse wheel event
+
     private void Execute()
     {
+        
+int ctrlTabIterations = 10; // Number of iterations for scrolling interactions
+int ctrlTabWaitSecondsBeforeScroll = 3; // Wait time (in seconds) before scrolling to allow the page to load
+int ctrlTabWaitSecondsAfterScroll = 1;  // Wait time (in seconds) after scrolling before next iteration
+
         // This is a language dependent script. English is required.
 
         var temp = GetEnvironmentVariable("TEMP");
@@ -27,7 +40,7 @@ public class M365Word_DefaultScript : ScriptBase
         var waitTime = 2;
 
         // Download file from the appliance through the KnownFiles method, if it already exists: Skip Download.
-        Wait(seconds: 3, showOnScreen: true, onScreenText: "Get .docx file");
+        /*Wait(seconds: 3, showOnScreen: true, onScreenText: "Get .docx file");
         if (!(FileExists($"{temp}\\LoginPI\\loginvsi.docx")))
         {
             Log("Downloading File");
@@ -60,8 +73,54 @@ public class M365Word_DefaultScript : ScriptBase
             Wait(10);
 
             SkipFirstRunDialogs();
-        }
+        }*/
         
+        Wait(seconds: 1, showOnScreen: true, onScreenText: "Starting Excel");
+        // START(mainWindowTitle: "*Excel*", mainWindowClass: "*XLMAIN*", timeout: 30);
+        ShellExecute(@"winword.exe C:\Users\NVtestuser\Desktop\loginvsi.docx",forceKillOnExit:true,waitForProcessEnd:false);        
+        //START(mainWindowTitle: "*Excel*", timeout: 30);
+        var MainWindow = FindWindow(title:"*Word*");
+        Wait(1);
+        MainWindow.Maximize();
+        MainWindow.Focus();
+        //MainWindow.MoveMouseToCenter();
+        Wait(1);
+        //MainWindow.Click();
+        MainWindow.Type("{alt}np",cpm:50);
+        Wait(1);
+        MainWindow.Type("d",cpm:50);
+        Wait(2);
+        Type(@"C:\Users\NVtestuser\Desktop\LoginVSI_BattlingRobots.bmp{enter}", cpm:1000);
+        Wait(2);
+        
+        // Usage of Scroll():
+//   - direction: "Down" to scroll down or "Up" to scroll up.
+//   - scrollCount: Number of scroll events to send.
+//   - notches: Number of notches per event (1 notch is typically 120).
+//   - waitTime: Time in seconds to wait between each scroll event.
+// Example:
+//   Scroll("Down", 20, 1, 0.2);
+//   Scroll("Up", 10, 2, 0.3);
+
+// Scroll interactions on the active tab after switching:
+MainWindow.MoveMouseToCenter();
+MainWindow.Click();
+Wait(1);
+Type("{ctrl+a}{ctrl+c}{ctrl+v}{ctrl+v}",cpm:50);
+Wait(3);
+//MainWindow.FindControl(className : "Button:NetUISimpleButton", title : "Zoom *").Click();
+//Wait(1);
+//Type("{alt+2}",cpm:50);
+//Wait(2);
+//Type("{enter}",cpm:50);
+//Wait(2);
+Scroll("Up",50, 2, 0.1);
+Scroll("Down", 50, 1, 0.1);
+
+
+Wait(1);
+        
+        /*
         //Open "Open File" window and start measurement.
         Wait(seconds: 3, showOnScreen: true, onScreenText: "Open File Window");
         MainWindow.Type("{CTRL+O}");
@@ -176,8 +235,9 @@ public class M365Word_DefaultScript : ScriptBase
 
         // Stop application
         Wait(seconds: 3, showOnScreen: true, onScreenText: "Stopping App");
-        Wait(2);
-        STOP();
+        Wait(2);*/
+        //STOP();
+        MainWindow.Close();
 
     }
 
@@ -227,5 +287,22 @@ public class M365Word_DefaultScript : ScriptBase
                 script.ABORT($"Unable to set the correct text '{text}', got '{currentText}'");
         }
     }
+        void Scroll(string direction, int scrollCount, int notches, double waitTime)
+{
+if (waitTime <= 0)
+{
+throw new ArgumentException("Scroll waitTime must be greater than 0 seconds.");
+}
+
+int sign = direction.Equals("Down", StringComparison.OrdinalIgnoreCase) ? -1 : 1;
+int delta = sign * 120 * notches;
+
+Log($"Scrolling mouse {direction} {scrollCount} times, {notches} notch(es) per scroll, with {waitTime} sec between each scroll.");
+for (int i = 0; i < scrollCount; i++)
+{
+mouse_event(MOUSEEVENTF_WHEEL, 0, 0, delta, UIntPtr.Zero);
+Wait(waitTime);
+}
+}
 }
 
