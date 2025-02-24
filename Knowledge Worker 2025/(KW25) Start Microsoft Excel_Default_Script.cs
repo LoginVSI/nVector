@@ -1,4 +1,4 @@
-// TARGET:excel.exe
+// TARGET:excel.exe /e
 // START_IN:
 
 /////////////
@@ -11,9 +11,9 @@ using LoginPI.Engine.ScriptBase;
 
 public class Start_Excel_DefaultScript : ScriptBase
 {
+    const string ProcessName = "EXCEL";
     void Execute()
-    {        
-        const string ProcessName = "EXCEL";
+    {                
         START(mainWindowTitle: "*Excel*", mainWindowClass: "*XLMAIN*", timeout: 60);
         SkipFirstRunDialogs();
     }

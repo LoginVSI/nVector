@@ -1,4 +1,4 @@
-// TARGET:powerpnt.exe
+// TARGET:powerpnt.exe /n
 // START_IN:
 
 /////////////

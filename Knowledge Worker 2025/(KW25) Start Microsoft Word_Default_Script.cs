@@ -1,4 +1,4 @@
-// TARGET:winword.exe
+// TARGET:winword.exe /t
 // START_IN:
 
 /////////////
