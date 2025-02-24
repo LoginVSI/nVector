@@ -21,16 +21,26 @@ public class MicrosoftEdgeMultipleTabs_DefaultScript : ScriptBase
     // Import the user32.dll function to simulate mouse events.
     [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
     public static extern void mouse_event(uint dwFlags, uint dx, uint dy, int dwData, UIntPtr dwExtraInfo);
-
     public const uint MOUSEEVENTF_WHEEL = 0x0800; // Constant for a mouse wheel event
 
     private void Execute()
     {
-        // Find the browser window (adjust className/title as needed).
+        Log("Beginning Execute() in MicrosoftEdgeMultipleTabs_DefaultScript.");
+
+        // Simulate user interaction to open the Start Menu.
+        Log("Simulating Start Menu interaction.");
+        Wait(seconds: 2, showOnScreen: true, onScreenText: "Start Menu");
+        Type("{LWIN}");
+        Wait(3);
+        Type("{LWIN}");
+        Wait(1);
+        Type("{ESC}");
+        Log("Start Menu simulation complete.");
+        
         var browserWindow = FindWindow(
             className: "Win32 Window:Chrome_WidgetWin_1",
             title: "*Microsoft​ Edge",
-            processName: browserProcessName);
+            processName: browserProcessName);        
 
         // Calculate total wait time per iteration and overall.
         int totalWaitPerIteration = ctrlTabWaitSecondsBeforeScroll + ctrlTabWaitSecondsAfterScroll;
@@ -40,25 +50,28 @@ public class MicrosoftEdgeMultipleTabs_DefaultScript : ScriptBase
         Log(message);
 
         // For each iteration:
-        //   - On the first iteration, scroll the initial tab without switching.
-        //   - On subsequent iterations, send Ctrl+Tab to switch to the next tab before scrolling.
         for (int i = 0; i < ctrlTabIterations; i++)
         {
-            Wait(ctrlTabWaitSecondsBeforeScroll);
+            Log($"Iteration {i + 1} started.");            
+            Wait(ctrlTabWaitSecondsBeforeScroll); // Wait for the page to load on the current tab.
+            
+            // Prepare the browser window.
             browserWindow.Maximize();
-            browserWindow.MoveMouseToCenter(continueOnError: true, hoverTimeAfterMove: 1);
-            browserWindow.Focus();
+            browserWindow.MoveMouseToCenter(continueOnError: true, hoverTimeAfterMove: 1);            
+            browserWindow.Focus();            
 
             if (i > 0)
             {
-                // For iterations beyond the first, switch to the next tab.
-                browserWindow.Type("{ctrl+tab}", hideInLogging: false);
-                Wait(ctrlTabWaitSecondsBeforeScroll);
+                Log("Switching to next tab with Ctrl+Tab.");
+                browserWindow.Type("{ctrl+tab}", hideInLogging: false);                
+                Wait(ctrlTabWaitSecondsBeforeScroll); // Extra wait after switching.
                 browserWindow.Maximize();
                 browserWindow.MoveMouseToCenter(continueOnError: true, hoverTimeAfterMove: 1);
                 browserWindow.Focus();
+                Log("Switched tab and refocused window.");
             }
             
+            // Scroll interactions on the active tab:
             // Usage of Scroll():
             //   - direction: "Down" to scroll down or "Up" to scroll up.
             //   - scrollCount: Number of scroll events to send.
@@ -67,13 +80,15 @@ public class MicrosoftEdgeMultipleTabs_DefaultScript : ScriptBase
             // Example:
             //   Scroll("Down", 20, 1, 0.2);
             //   Scroll("Up", 10, 2, 0.3);
-
-            // Scroll interactions on the active tab after switching:
+            Log("Starting scroll interactions on the active tab.");
             Scroll("Down", 10, 1, 0.2);
-            Scroll("Up", 5, 2, 0.3);
+            Scroll("Up", 10, 1, 0.2);
+            Log("Scroll interactions completed for this iteration.");            
             
-            Wait(ctrlTabWaitSecondsAfterScroll);
-        }
+            Wait(ctrlTabWaitSecondsAfterScroll); // Wait after scrolling before the next iteration.
+            Log($"Iteration {i + 1} complete. Waiting {ctrlTabWaitSecondsAfterScroll} seconds before next iteration.");
+        }        
+        Log("All iterations completed.");
     }
 
     void Scroll(string direction, int scrollCount, int notches, double waitTime)
@@ -92,5 +107,6 @@ public class MicrosoftEdgeMultipleTabs_DefaultScript : ScriptBase
             mouse_event(MOUSEEVENTF_WHEEL, 0, 0, delta, UIntPtr.Zero);
             Wait(waitTime);
         }
+        Log($"Completed scrolling mouse {direction} {scrollCount} times.");
     }
 }

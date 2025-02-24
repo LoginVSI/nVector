@@ -23,6 +23,14 @@ public class M365Outlook_RunningScript : ScriptBase
     private void Execute()
     {
         
+                // Simulate user interaction to open the Start Menu.
+        Wait(seconds:2, showOnScreen:true, onScreenText:"Start Menu");
+        Type("{LWIN}");
+        Wait(3);
+        Type("{LWIN}");
+        Wait(1);
+        Type("{ESC}");
+        
         // Use a local variable for the main Outlook window.
         
         START();

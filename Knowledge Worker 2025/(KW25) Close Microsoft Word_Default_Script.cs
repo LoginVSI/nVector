@@ -13,7 +13,7 @@ public class Close_Word_DefaultScript : ScriptBase
 {
     void Execute()
     {
-        var MainWindow = FindWindow(processName:"winword", timeout:3, continueOnError:true);
+        var MainWindow = FindWindow(processName:"winword", timeout:2, continueOnError:true);
         MainWindow?.Close();
     }
 }

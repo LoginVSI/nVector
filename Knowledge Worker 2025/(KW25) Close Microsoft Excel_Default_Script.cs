@@ -13,7 +13,7 @@ public class Close_Excel_DefaultScript : ScriptBase
 {
     void Execute()
     {
-        var MainWindow = FindWindow(processName:"excel", timeout:3, continueOnError:true);
+        var MainWindow = FindWindow(processName:"excel", timeout:2, continueOnError:true);
         MainWindow?.Close();
     }
 }

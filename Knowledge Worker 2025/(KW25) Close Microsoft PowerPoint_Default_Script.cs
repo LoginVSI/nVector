@@ -13,7 +13,7 @@ public class Close_PowerPoint_DefaultScript : ScriptBase
 {
     void Execute()
     {
-        var MainWindow = FindWindow(processName:"powerpnt", timeout:3, continueOnError:true);
+        var MainWindow = FindWindow(processName:"powerpnt", timeout:2, continueOnError:true);
         MainWindow?.Close();
     }
 }

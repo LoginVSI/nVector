@@ -13,7 +13,7 @@ public class Close_Outlook_DefaultScript : ScriptBase
 {
     void Execute()
     {
-        var MainWindow = FindWindow(processName:"outlook", timeout:3, continueOnError:true);
+        var MainWindow = FindWindow(processName:"outlook", timeout:2, continueOnError:true);
         MainWindow?.Close();
     }
 }

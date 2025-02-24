@@ -21,7 +21,7 @@ public class M365Outlook_InvocationScript : ScriptBase
         var temp = GetEnvironmentVariable("TEMP");
         
         // Define the target directory.
-        string targetDir = $"{temp}\\Login Enterprise";
+        string targetDir = $"{temp}\\LoginEnterprise";
         // Create the "Login Enterprise" directory if it doesn't exist.
         if (!Directory.Exists(targetDir))
         {
@@ -38,15 +38,9 @@ public class M365Outlook_InvocationScript : ScriptBase
         // Update the PRF file: replace the placeholder %TEMP% with the actual TEMP path.
         string prfPath = $"{targetDir}\\Outlook.prf";
         File.WriteAllText(prfPath, File.ReadAllText(prfPath).Replace("%TEMP%", $"{temp}"));
-            
-        // Simulate user interaction to open the Start Menu.
-        Wait(seconds:1, showOnScreen:true, onScreenText:"Start Menu");
-        Type("{LWIN}");
-        Wait(3);
-        Type("{ESC}");
         
         // Start Outlook using its command line configuration.
-        Wait(seconds:1, showOnScreen:true, onScreenText:"Starting Outlook");
+        Wait(seconds:2, showOnScreen:true, onScreenText:"Starting Outlook");
         START(mainWindowTitle:"Inbox*", mainWindowClass:"Win32 Window:rctrl_renwnd32", processName:"OUTLOOK", timeout:60, continueOnError:true);
         MainWindow.Maximize();
     }

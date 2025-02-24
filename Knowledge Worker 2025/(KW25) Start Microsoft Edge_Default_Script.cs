@@ -25,16 +25,28 @@ public class Start_Browser_DefaultScript : ScriptBase
 
     void Execute()
     {
+        Log("Starting browser open process.");
+
         // Get the current user's TEMP folder path.
         string tempPath = GetEnvironmentVariable("TEMP");
         
-        // Copy the PDF file from the Login Enterprise appliance to the TEMP folder as "loginvsi.pdf".
-        CopyFile(KnownFiles.PdfFile, tempPath + "\\loginvsi.pdf", continueOnError: false, overwrite: true);
+        // Define the subdirectory path for LoginEnterprise.
+        string loginEnterpriseDir = Path.Combine(tempPath, "LoginEnterprise");
+        // Create the directory if it doesn't exist.
+        Directory.CreateDirectory(loginEnterpriseDir);
+
+        // Define the destination path for the PDF file.
+        string pdfDestination = Path.Combine(loginEnterpriseDir, "loginvsi.pdf");
+
+        // Copy the PDF file from the Login Enterprise appliance to the destination.
+        Log("Copying PDF file from KnownFiles.PdfFile to " + pdfDestination);
+        CopyFile(KnownFiles.PdfFile, pdfDestination, continueOnError: false, overwrite: true);
+        Log("PDF file copied successfully.");
 
         // Build the URL list with the local PDF file path as the second URL.
         string urlsDefined =
             "https://euc.loginvsi.com/customer-portal/knowledge-worker-2023;" +
-            tempPath + "\\loginvsi.pdf;" +
+            pdfDestination + ";" +
             "https://images.nasa.gov/;" +
             "https://www.google.com/search?q=beautiful+mountains&udm=2;" +            
             "https://www.bing.com/images/search?q=beautiful%20mountains&first=1;" +
@@ -43,7 +55,7 @@ public class Start_Browser_DefaultScript : ScriptBase
             "https://www.google.com/search?q=login+vsi&udm=2;" +
             "https://www.bing.com/images/search?q=login%20vsi&lq=0&ghsh=0&ghacc=0&first=1;" +
             "https://www.microsoft.com;";
-        
+
         // Split the defined URLs into an array using semicolon as the delimiter.
         string[] urlArray = urlsDefined.Split(new char[] { ';' }, System.StringSplitOptions.RemoveEmptyEntries);
         
@@ -55,22 +67,30 @@ public class Start_Browser_DefaultScript : ScriptBase
         // Execute the browser with the dynamically constructed command line.
         ShellExecute(command, waitForProcessEnd: false, continueOnError: false, forceKillOnExit: false);
 
-        string browserProcessName = Path.GetFileNameWithoutExtension(browserExecutable);
+        string browserProcessName = System.IO.Path.GetFileNameWithoutExtension(browserExecutable);
 
         // Find the browser window (adjust className/title as needed).
-        var browserWindow = FindWindow(
+        FindWindow(
             className: "Win32 Window:Chrome_WidgetWin_1",
             title: "*Microsoft​ Edge",
             processName: browserProcessName,
             timeout: waitTimeoutInSecondsMsedgeLaunch);
-        
+
         StopTimer("Browser_Start"); // Stop timer after the browser window is found.
 
         // Wait for the browser to fully load the tabs.
         Wait(waitInSecondsBrowserInitialize, onScreenText: "Waiting for browser to fully load tabs");
-        browserWindow.Maximize(); // Maximize the browser window.
-        browserWindow.Focus(); // Bring the browser window to the foreground.
+        Log("Waited " + waitInSecondsBrowserInitialize + " seconds for browser initialization.");
 
+        // Maximize and focus the browser window.
+        var browserWindow = FindWindow(
+            className: "Win32 Window:Chrome_WidgetWin_1",
+            title: "*Microsoft​ Edge",
+            processName: browserProcessName);
+        browserWindow.Maximize();        
+        browserWindow.Focus();        
+
+        Log("Browser open process completed.");
     }
 
     // Helper method to build the command string.

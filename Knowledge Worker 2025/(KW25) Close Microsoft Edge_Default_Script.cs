@@ -13,7 +13,7 @@ public class Close_Browser_DefaultScript : ScriptBase
 {
     void Execute()
     {
-        var MainWindow = FindWindow(processName:"msedge", timeout:3, continueOnError:true);
+        var MainWindow = FindWindow(processName:"msedge", timeout:2, continueOnError:true);
         MainWindow?.Close();
     }
 }

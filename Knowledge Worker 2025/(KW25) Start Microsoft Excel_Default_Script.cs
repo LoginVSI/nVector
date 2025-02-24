@@ -12,9 +12,18 @@ using LoginPI.Engine.ScriptBase;
 public class Start_Excel_DefaultScript : ScriptBase
 {
     void Execute()
+    {        
+        const string ProcessName = "EXCEL";
+        START(mainWindowTitle: "*Excel*", mainWindowClass: "*XLMAIN*", timeout: 60);
+        SkipFirstRunDialogs();
+    }
+    void SkipFirstRunDialogs()
     {
-        START(mainWindowTitle: "*Excel*", mainWindowClass: "*XLMAIN*", timeout: 5);
-
-        STOP();
+        var dialog = FindWindow(className: "Win32 Window:NUIDialog", processName: ProcessName, continueOnError: true, timeout: 1);
+        while (dialog != null)
+        {
+            dialog.Close();
+            dialog = FindWindow(className: "Win32 Window:NUIDialog", processName: ProcessName, continueOnError: true, timeout: 10);
+        }
     }
 }
