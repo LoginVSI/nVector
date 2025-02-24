@@ -13,12 +13,16 @@ public class Start_Word_DefaultScript : ScriptBase
 {
     void Execute()
     {
+        Wait(seconds:2, showOnScreen:true, onScreenText:"Starting Word");
+        Log("Starting Word");
         START(mainWindowTitle: "*Word*", mainWindowClass: "Win32 Window:OpusApp", processName: "WINWORD", timeout: 60);
         SkipFirstRunDialogs();
+        MainWindow.Maximize();
+        MainWindow.Focus();
     }
     private void SkipFirstRunDialogs()
     {
-        var dialog = FindWindow(className: "Win32 Window:NUIDialog", processName: "WINWORD", continueOnError: true, timeout: 1);
+        var dialog = FindWindow(className: "Win32 Window:NUIDialog", processName: "WINWORD", continueOnError: true, timeout: 5);
         while (dialog != null)
         {
             dialog.Close();

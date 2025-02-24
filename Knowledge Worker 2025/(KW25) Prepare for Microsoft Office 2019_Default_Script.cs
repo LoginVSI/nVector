@@ -15,14 +15,15 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
 {
     private void Execute()
     {
+        Log("Dismissing first run Word dialogs");
         START(mainWindowTitle: "*Word*", mainWindowClass: "Win32 Window:OpusApp", processName: "WINWORD", timeout: 30, continueOnError: true);
-        Wait(seconds: 3, showOnScreen: true, onScreenText: "Skip first run dialog");
-        var openDialog = MainWindow.FindControlWithXPath(xPath: "*:NUIDialog", timeout: 5, continueOnError: true);
+        Wait(seconds: 2, showOnScreen: true, onScreenText: "Skip first run dialog");
+        var openDialog = MainWindow.FindControlWithXPath(xPath: "*:NUIDialog", timeout: 3, continueOnError: true);
         if (openDialog is object)
         {
             if (openDialog.GetTitle().StartsWith("First things", StringComparison.CurrentCultureIgnoreCase))
             {
-                Wait(seconds: 3, showOnScreen: true, onScreenText: "Closing first things first dialog");
+                Wait(seconds: 2, showOnScreen: true, onScreenText: "Closing first things first dialog");
                 openDialog.FindControl(className: "RadioButton:NetUIRadioButton", title: "Install updates only", continueOnError: true)?.Click();
                 openDialog.FindControl(className: "Button:NetUIButton", title: "Accept", continueOnError: true)?.Click();
                 openDialog = MainWindow.FindControlWithXPath(xPath: "Pane:NUIDialog", timeout: 5, continueOnError: true);

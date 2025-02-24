@@ -17,7 +17,7 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         var temp = GetEnvironmentVariable("TEMP");
 
         // Set registry values; this should be a run-once preparation
-        Wait(seconds:3, showOnScreen:true, onScreenText:"Setting Reg Values #1");
+        Wait(seconds:2, showOnScreen:true, onScreenText:"Setting Reg Values #1");
         RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Common\General",@"ShownFirstRunOptin",@"dword:00000001"));
         RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Common\Licensing",@"DisableActivationUI",@"dword:00000001"));
         RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Registration",@"AcceptAllEulas",@"dword:00000001"));
@@ -49,30 +49,24 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\word\options", @"defaultformat",@""));
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\options", @"PrivacyNoticeShown", @"dword:00000002"));
             
-        Wait(seconds:3, showOnScreen:true, onScreenText:"Starting App");
+        Wait(seconds:2, showOnScreen:true, onScreenText:"Starting App");
         
         // Start Application
         Log("Starting Word");
-        Wait(seconds:3, showOnScreen:true, onScreenText:"Starting Word");
+        Wait(seconds:2, showOnScreen:true, onScreenText:"Starting Word");
         START(mainWindowTitle:"*Word*", processName:"WINWORD", timeout:600);
-        // FindWindow(title : "*Word*", processName : "WINWORD", timeout:600).Focus();
+        Wait(1);
         FindWindow(className : "Win32 Window:OpusApp", title : "*Word*", processName : "WINWORD", continueOnError:true).Focus();
-        // MainWindow.Maximize();
-        Wait(5);
-        
+        FindWindow(className : "Win32 Window:OpusApp", title : "*Word*", processName : "WINWORD", continueOnError:true).Maximize();
+        Wait(seconds:5, showOnScreen:true, onScreenText:"Finding first run dialogs then stopping App");        
         SkipFirstRunDialogs();        
-
-        Wait(seconds:3, showOnScreen:true, onScreenText:"Stopping App");
-
-        // Stop application
-        Wait(2);
 
         STOP();
     }
 
     private void SkipFirstRunDialogs()
     {
-        var dialog = FindWindow(className: "Win32 Window:NUIDialog", processName: "WINWORD", continueOnError: true, timeout: 1);
+        var dialog = FindWindow(className: "Win32 Window:NUIDialog", processName: "WINWORD", continueOnError: true, timeout: 5);
         while (dialog != null)
         {
             dialog.Close();

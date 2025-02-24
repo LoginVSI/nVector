@@ -41,7 +41,10 @@ public class M365Outlook_InvocationScript : ScriptBase
         
         // Start Outlook using its command line configuration.
         Wait(seconds:2, showOnScreen:true, onScreenText:"Starting Outlook");
+        Log("Starting Outlook");
         START(mainWindowTitle:"Inbox*", mainWindowClass:"Win32 Window:rctrl_renwnd32", processName:"OUTLOOK", timeout:60, continueOnError:true);
+        Wait(5);
         MainWindow.Maximize();
+        MainWindow.Focus();
     }
 }

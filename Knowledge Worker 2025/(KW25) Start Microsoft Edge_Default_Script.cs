@@ -18,7 +18,7 @@ public class Start_Browser_DefaultScript : ScriptBase
     int tabsToOpen = 10; // Number of browser tabs to open
 
     // Maximum wait time in seconds for the browser to initially appear.
-    int waitTimeoutInSecondsMsedgeLaunch = 30;
+    int waitTimeoutInSecondsMsedgeLaunch = 5;
     
     // Wait time in seconds to allow the browser to fully load the defined tabs/URLs.
     int waitInSecondsBrowserInitialize = 5;
@@ -26,6 +26,7 @@ public class Start_Browser_DefaultScript : ScriptBase
     void Execute()
     {
         Log("Starting browser open process.");
+        Wait(seconds:2, showOnScreen:true, onScreenText:"Starting browser open process.");
 
         // Get the current user's TEMP folder path.
         string tempPath = GetEnvironmentVariable("TEMP");

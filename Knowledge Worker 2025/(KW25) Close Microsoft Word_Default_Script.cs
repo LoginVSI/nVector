@@ -13,6 +13,8 @@ public class Close_Word_DefaultScript : ScriptBase
 {
     void Execute()
     {
+        Wait(seconds:2, showOnScreen:true, onScreenText:"Closing Word if open.");
+        Log("Closing Word if open.");
         var MainWindow = FindWindow(processName:"winword", timeout:2, continueOnError:true);
         MainWindow?.Close();
     }
