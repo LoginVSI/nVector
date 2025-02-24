@@ -16,6 +16,7 @@ public class Close_Excel_DefaultScript : ScriptBase
         Wait(seconds:2, showOnScreen:true, onScreenText:"Closing Excel if open.");
         Log("Closing Excel if open.");
         var MainWindow = FindWindow(processName:"excel", timeout:2, continueOnError:true);
+        MainWindow?.Focus();
         MainWindow?.Close();
     }
 }
