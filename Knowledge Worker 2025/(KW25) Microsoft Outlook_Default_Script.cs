@@ -1,4 +1,4 @@
-// TARGET:outlook.exe /importprf "%TEMP%\Login Enterprise\Outlook.prf"
+// TARGET:outlook.exe /importprf %TEMP%\LoginEnterprise\Outlook.prf
 // START_IN:
 
 /////////////

@@ -1,4 +1,4 @@
-// TARGET:excel.exe "C:\Users\NVtestuser\Desktop\loginvsi.xlsx"
+// TARGET:excel.exe /e
 // START_IN:
 
 /////////////
@@ -30,12 +30,11 @@ public class M365Excel_DefaultScript : ScriptBase
 
     public const uint MOUSEEVENTF_WHEEL = 0x0800; // Constant for a mouse wheel event
     
-    private void Execute()
-    
+    private void Execute()    
     {
-    int ctrlTabIterations = 10; // Number of iterations for scrolling interactions
-int ctrlTabWaitSecondsBeforeScroll = 3; // Wait time (in seconds) before scrolling to allow the page to load
-int ctrlTabWaitSecondsAfterScroll = 1;  // Wait time (in seconds) after scrolling before next iteration
+        int ctrlTabIterations = 10; // Number of iterations for scrolling interactions
+        int ctrlTabWaitSecondsBeforeScroll = 3; // Wait time (in seconds) before scrolling to allow the page to load
+        int ctrlTabWaitSecondsAfterScroll = 1;  // Wait time (in seconds) after scrolling before next iteration
         // This is a language dependent script. English is required.
 
         _tempFolder = GetEnvironmentVariable("TEMP");

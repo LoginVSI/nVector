@@ -1,4 +1,4 @@
-// TARGET:winword.exe C:\Users\NVtestuser\Desktop\loginvsi.docx
+// TARGET:winword.exe /t
 // START_IN:
 
 /////////////

@@ -40,13 +40,19 @@ public class MicrosoftEdgeMultipleTabs_DefaultScript : ScriptBase
         var browserWindow = FindWindow(
             className: "Win32 Window:Chrome_WidgetWin_1",
             title: "*Microsoft​ Edge",
-            processName: browserProcessName);        
+            processName: browserProcessName);  
+
+        browserWindow.Minimize();
+        Wait(1);
+        browserWindow.Maximize();
+        browserWindow.Focus();
+        Wait(1);      
 
         // Calculate total wait time per iteration and overall.
         int totalWaitPerIteration = ctrlTabWaitSecondsBeforeScroll + ctrlTabWaitSecondsAfterScroll;
         int totalCtrlTabTime = ctrlTabIterations * totalWaitPerIteration;
         string message = $"Performing {ctrlTabIterations} iterations with {ctrlTabWaitSecondsBeforeScroll} sec wait before scrolling and {ctrlTabWaitSecondsAfterScroll} sec wait after scrolling. Total wait time: {totalCtrlTabTime} sec.";
-        Wait(3, showOnScreen: true, onScreenText: message);
+        Wait(2, showOnScreen: true, onScreenText: message);
         Log(message);
 
         // For each iteration:
@@ -81,8 +87,8 @@ public class MicrosoftEdgeMultipleTabs_DefaultScript : ScriptBase
             //   Scroll("Down", 20, 1, 0.2);
             //   Scroll("Up", 10, 2, 0.3);
             Log("Starting scroll interactions on the active tab.");
-            Scroll("Down", 10, 1, 0.2);
-            Scroll("Up", 10, 1, 0.2);
+            Scroll("Down", 15, 1, 0.2);
+            Scroll("Up", 15, 1, 0.2);
             Log("Scroll interactions completed for this iteration.");            
             
             Wait(ctrlTabWaitSecondsAfterScroll); // Wait after scrolling before the next iteration.
