@@ -16,7 +16,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
 using System.Runtime.InteropServices;
 
-public class M365Word_RefactoredScript : ScriptBase
+public class WordDefaultScript : ScriptBase
 {
     // Import the user32.dll function to simulate mouse events.
     [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
@@ -89,7 +89,6 @@ public class M365Word_RefactoredScript : ScriptBase
             Log("BMP file already exists");
         }
 
-        /*
         // --- Open/Close Start Menu ---
         Log("Opening Start Menu");
         Wait(seconds: 2, showOnScreen: true, onScreenText: "Start Menu");
@@ -98,7 +97,6 @@ public class M365Word_RefactoredScript : ScriptBase
         Type("{LWIN}");
         Wait(1);
         Type("{ESC}");
-        */
 
         // --- Locate the already open Word Application ---        
         // Find the main Word window (assuming it's already open)
@@ -153,8 +151,7 @@ public class M365Word_RefactoredScript : ScriptBase
         Wait(globalWaitInSeconds);
 
         // --- Type the document content ---
-        string content =
-@"About Login VSI The VDI and DaaS industry has transformed incredibly, and Login VSI has evolved alongside the world of remote and hybrid work. Through an innovative and dynamic culture, the Login VSI team is passionate about helping enterprises worldwide understand, build, and maintain amazing digital workspaces. Trusted globally for 360° proactive visibility of performance, cost, and capacity of virtual desktops and applications, Login Enterprise is accepted as the industry standard and used by major vendors to spot problems quicker, avoid unexpected downtime, and deliver next-level digital experiences for end-users. Our Mission The paradigm for remote computing has shifted with virtual app delivery coupled with the growth in Web and SaaS-based applications. Now more than ever, organizations rely on digital workspaces to function. We give our customers 360° insights into the entire stack of virtual desktops and applications – in production or delivery and across various settings and infrastructure. We aim to empower IT teams to take control of their virtual desktops and applications’ performance, cost, and capacity wherever they reside – traditional, hybrid, or cloud.";
+        string content = @"About Login VSI{Enter}The VDI and DaaS industry has transformed incredibly, and Login VSI has evolved alongside the world of remote and hybrid work.{Enter}Through an innovative and dynamic culture, the Login VSI team is passionate about helping enterprises worldwide understand, build, and maintain amazing digital workspaces.{Enter}Trusted globally for 360° proactive visibility of performance, cost, and capacity of virtual desktops and applications, Login Enterprise is accepted as the industry standard and used by major vendors to spot problems quicker, avoid unexpected downtime, and deliver next-level digital experiences for end-users.{Enter}Our Mission{Enter}The paradigm for remote computing has shifted with virtual app delivery coupled with the growth in Web and SaaS-based applications.{Enter}Now more than ever, organizations rely on digital workspaces to function. We give our customers 360° insights into the entire stack of virtual desktops and applications – in production or delivery and across various settings and infrastructure.{Enter}We aim to empower IT teams to take control of their virtual desktops and applications’ performance, cost, and capacity wherever they reside – traditional, hybrid, or cloud.";
         // Type text at the specified text speed.
         newWord.Type(content, cpm: CharactersPerMinuteToType);
         Wait(globalWaitInSeconds);
@@ -185,8 +182,7 @@ public class M365Word_RefactoredScript : ScriptBase
         for (int i = 0; i < copyPasteRepetitions; i++)
         {
             newWord.Type("{CTRL+V}", cpm: keyboardShortcutsCharactersPerMinuteToType);
-            Wait(waitForCopyPasteInSeconds);
-            newWord.Type("{ctrl+home}"); // Go to top of the doc
+            Wait(waitForCopyPasteInSeconds);            
         }
         
         // Scroll interactions on the active tab:
@@ -199,15 +195,15 @@ public class M365Word_RefactoredScript : ScriptBase
         //   Scroll("Down", 20, 1, 0.2);
         //   Scroll("Up", 10, 2, 0.3);
         // --- Scroll interactions using the helper Scroll() function ---
-        Log("Scrolling the document");
+        Log("Scrolling the document");        
+        newWord.Type("{ctrl+home}"); // Go to top of the doc
         Wait(waitForCopyPasteInSeconds);
+        Scroll("Down", 40, 1, 0.1);  
+        Scroll("Up", 40, 1, 0.1);
         newWord.Type("{ctrl+home}"); // Go to top of the doc
-        Scroll("Down", 20, 1, 0.2);  
-        newWord.Type("{ctrl+home}"); // Go to top of the doc
-        Scroll("Up", 20, 1, 0.2);
-        newWord.Type("{ctrl+home}"); // Go to top of the doc
-        Scroll("Down", 20, 1, 0.2);
-        Scroll("Up", 20, 1, 0.2);  
+        Wait(waitForCopyPasteInSeconds);
+        Scroll("Down", 40, 1, 0.1);
+        Scroll("Up", 40, 1, 0.1);  
         newWord.Type("{ctrl+home}"); // Go to top of the doc
         Wait(globalWaitInSeconds);
 

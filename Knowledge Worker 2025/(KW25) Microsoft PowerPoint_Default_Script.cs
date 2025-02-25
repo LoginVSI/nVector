@@ -15,7 +15,7 @@ using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
 
-public class M365PowerPoint_RefactoredScript : ScriptBase
+public class PowerPoint_DefaultScript : ScriptBase
 {
     private void Execute()
     {   

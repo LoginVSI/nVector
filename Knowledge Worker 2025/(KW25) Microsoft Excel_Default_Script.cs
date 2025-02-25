@@ -12,7 +12,7 @@ using LoginPI.Engine.ScriptBase.Components;
 using System;
 using System.Runtime.InteropServices;
 
-public class M365Excel_DefaultScript : ScriptBase
+public class Excel_DefaultScript : ScriptBase
 {
     const string ProcessName = "EXCEL";
     
