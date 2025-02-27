@@ -294,7 +294,7 @@ public class Excel_DefaultScript : ScriptBase
     // =====================================================
     // SetTextBoxText Helper Method
     // =====================================================
-    void SetTextBoxText(IWindow textBox, string text, int cpm = charactersPerMinuteToType)
+    void SetTextBoxText(IWindow textBox, string text, int cpm = 600)
     {
         int numTries = 1;
         string currentText = null;

@@ -352,7 +352,7 @@ public class WordDefaultScript : ScriptBase
 // =====================================================
 public static class ScriptHelpers
 {
-    public static void SetTextBoxText(ScriptBase script, IWindow textBox, string text, int cpm = typingTextCPM)
+    public static void SetTextBoxText(ScriptBase script, IWindow textBox, string text, int cpm = 600)
     {
         double globalWaitInSeconds = 3;           // General wait time between actions for human-like behavior
         var numTries = 1;

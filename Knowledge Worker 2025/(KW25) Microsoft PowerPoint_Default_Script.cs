@@ -370,7 +370,7 @@ public class PowerPoint_DefaultScript : ScriptBase
 // =====================================================
 public static class ScriptHelpers
 {
-    public static void SetTextBoxText(ScriptBase script, IWindow textBox, string text, int cpm = typingTextCharacterPerMinute)
+    public static void SetTextBoxText(ScriptBase script, IWindow textBox, string text, int cpm = 600)
     {
         int globalWaitInSeconds = 3;                  // Standard wait time between actions
         var numTries = 1;

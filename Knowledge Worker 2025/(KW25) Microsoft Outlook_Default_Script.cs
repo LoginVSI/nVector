@@ -369,7 +369,7 @@ public class Outlook_DefaultScript : ScriptBase
 // =====================================================
 public static class ScriptHelpers
 {
-    public static void SetTextBoxText(ScriptBase script, LoginPI.Engine.ScriptBase.Components.IWindow textBox, string text, int cpm = typingTextCharacterPerMinute)
+    public static void SetTextBoxText(ScriptBase script, LoginPI.Engine.ScriptBase.Components.IWindow textBox, string text, int cpm = 600)
     {
         var numTries = 1;
         string currentText = null;
