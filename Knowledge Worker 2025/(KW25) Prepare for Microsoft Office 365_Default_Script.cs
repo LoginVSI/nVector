@@ -102,6 +102,7 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\word\options", @"defaultformat",@""));
         RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Word\Options", @"SaveAutoRecoverInfoEvery", @"dword:00000000"));
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\options", @"PrivacyNoticeShown", @"dword:00000002"));
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\PromoDialogShown", @"FluentWelcomeDialogShown", @"dword:00000001"));
 
         // RegImport(create_regfile(@"HKEY_CURRENT_USER\software\Policies\Microsoft\Edge", @"RestoreOnStartup", @"dword:00000000"));
         // RegImport(create_regfile(@"HKEY_CURRENT_USER\software\Policies\Microsoft\Edge", @"HideRestoreDialogEnabled", @"dword:00000001"));
