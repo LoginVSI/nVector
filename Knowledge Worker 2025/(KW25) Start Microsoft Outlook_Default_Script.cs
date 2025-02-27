@@ -16,8 +16,8 @@ public class M365Outlook_InvocationScript : ScriptBase
     // =====================================================
     // Configurable Variables
     // =====================================================
-    int globalWaitInSeconds = 8;                    // Wait time between actions
-    int waitMessageboxInSeconds = 8;                // Duration for onscreen wait messages
+    int globalWaitInSeconds = 3;                    // Wait time between actions
+    int waitMessageboxInSeconds = 2;                // Duration for onscreen wait messages
 
     // =====================================================
     // Execute Method

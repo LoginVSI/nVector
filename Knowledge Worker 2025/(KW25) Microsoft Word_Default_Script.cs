@@ -30,10 +30,10 @@ public class WordDefaultScript : ScriptBase
     // =====================================================
     // Global timings and speeds
     int globalTimeoutInSeconds = 60;          // Timeout for actions (e.g., finding the app window)
-    int waitMessageboxInSeconds = 8;          // Duration for onscreen wait messages (in seconds)
-    double globalWaitInSeconds = 8;           // General wait time between actions for human-like behavior
+    int waitMessageboxInSeconds = 2;          // Duration for onscreen wait messages (in seconds)
+    double globalWaitInSeconds = 3;           // General wait time between actions for human-like behavior
     int keyboardShortcutsCPM = 30;            // Typing speed for keyboard shortcuts
-    int typingTextCPM = 300;                  // Typing speed for document text
+    int typingTextCPM = 600;                  // Typing speed for document text
     int copyPasteRepetitions = 1;             // Number of times to perform the copy-paste action
     int waitForCopyPasteInSeconds = 5;        // Wait time after copy-paste actions
 
@@ -144,7 +144,7 @@ public class WordDefaultScript : ScriptBase
         var fileNameBox = openWindow.FindControl(className: "Edit:Edit", title: "File name:", timeout: globalTimeoutInSeconds);
         fileNameBox.Click();
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Typing file path...");
-        ScriptHelpers.SetTextBoxText(this, fileNameBox, docxFile, cpm: 300);
+        ScriptHelpers.SetTextBoxText(this, fileNameBox, docxFile, cpm: typingTextCPM);
         Type("{enter}", hideInLogging:false);
         StartTimer("Open_Word_Document");
         var newWord = FindWindow(className: "Win32 Window:OpusApp", title: "loginvsi*", processName: "WINWORD", timeout: globalTimeoutInSeconds);
@@ -219,7 +219,7 @@ public class WordDefaultScript : ScriptBase
         var fileNameBoxPic = addPictureDialog.FindControl(className: "Edit:Edit", title: "File name:", timeout: globalTimeoutInSeconds);
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Typing BMP file path");
         fileNameBoxPic.Click();
-        ScriptHelpers.SetTextBoxText(this, fileNameBoxPic, bmpFile, cpm: 300);
+        ScriptHelpers.SetTextBoxText(this, fileNameBoxPic, bmpFile, cpm: typingTextCPM);
         fileNameBoxPic.Type("{ENTER}", cpm: keyboardShortcutsCPM, hideInLogging:false);
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Picture inserted");
 
@@ -292,7 +292,7 @@ public class WordDefaultScript : ScriptBase
         StopTimer("Save_As_Dialog");
         saveFileNameBox.Click();
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Typing save path");
-        ScriptHelpers.SetTextBoxText(this, saveFileNameBox, saveFilename, cpm: 300);
+        ScriptHelpers.SetTextBoxText(this, saveFileNameBox, saveFilename, cpm: typingTextCPM);
         saveAs.Type("{ENTER}", hideInLogging:false);
         StartTimer("Saving_file");
         FindWindow(title: $"{newDocName}*", processName: "WINWORD", timeout: globalTimeoutInSeconds);
@@ -352,7 +352,7 @@ public class WordDefaultScript : ScriptBase
 // =====================================================
 public static class ScriptHelpers
 {
-    public static void SetTextBoxText(ScriptBase script, IWindow textBox, string text, int cpm = 300)
+    public static void SetTextBoxText(ScriptBase script, IWindow textBox, string text, int cpm = typingTextCPM)
     {
         double globalWaitInSeconds = 3;           // General wait time between actions for human-like behavior
         var numTries = 1;

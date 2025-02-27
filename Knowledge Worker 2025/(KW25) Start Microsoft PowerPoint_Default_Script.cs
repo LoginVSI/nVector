@@ -55,7 +55,7 @@ public class Start_PowerPoint_DefaultScript : ScriptBase
             } */
         }
 
-        Wait(seconds:3, showOnScreen:true, onScreenText:"Starting PowerPoint");
+        Wait(seconds:2, showOnScreen:true, onScreenText:"Starting PowerPoint");
         Log("Starting PowerPoint");
         START(mainWindowTitle:"*PowerPoint*", mainWindowClass:"*PPTFrameClass*", timeout:60);
         SkipFirstRunDialogs();

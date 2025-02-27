@@ -75,7 +75,7 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
             {
                 if (openDialog.GetTitle().StartsWith("First things", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    Wait(seconds: 3, showOnScreen: true, onScreenText: "Closing first things first dialog if it exists");
+                    Wait(seconds: 2, showOnScreen: true, onScreenText: "Closing first things first dialog if it exists");
                     
                     openDialog.FindControl(
                         className: "RadioButton:NetUIRadioButton", 

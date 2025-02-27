@@ -22,14 +22,15 @@ public class PowerPoint_DefaultScript : ScriptBase
     // =====================================================
     // Global timings and speeds
     int globalTimeoutInSeconds = 60;              // How long to wait for actions (e.g., opening the app)
-    int globalWaitInSeconds = 8;                  // Standard wait time between actions
-    int waitMessageboxInSeconds = 8;              // Duration for onscreen wait messages
+    int globalWaitInSeconds = 3;                  // Standard wait time between actions
+    int waitMessageboxInSeconds = 2;              // Duration for onscreen wait messages
     int charactersPerMinuteToType = 30;           // Typing speed for keyboard shortcuts
     int slideshowCharactersPerMinuteToType = 12;  // Typing speed for slideshow navigation
     int pageScrollCpm = 60;                      // Typing speed for page scrolling actions
     int transitionPopupCharactersPerMinuteToType = 60; // Typing speed for navigating transitions popup
     int waitForPopupShowingInSeconds = 10;         // Wait time for popups to show (e.g., ribbon popups)
     int waitSlideshowStart = 10;                   // Wait time for slideshow to start
+    int typingTextCharacterPerMinute = 600;         // Typing speed for saving and opening the file
 
     // File download settings
     string bmpUrl = "https://myAppliance.myOrg.com/contentDelivery/content/LoginVSI_BattlingRobots.bmp"; // URL for BMP file
@@ -66,8 +67,8 @@ public class PowerPoint_DefaultScript : ScriptBase
 
         // -- Download PowerPoint (.pptx) file (overwrite without checking existence)
         string pptxFile = $"{loginEnterpriseDir}\\loginvsi.pptx";
-        Log("Downloading PowerPoint presentation file (overwrite).");
-        CopyFile(KnownFiles.PowerPointPresentation, pptxFile, overwrite: true, continueOnError: false);
+        Log("Downloading PowerPoint presentation file.");
+        CopyFile(KnownFiles.PowerPointPresentation, pptxFile, overwrite: false, continueOnError: true);
 
         // -- Download the BMP file if it doesn't exist.
         string bmpFile = $"{loginEnterpriseDir}\\LoginVSI_BattlingRobots.bmp";
@@ -122,7 +123,7 @@ public class PowerPoint_DefaultScript : ScriptBase
         var fileNameBox = openWindow.FindControl(className: "Edit:Edit", title: "File name:", timeout: globalTimeoutInSeconds);
         fileNameBox.Click();
         Wait(seconds: globalWaitInSeconds);
-        ScriptHelpers.SetTextBoxText(this, fileNameBox, pptxFile, cpm: 300);
+        ScriptHelpers.SetTextBoxText(this, fileNameBox, pptxFile, cpm: typingTextCharacterPerMinute);
         Type("{enter}", hideInLogging: false);
         StartTimer("Open_Powerpoint_Document");
         var newPowerpoint = FindWindow(className: "Win32 Window:PPTFrameClass", title: "loginvsi*", processName: "POWERPNT", timeout: globalTimeoutInSeconds);
@@ -166,12 +167,9 @@ public class PowerPoint_DefaultScript : ScriptBase
         // =====================================================
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Adding bmp into a slide, duplicating it, and adding transitions");
 
-        // --- Add 'Curtains' Transition and Duplicate Slide ---
-        Log("Adding 'Curtains' transition");
-        newPowerpoint.Type("{ALT+K}{ALT+T}", cpm: charactersPerMinuteToType, hideInLogging: false);
-        var transitionCurtains = newPowerpoint.FindControl(title: "Curtains", timeout: globalTimeoutInSeconds);
-        Wait(seconds: globalWaitInSeconds);
-        transitionCurtains.Click();
+        // --- Add new slide ---
+        newPowerpoint.Focus();
+        newPowerpoint.Maximize();
         Wait(seconds: globalWaitInSeconds);
         newPowerpoint.Type("{CTRL+M}", cpm: charactersPerMinuteToType, hideInLogging: false);
         Wait(seconds: globalWaitInSeconds);
@@ -190,7 +188,7 @@ public class PowerPoint_DefaultScript : ScriptBase
         fileNameBox2.Click();
         newPowerpoint.Type("{ALT+N}", cpm: charactersPerMinuteToType, hideInLogging: false);
         Wait(seconds: globalWaitInSeconds);
-        ScriptHelpers.SetTextBoxText(this, fileNameBox2, bmpFile, cpm: 300);
+        ScriptHelpers.SetTextBoxText(this, fileNameBox2, bmpFile, cpm: typingTextCharacterPerMinute);
         fileNameBox2.Type("{ENTER}", cpm: charactersPerMinuteToType, hideInLogging: false);
         Wait(seconds: globalWaitInSeconds);
         var stillExists = FindWindow(className: "Win32 Window:#32770", title: "Insert Picture", processName: "POWERPNT", timeout: 2, continueOnError: true);
@@ -198,6 +196,33 @@ public class PowerPoint_DefaultScript : ScriptBase
         {
             newPowerpoint.Type("{ESC}", cpm: charactersPerMinuteToType, hideInLogging: false);
         }
+
+        // --- Add 'Honeycomb' Transition ---
+        Log("Adding 'Honeycomb' transition");
+        newPowerpoint.Type("{ALT+K}{ALT+T}", cpm: charactersPerMinuteToType, hideInLogging: false);        
+        newPowerpoint.FindControl(title: "Honeycomb", timeout: globalTimeoutInSeconds);
+        Wait(seconds: globalWaitInSeconds);
+        newPowerpoint.Type("{DOWN}", cpm: transitionPopupCharactersPerMinuteToType, hideInLogging: false);
+        newPowerpoint.Type("{RIGHT}".Repeat(16), cpm: transitionPopupCharactersPerMinuteToType, hideInLogging: false);
+        newPowerpoint.Type("{ENTER}", hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
+
+        // --- Add the transition to all slides ---
+        Log("Adding transition to all slides");
+        newPowerpoint.Type("{ALT+K}{ALT+L}", hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
+        
+        /* // --- Add 'Curtains' Transition and Duplicate Slide ---
+        Log("Adding 'Curtains' transition");
+        newPowerpoint.Type("{ALT+K}{ALT+T}", cpm: charactersPerMinuteToType, hideInLogging: false);
+        var transitionCurtains = newPowerpoint.FindControl(title: "Curtains", timeout: globalTimeoutInSeconds);
+        Wait(seconds: globalWaitInSeconds);
+        transitionCurtains.Click();
+        Wait(seconds: globalWaitInSeconds);
+        newPowerpoint.Type("{ALT}NSI", cpm: charactersPerMinuteToType, hideInLogging: false);
+        Wait(seconds: waitForPopupShowingInSeconds);
+        Type("d", cpm: charactersPerMinuteToType, hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
 
         // --- Add 'Origami' Transition and Duplicate Slide ---
         Log("Adding 'Origami' transition");
@@ -241,20 +266,6 @@ public class PowerPoint_DefaultScript : ScriptBase
         Type("d", cpm: charactersPerMinuteToType, hideInLogging: false);
         Wait(seconds: globalWaitInSeconds);
 
-        // --- Add 'Honeycomb' Transition and Duplicate Slide ---
-        Log("Adding 'Honeycomb' transition");
-        newPowerpoint.Type("{ALT+K}{ALT+T}", cpm: charactersPerMinuteToType, hideInLogging: false);        
-        newPowerpoint.FindControl(title: "Honeycomb", timeout: globalTimeoutInSeconds);
-        Wait(seconds: globalWaitInSeconds);
-        newPowerpoint.Type("{DOWN}", cpm: transitionPopupCharactersPerMinuteToType, hideInLogging: false);
-        newPowerpoint.Type("{RIGHT}".Repeat(16), cpm: transitionPopupCharactersPerMinuteToType, hideInLogging: false);
-        newPowerpoint.Type("{ENTER}", hideInLogging: false);
-        Wait(seconds: globalWaitInSeconds);
-        newPowerpoint.Type("{ALT}NSI", cpm: charactersPerMinuteToType, hideInLogging: false);
-        Wait(seconds: waitForPopupShowingInSeconds);
-        Type("d", cpm: charactersPerMinuteToType, hideInLogging: false);
-        Wait(seconds: globalWaitInSeconds);
-
         // --- Add 'Vortex' Transition and Duplicate Slide ---
         Log("Adding 'Vortex' transition");
         newPowerpoint.Type("{ALT+K}{ALT+T}", cpm: charactersPerMinuteToType, hideInLogging: false);        
@@ -264,15 +275,16 @@ public class PowerPoint_DefaultScript : ScriptBase
         newPowerpoint.Type("{RIGHT}", cpm: transitionPopupCharactersPerMinuteToType, hideInLogging: false);
         newPowerpoint.Type("{ENTER}", hideInLogging: false);
         Wait(seconds: globalWaitInSeconds);
+        */
         
         // =====================================================
         // Scroll, Minimize, and Maximize Presentation
         // =====================================================
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Scroll, minimize, and maximize");
         Log("Scrolling through presentation");
-        newPowerpoint.Type("{PAGEDOWN}".Repeat(20), cpm: pageScrollCpm, hideInLogging: false);
+        newPowerpoint.Type("{PAGEDOWN}".Repeat(10), cpm: pageScrollCpm, hideInLogging: false);
         Wait(seconds: globalWaitInSeconds);
-        newPowerpoint.Type("{PAGEUP}".Repeat(20), cpm: pageScrollCpm, hideInLogging: false);
+        newPowerpoint.Type("{PAGEUP}".Repeat(10), cpm: pageScrollCpm, hideInLogging: false);
         Wait(seconds: globalWaitInSeconds);  
 
         newPowerpoint.Minimize();
@@ -288,7 +300,7 @@ public class PowerPoint_DefaultScript : ScriptBase
         Log("Starting slideshow");
         newPowerpoint.Type("{F5}", cpm: charactersPerMinuteToType, hideInLogging: false);
         Wait(seconds: waitSlideshowStart);
-        newPowerpoint.Type("{DOWN}".Repeat(8), cpm: slideshowCharactersPerMinuteToType, hideInLogging: false);
+        newPowerpoint.Type("{DOWN}".Repeat(5), cpm: slideshowCharactersPerMinuteToType, hideInLogging: false);
         Wait(seconds: globalWaitInSeconds);
         Type("{ESC}", hideInLogging: false);
         Wait(seconds: globalWaitInSeconds);
@@ -317,7 +329,7 @@ public class PowerPoint_DefaultScript : ScriptBase
         var saveFileNameBox = saveAs.FindControl(className: "Edit:Edit", title: "File name:", timeout: globalTimeoutInSeconds);
         saveFileNameBox.Click();
         Wait(seconds: globalWaitInSeconds);
-        ScriptHelpers.SetTextBoxText(this, saveFileNameBox, saveFilename, cpm: 300);
+        ScriptHelpers.SetTextBoxText(this, saveFileNameBox, saveFilename, cpm: typingTextCharacterPerMinute);
         saveAs.Type("{ENTER}", hideInLogging: false);
         StartTimer("Saving_file");        
         FindWindow(title: $"{newDocName}*", processName: "POWERPNT", timeout: globalTimeoutInSeconds);
@@ -358,7 +370,7 @@ public class PowerPoint_DefaultScript : ScriptBase
 // =====================================================
 public static class ScriptHelpers
 {
-    public static void SetTextBoxText(ScriptBase script, IWindow textBox, string text, int cpm = 300)
+    public static void SetTextBoxText(ScriptBase script, IWindow textBox, string text, int cpm = typingTextCharacterPerMinute)
     {
         int globalWaitInSeconds = 3;                  // Standard wait time between actions
         var numTries = 1;

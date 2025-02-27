@@ -21,7 +21,7 @@ public class Start_Browser_DefaultScript : ScriptBase
     string browserExecutable = "msedge.exe";          // Browser executable name
     int tabsToOpen = 10;                              // Number of browser tabs to open
 
-    int waitMessageboxInSeconds = 8;                  // Duration for onscreen wait messages
+    int waitMessageboxInSeconds = 2;                  // Duration for onscreen wait messages
 
     // Browser launch and initialization timing
     int waitTimeoutInSecondsMsedgeLaunch = 60;         // Maximum wait time (in seconds) for the browser to initially appear
@@ -65,10 +65,10 @@ public class Start_Browser_DefaultScript : ScriptBase
         // Build the URL list with the local PDF URL as the second URL.
         string urlsDefined = 
             "https://euc.loginvsi.com/customer-portal/knowledge-worker-2023;" +
+            "http://distribution.bbb3d.renderfarming.net/video/mp4/bbb_sunflower_2160p_30fps_normal.mp4;" +
             pdfUrl + ";" +
             "https://images.nasa.gov/;" +
             "https://www.google.com/search?q=beautiful+mountains&udm=2;" +            
-            "https://www.bing.com/images/search?q=beautiful%20mountains&first=1;" +
             "https://www.google.com/search?q=nvidia&udm=2;" +
             "https://www.bing.com/images/search?q=nvidia&lq=0&ghsh=0&ghacc=0&first=1;" +
             "https://www.google.com/search?q=login+vsi&udm=2;" +

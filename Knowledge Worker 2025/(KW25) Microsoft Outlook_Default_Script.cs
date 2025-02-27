@@ -31,10 +31,10 @@ public class Outlook_DefaultScript : ScriptBase
     // =====================================================
     // Global timings and speeds
     int globalTimeoutInSeconds = 60;                // How long to wait for actions
-    int globalWaitInSeconds = 8;                    // Wait time between actions
-    int waitMessageboxInSeconds = 8;                // Duration for onscreen wait messages
+    int globalWaitInSeconds = 3;                    // Wait time between actions
+    int waitMessageboxInSeconds = 2;                // Duration for onscreen wait messages
     int keyboardShortcutsCPM = 30;                  // Typing speed for keyboard shortcuts
-    int typingTextCharacterPerMinute = 300;         // Typing speed for email body text
+    int typingTextCharacterPerMinute = 600;         // Typing speed for email body text
     int copyPasteRepetitions = 2;                   // Number of times to copy-paste email body content
 
     // Scrolling parameters for navigating emails
@@ -270,7 +270,7 @@ public class Outlook_DefaultScript : ScriptBase
         insertPictureDialogFileName.Click();
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Typing BMP file path");
         // Use the helper method to set text in the file name textbox reliably.
-        ScriptHelpers.SetTextBoxText(this, insertPictureDialogFileName, bmpFile, cpm: 300);
+        ScriptHelpers.SetTextBoxText(this, insertPictureDialogFileName, bmpFile, cpm: typingTextCharacterPerMinute);
         Type("{ENTER}", hideInLogging: false);
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Picture inserted");
 
@@ -329,7 +329,7 @@ public class Outlook_DefaultScript : ScriptBase
         Type("{alt+n}", hideInLogging: false);
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Typing BMP file path for attachment");
         // Use SetTextBoxText helper for the attachment dialog textbox.
-        ScriptHelpers.SetTextBoxText(this, addAttachmentDialog.FindControl(className: "Edit:Edit", title: "File name:", timeout: globalTimeoutInSeconds), bmpFile, cpm: 300);
+        ScriptHelpers.SetTextBoxText(this, addAttachmentDialog.FindControl(className: "Edit:Edit", title: "File name:", timeout: globalTimeoutInSeconds), bmpFile, cpm: typingTextCharacterPerMinute);
         Type("{ENTER}", hideInLogging: false);
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Attachment added");
 
@@ -369,7 +369,7 @@ public class Outlook_DefaultScript : ScriptBase
 // =====================================================
 public static class ScriptHelpers
 {
-    public static void SetTextBoxText(ScriptBase script, LoginPI.Engine.ScriptBase.Components.IWindow textBox, string text, int cpm = 300)
+    public static void SetTextBoxText(ScriptBase script, LoginPI.Engine.ScriptBase.Components.IWindow textBox, string text, int cpm = typingTextCharacterPerMinute)
     {
         var numTries = 1;
         string currentText = null;

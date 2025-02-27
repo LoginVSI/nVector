@@ -108,7 +108,7 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         
         // Start Application
         Log("Starting Word");
-        Wait(seconds:3, showOnScreen:true, onScreenText:"Starting Word; finding first run dialogs, if any, then stopping App");
+        Wait(seconds:2, showOnScreen:true, onScreenText:"Starting Word; finding first run dialogs, if any, then stopping App");
         START(mainWindowTitle:"*Word*", processName:"WINWORD", timeout:600);
         Wait(1);
         FindWindow(className : "Win32 Window:OpusApp", title : "*Word*", processName : "WINWORD", continueOnError:true).Focus();

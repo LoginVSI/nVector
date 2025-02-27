@@ -19,16 +19,17 @@ public class Excel_DefaultScript : ScriptBase
     // Global Timings and Speeds
     // =====================================================
     int globalTimeoutInSeconds = 60;              // Timeout for actions
-    int globalWaitInSeconds = 8;                  // Standard wait time between actions
-    int waitMessageboxInSeconds = 8;              // Duration for onscreen wait messages
+    int globalWaitInSeconds = 3;                  // Standard wait time between actions
+    int waitMessageboxInSeconds = 2;              // Duration for onscreen wait messages
     int keyboardShortcutsCPM = 30;                // Typing speed for keyboard shortcuts
-    int charactersPerMinuteToType = 300;          // Typing speed for file dialogs and text input
+    int charactersPerMinuteToType = 600;          // Typing speed for file dialogs and text input
 
     // New timing variables for chart insertion
     int waitForGraphToShow = 15;                   // Wait time for the graph to show
     int waitForGraphFullscreenToLoad = 15;         // Wait time for the fullscreen graph to load
     int waitForQuickLayout = 10;                   // Wait time for the quick layout drop down to show
     int waitAfterQuickLayoutPreviews = 15;         // Wait time after the quick layout previews
+    int waitCyclingQuickLayouts = 8;               // Wait time between cycling through quick layouts
 
     // =====================================================
     // Shared Information (set during runtime)
@@ -97,7 +98,7 @@ public class Excel_DefaultScript : ScriptBase
         var fileNameBox = openWindow.FindControl(className: "Edit:Edit", title: "File name:", timeout: globalTimeoutInSeconds);
         fileNameBox.Click();
         Wait(seconds: globalWaitInSeconds);
-        SetTextBoxText(fileNameBox, excelFilePath, cpm: 300);
+        SetTextBoxText(fileNameBox, excelFilePath, cpm: charactersPerMinuteToType);
         openWindow.Type("{ENTER}", hideInLogging: false);
         StartTimer("Open_Excel_Document");
         _activeDocument = FindWindow(className: "*XLMAIN*", title: "loginvsi*", processName: "EXCEL", timeout: globalTimeoutInSeconds);
@@ -184,16 +185,10 @@ public class Excel_DefaultScript : ScriptBase
         _activeDocument.Type("{ALT}JCL", cpm: keyboardShortcutsCPM, hideInLogging: false);
         Wait(seconds: waitForQuickLayout, showOnScreen: true, onScreenText: "Quick Layout drop-down");
         // Simulate keystrokes to navigate layout options:
-        _activeDocument.Type("{DOWN}", hideInLogging: false); Wait(2);
-        _activeDocument.Type("{DOWN}", hideInLogging: false); Wait(2);
-        _activeDocument.Type("{DOWN}", hideInLogging: false); Wait(2);
-        _activeDocument.Type("{RIGHT}", hideInLogging: false); Wait(2);
-        _activeDocument.Type("{UP}", hideInLogging: false); Wait(2);
-        _activeDocument.Type("{UP}", hideInLogging: false); Wait(2);
-        _activeDocument.Type("{UP}", hideInLogging: false); Wait(2);
-        _activeDocument.Type("{RIGHT}", hideInLogging: false); Wait(2);
-        _activeDocument.Type("{DOWN}", hideInLogging: false); Wait(2);
-        _activeDocument.Type("{DOWN}", hideInLogging: false); Wait(2);
+        _activeDocument.Type("{DOWN}", hideInLogging: false); Wait(waitCyclingQuickLayouts);
+        _activeDocument.Type("{DOWN}", hideInLogging: false); Wait(waitCyclingQuickLayouts);
+        _activeDocument.Type("{DOWN}", hideInLogging: false); Wait(waitCyclingQuickLayouts);
+
         // Global wait then close the drop-down
         Wait(seconds: waitAfterQuickLayoutPreviews);
         _activeDocument.Type("{ESC}", hideInLogging: false);
@@ -251,7 +246,7 @@ public class Excel_DefaultScript : ScriptBase
         var fileNameBox = saveAsDialog.FindControl(className: "Edit:Edit", title: "File name:", timeout: globalTimeoutInSeconds);
         fileNameBox.Click();
         Wait(seconds: globalWaitInSeconds);
-        SetTextBoxText(fileNameBox, filename, cpm: 300);
+        SetTextBoxText(fileNameBox, filename, cpm: charactersPerMinuteToType);
         saveAsDialog.Type("{ENTER}",hideInLogging:false);
         StartTimer("Saving_Excel_file");
         FindWindow(title: $"{_newDocName}*", processName: "EXCEL", timeout: globalTimeoutInSeconds);
@@ -299,7 +294,7 @@ public class Excel_DefaultScript : ScriptBase
     // =====================================================
     // SetTextBoxText Helper Method
     // =====================================================
-    void SetTextBoxText(IWindow textBox, string text, int cpm = 300)
+    void SetTextBoxText(IWindow textBox, string text, int cpm = charactersPerMinuteToType)
     {
         int numTries = 1;
         string currentText = null;

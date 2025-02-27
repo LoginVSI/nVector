@@ -24,7 +24,7 @@ public class Browser_MultipleTabs_DefaultScript : ScriptBase
     // Configurable Variables
     // =====================================================
     // Global timings and iterations
-    int ctrlTabIterations = 10;                     // Number of iterations for tab switching and scrolling interactions
+    int ctrlTabIterations = 5;                     // Number of iterations for tab switching and scrolling interactions
     int ctrlTabWaitSecondsBeforeScroll = 3;         // Wait time before scrolling to allow the page to load
     int ctrlTabWaitSecondsAfterScroll = 1;          // Wait time after scrolling before next iteration
     string browserProcessName = "msedge";           // Process name for Microsoft Edge
@@ -35,8 +35,8 @@ public class Browser_MultipleTabs_DefaultScript : ScriptBase
     double scrollWaitTime = 0.2;                    // Wait time between each scroll event
 
     // Additional global wait times
-    int globalWaitInSeconds = 8;                    // Standard wait time between actions
-    int waitMessageboxInSeconds = 8;                // Duration for onscreen wait messages
+    int globalWaitInSeconds = 3;                    // Standard wait time between actions
+    int waitMessageboxInSeconds = 2;                // Duration for onscreen wait messages
 
     private void Execute()
     {

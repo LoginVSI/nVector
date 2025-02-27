@@ -61,7 +61,7 @@ public class Start_Excel_DefaultScript : ScriptBase
             } */
         }
           
-        Wait(seconds:3, showOnScreen:true, onScreenText:"Starting Excel");
+        Wait(seconds:2, showOnScreen:true, onScreenText:"Starting Excel");
         Log("Starting Excel");
         START(mainWindowTitle: "*Excel*", mainWindowClass: "*XLMAIN*", timeout: 60);
         SkipFirstRunDialogs();

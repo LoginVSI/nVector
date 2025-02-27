@@ -60,7 +60,7 @@ public class Start_Word_DefaultScript : ScriptBase
             } */
         }
 
-        Wait(seconds:3, showOnScreen:true, onScreenText:"Starting Word");
+        Wait(seconds:2, showOnScreen:true, onScreenText:"Starting Word");
         Log("Starting Word");
         START(mainWindowTitle: "*Word*", mainWindowClass: "Win32 Window:OpusApp", processName: "WINWORD", timeout: 60);
         SkipFirstRunDialogs();
