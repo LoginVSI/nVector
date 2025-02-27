@@ -1,4 +1,4 @@
-// TARGET:outlook
+// TARGET:outlook.exe /importprf %TEMP%\LoginEnterprise\Outlook.prf
 // START_IN:
 
 /////////////
@@ -15,8 +15,9 @@ public class Close_Outlook_DefaultScript : ScriptBase
     {
         Wait(seconds:2, showOnScreen:true, onScreenText:"Closing Outlook if open.");
         Log("Closing Outlook if open.");
-        var MainWindow = FindWindow(processName:"outlook", title:"* - Outlook*", timeout:2, continueOnError:true);
+        var MainWindow = FindWindow(processName:"outlook", title:"* - Outlook*", timeout:5, continueOnError:true);
         MainWindow?.Focus();
+        MainWindow?.Maximize();
         MainWindow?.Close();
     }
 }

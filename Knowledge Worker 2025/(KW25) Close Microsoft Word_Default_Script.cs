@@ -1,4 +1,4 @@
-// TARGET:winword
+// TARGET:winword /t
 // START_IN:
 
 /////////////
@@ -15,8 +15,11 @@ public class Close_Word_DefaultScript : ScriptBase
     {
         Wait(seconds:2, showOnScreen:true, onScreenText:"Closing Word if open.");
         Log("Closing Word if open.");
-        var MainWindow = FindWindow(processName:"winword", timeout:2, continueOnError:true);
+        var MainWindow = FindWindow(processName:"winword", timeout:5, continueOnError:true);
         MainWindow?.Focus();
+        MainWindow?.Maximize();
         MainWindow?.Close();
+        Wait(1);
+        Type("n");  
     }
 }

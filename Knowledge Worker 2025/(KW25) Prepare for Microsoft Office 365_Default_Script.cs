@@ -1,4 +1,4 @@
-// TARGET:winword.exe
+// TARGET:winword.exe /t
 // START_IN:
 
 /////////////
@@ -8,11 +8,58 @@
 /////////////
 
 using LoginPI.Engine.ScriptBase;
+using System;
+using System.IO;
 
 public class M365PrivacyPrep_DefaultScript : ScriptBase
 {
     private void Execute()
-    {   
+    {           
+        // Delete all Microsoft Word AutoRecover, backup, and temporary files
+        Log("Deleting all Microsoft Word AutoRecover, backup, and temporary files...");
+
+        string wordFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Word");
+        string tempFolder = Path.GetTempPath();
+
+        if (Directory.Exists(wordFolder))
+        {
+            foreach (var file in Directory.GetFiles(wordFolder, "*.asd"))
+            {
+                File.Delete(file);
+                Log("Deleted file: " + file);
+            }
+            foreach (var file in Directory.GetFiles(wordFolder, "*.wbk"))
+            {
+                File.Delete(file);
+                Log("Deleted file: " + file);
+            }
+            foreach (var file in Directory.GetFiles(wordFolder, "*.docx"))
+            {
+                File.Delete(file);
+                Log("Deleted file: " + file);
+            }
+        }
+
+        if (Directory.Exists(tempFolder))
+        {
+            foreach (var file in Directory.GetFiles(tempFolder, "~WRD*.tmp"))
+            {
+                File.Delete(file);
+                Log("Deleted file: " + file);
+            }
+            foreach (var file in Directory.GetFiles(tempFolder, "~$*.docx"))
+            {
+                File.Delete(file);
+                Log("Deleted file: " + file);
+            }
+            /* Commented out becasue it may delete other important temp files 
+            foreach (var file in Directory.GetFiles(tempFolder, "*.tmp"))
+            {
+                File.Delete(file);
+                Log("Deleted file: " + file);
+            } */
+        }
+
         // Define environement variables to use with Workload
         var temp = GetEnvironmentVariable("TEMP");
 
@@ -25,6 +72,8 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\excel\Security\ProtectedView",@"DisableAttachmentsInPV",@"dword:00000001"));
         RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\excel\Security\ProtectedView",@"DisableInternetFilesInPV",@"dword:00000001"));
         RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\excel\Security\ProtectedView",@"DisableUnsafeLocationsInPV",@"dword:00000001"));
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\excel\Options", @"SaveAutoRecoverInfoEvery", @"dword:00000000"));
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Excel\Resiliency", @"DisableAutoRecover", @"dword:00000001"));
         
         RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Word\Security\ProtectedView",@"DisableAttachmentsInPV",@"dword:00000001"));
         RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Word\Security\ProtectedView",@"DisableInternetFilesInPV",@"dword:00000001"));
@@ -37,6 +86,10 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         
         RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Powerpoint\options", @"DisableHardwareNotification",@"dword:00000001"));
 
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Powerpoint\Options", @"SaveAutoRecoverInfoEvery", @"dword:00000000"));
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\PowerPoint", @"AutoRecover", @"dword:00000000"));
+        
+
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\sharepointintegration", @"hidelearnmorelink", @"dword:00000001"));
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\graphics", @"disablehardwareacceleration", @"dword:00000001"));
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\graphics", @"disableanimations", @"dword:00000001"));
@@ -47,18 +100,19 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\excel\options", @"defaultformat", @"dword:00000051"));
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\powerpoint\options", @"defaultformat", @"dword:00000027"));
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\word\options", @"defaultformat",@""));
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Word\Options", @"SaveAutoRecoverInfoEvery", @"dword:00000000"));
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\options", @"PrivacyNoticeShown", @"dword:00000002"));
-            
-        Wait(seconds:2, showOnScreen:true, onScreenText:"Starting App");
+
+        // RegImport(create_regfile(@"HKEY_CURRENT_USER\software\Policies\Microsoft\Edge", @"RestoreOnStartup", @"dword:00000000"));
+        // RegImport(create_regfile(@"HKEY_CURRENT_USER\software\Policies\Microsoft\Edge", @"HideRestoreDialogEnabled", @"dword:00000001"));
         
         // Start Application
         Log("Starting Word");
-        Wait(seconds:2, showOnScreen:true, onScreenText:"Starting Word");
+        Wait(seconds:3, showOnScreen:true, onScreenText:"Starting Word; finding first run dialogs, if any, then stopping App");
         START(mainWindowTitle:"*Word*", processName:"WINWORD", timeout:600);
         Wait(1);
         FindWindow(className : "Win32 Window:OpusApp", title : "*Word*", processName : "WINWORD", continueOnError:true).Focus();
-        FindWindow(className : "Win32 Window:OpusApp", title : "*Word*", processName : "WINWORD", continueOnError:true).Maximize();
-        Wait(seconds:5, showOnScreen:true, onScreenText:"Finding first run dialogs then stopping App");        
+        FindWindow(className : "Win32 Window:OpusApp", title : "*Word*", processName : "WINWORD", continueOnError:true).Maximize();      
         SkipFirstRunDialogs();        
 
         STOP();
@@ -66,11 +120,23 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
 
     private void SkipFirstRunDialogs()
     {
-        var dialog = FindWindow(className: "Win32 Window:NUIDialog", processName: "WINWORD", continueOnError: true, timeout: 5);
-        while (dialog != null)
+        int loopCount = 2; // configurable number of loops
+        for (int i = 0; i < loopCount; i++)
         {
-            dialog.Close();
-            dialog = FindWindow(className: "Win32 Window:NUIDialog", processName: "WINWORD", continueOnError: true, timeout: 10);
+            var dialog = FindWindow(
+                className: "Win32 Window:NUIDialog",
+                processName: "WINWORD",
+                continueOnError: true,
+                timeout: 5);
+            while (dialog != null)
+            {
+                dialog.Close();
+                dialog = FindWindow(
+                    className: "Win32 Window:NUIDialog",
+                    processName: "WINWORD",
+                    continueOnError: true,
+                    timeout: 5);
+            }
         }
     }
 

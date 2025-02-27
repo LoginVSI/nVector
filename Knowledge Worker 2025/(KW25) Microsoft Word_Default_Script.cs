@@ -18,26 +18,51 @@ using System.Runtime.InteropServices;
 
 public class WordDefaultScript : ScriptBase
 {
-    // Import the user32.dll function to simulate mouse events.
+    // =====================================================
+    // Import and Constants
+    // =====================================================
     [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
     public static extern void mouse_event(uint dwFlags, uint dx, uint dy, int dwData, UIntPtr dwExtraInfo);
     public const uint MOUSEEVENTF_WHEEL = 0x0800; // Constant for a mouse wheel event
 
-    // BMP URL and file download settings
-    private string bmpUrl = "<your URL here>"; // Replace with the actual URL for the BMP file, such as "https://myAppliance.myOrg.com/contentDelivery/content/LoginVSI_BattlingRobots.bmp";
-    
+    // =====================================================
+    // Configurable Variables
+    // =====================================================
+    // Global timings and speeds
+    int globalTimeoutInSeconds = 60;          // Timeout for actions (e.g., finding the app window)
+    int waitMessageboxInSeconds = 8;          // Duration for onscreen wait messages (in seconds)
+    double globalWaitInSeconds = 8;           // General wait time between actions for human-like behavior
+    int keyboardShortcutsCPM = 30;            // Typing speed for keyboard shortcuts
+    int typingTextCPM = 300;                  // Typing speed for document text
+    int copyPasteRepetitions = 1;             // Number of times to perform the copy-paste action
+    int waitForCopyPasteInSeconds = 5;        // Wait time after copy-paste actions
+
+    // Scrolling parameters (for document navigation)
+    int scrollDownCount = 40;                 // Number of scroll events for scrolling down
+    int scrollUpCount = 40;                   // Number of scroll events for scrolling up
+    double scrollWaitTime = 0.1;              // Wait time between each scroll event
+
+    // File download settings
+    private string bmpUrl = "https://myAppliance.myOrg.com/contentDelivery/content/LoginVSI_BattlingRobots.bmp"; // Replace with the actual URL for the BMP file
+
+    // Document content to be typed into Word, broken into separate lines.
+    string[] documentContentLines = new string[] 
+    {
+        "About Login VSI",
+        "The VDI and DaaS industry has transformed incredibly, and Login VSI has evolved alongside the world of remote and hybrid work.",
+        "Through an innovative and dynamic culture, the Login VSI team is passionate about helping enterprises worldwide understand, build, and maintain amazing digital workspaces.",
+        "Trusted globally for 360° proactive visibility of performance, cost, and capacity of virtual desktops and applications, Login Enterprise is accepted as the industry standard and used by major vendors to spot problems quicker, avoid unexpected downtime, and deliver next-level digital experiences for end-users.",
+        "Our Mission",
+        "The paradigm for remote computing has shifted with virtual app delivery coupled with the growth in Web and SaaS-based applications.",
+        "Now more than ever, organizations rely on digital workspaces to function. We give our customers 360° insights into the entire stack of virtual desktops and applications – in production or delivery and across various settings and infrastructure.",
+        "We aim to empower IT teams to take control of their virtual desktops and applications’ performance, cost, and capacity wherever they reside – traditional, hybrid, or cloud."
+    };
+
     private void Execute()
     {
-        // Global settings
-        int globalTimeoutInSeconds = 60;                // Timeout for actions (e.g., finding the app window)
-        int waitMessageboxInSeconds = 3;                // Duration for wait message boxes (in seconds)
-        double globalWaitInSeconds = 3;                 // General wait time between actions for human-like behavior
-        int keyboardShortcutsCharactersPerMinuteToType = 50; // Typing speed for keyboard shortcuts
-        int CharactersPerMinuteToType = 600;           // Typing speed for text on the document canvas
-        int copyPasteRepetitions = 1;                   // Number of times to perform the copy-paste action
-        int waitForCopyPasteInSeconds = 5;              // After the copy and paste keyboard shortcuts how long to wait for the paste to finalize
-    
-        // Get the TEMP directory and ensure the LoginEnterprise folder exists.
+        // =====================================================
+        // Setup: Directory and File Downloads
+        // =====================================================
         var temp = GetEnvironmentVariable("TEMP");
         string loginEnterpriseDir = $"{temp}\\LoginEnterprise";
         if (!Directory.Exists(loginEnterpriseDir))
@@ -46,20 +71,13 @@ public class WordDefaultScript : ScriptBase
             Log("Created directory: " + loginEnterpriseDir);
         }
 
-        // --- Download .docx file ---
-        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Get .docx file");
+        // --- Download .docx File ---
+        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Retrieving .docx file");
         string docxFile = $"{loginEnterpriseDir}\\loginvsi.docx";
-        if (!FileExists(docxFile))
-        {
-            Log("Downloading Word document file");
-            CopyFile(KnownFiles.WordDocument, docxFile);
-        }
-        else
-        {
-            Log("Word document file already exists");
-        }
+        Log("Downloading Word document file (force overwrite)");
+        CopyFile(KnownFiles.WordDocument, docxFile, overwrite: true);
 
-        // --- Download the BMP file ---
+        // --- Download the BMP File ---
         string bmpFile = $"{loginEnterpriseDir}\\LoginVSI_BattlingRobots.bmp";
         if (!FileExists(bmpFile))
         {
@@ -68,7 +86,7 @@ public class WordDefaultScript : ScriptBase
             {
                 // Disable SSL certificate validation.
                 ServicePointManager.ServerCertificateValidationCallback =
-                    delegate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+                    delegate (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
                     {
                         return true;
                     };
@@ -89,103 +107,139 @@ public class WordDefaultScript : ScriptBase
             Log("BMP file already exists");
         }
 
-        // --- Open/Close Start Menu ---
+        // =====================================================
+        // Open/Close Start Menu
+        // =====================================================
         Log("Opening Start Menu");
-        Wait(seconds: 2, showOnScreen: true, onScreenText: "Start Menu");
-        Type("{LWIN}");
-        Wait(3);
-        Type("{LWIN}");
-        Wait(1);
-        Type("{ESC}");
+        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Start Menu");
+        Type("{LWIN}", hideInLogging:false);
+        Wait(seconds: 3);
+        Type("{LWIN}", hideInLogging:false);
+        Wait(seconds: 1);
+        Type("{ESC}", hideInLogging:false);
 
-        // --- Locate the already open Word Application ---        
-        // Find the main Word window (assuming it's already open)
-        var MainWindow = FindWindow(className:"Win32 Window:OpusApp", title:"*Word*", processName:"WINWORD", timeout:globalTimeoutInSeconds);
+        // =====================================================
+        // Skip First-Run Dialogs before Bringing Word into Focus
+        // =====================================================
+        SkipFirstRunDialogs();
+
+        // =====================================================
+        // Bring Word Application into Focus
+        // =====================================================
+        var MainWindow = FindWindow(className: "Win32 Window:OpusApp", title: "*Word*", processName: "WINWORD", timeout: globalTimeoutInSeconds);
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Interacting with existing Word");
-        Wait(globalWaitInSeconds);
         MainWindow.Maximize();
         MainWindow.Focus();
 
-        // --- Open File Dialog to open the .docx (if needed) ---
+        // =====================================================
+        // Open .docx File via Open File Dialog
+        // =====================================================
         Log("Opening .docx file via open file dialog");
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Open .docx file");
-        MainWindow.Type("{CTRL+O}{ALT+O+O}", cpm: keyboardShortcutsCharactersPerMinuteToType);
+        MainWindow.Type("{CTRL+O}{ALT+O+O}", cpm: keyboardShortcutsCPM, hideInLogging:false);
         StartTimer("Open_DOCX_Dialog");
-        var openWindow = FindWindow(className:"Win32 Window:#32770", processName:"WINWORD", continueOnError:false, timeout:globalTimeoutInSeconds);
+        var openWindow = FindWindow(className: "Win32 Window:#32770", processName: "WINWORD", continueOnError:false, timeout: globalTimeoutInSeconds);
         StopTimer("Open_DOCX_Dialog");
-        Wait(globalWaitInSeconds);
-        var fileNameBox = openWindow.FindControl(className:"Edit:Edit", title:"File name:", timeout:globalTimeoutInSeconds);
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Waiting for dialog...");
+        var fileNameBox = openWindow.FindControl(className: "Edit:Edit", title: "File name:", timeout: globalTimeoutInSeconds);
         fileNameBox.Click();
-        Wait(globalWaitInSeconds);
-        ScriptHelpers.SetTextBoxText(this, fileNameBox, docxFile, cpm:1000);
-        Type("{enter}");
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Typing file path...");
+        ScriptHelpers.SetTextBoxText(this, fileNameBox, docxFile, cpm: 300);
+        Type("{enter}", hideInLogging:false);
         StartTimer("Open_Word_Document");
-        var newWord = FindWindow(className:"Win32 Window:OpusApp", title:"loginvsi*", processName:"WINWORD", timeout:globalTimeoutInSeconds);        
+        var newWord = FindWindow(className: "Win32 Window:OpusApp", title: "loginvsi*", processName: "WINWORD", timeout: globalTimeoutInSeconds);
         StopTimer("Open_Word_Document");
         newWord.Focus();
-        Wait(globalWaitInSeconds);
+        newWord.Maximize();
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Document loaded");
 
-        // --- Check for an existing "edited" Word window ---
+        // =====================================================
+        // Skip First-Run Dialogs before Checking for an Existing Edited Window
+        // =====================================================
+        SkipFirstRunDialogs();
+
+        // =====================================================
+        // Check and Close Existing Edited Window (if any)
+        // =====================================================
         string newDocName = "edited";
-        var editedWindow = FindWindow(title:$"{newDocName}*", processName:"WINWORD", timeout:5, continueOnError:true);
-        if (editedWindow != null)
+        for (int attempt = 0; attempt < 2; attempt++)
         {
-            Wait(globalWaitInSeconds);
-            editedWindow.Focus();
-            Wait(globalWaitInSeconds);
-            Log("Existing edited Word window found. Closing it.");
-            editedWindow.Close();
-            Wait(globalWaitInSeconds);
-            newWord = FindWindow(className:"Win32 Window:OpusApp", title:"loginvsi*", processName:"WINWORD", timeout:globalTimeoutInSeconds);
-            Wait(globalWaitInSeconds);
-            newWord.Focus();
-            Wait(globalWaitInSeconds);
-        }
-
-        // --- Type initial commands into Word ---
-        // Switch page view to "Page Width" using keyboard shortcuts.
-        newWord.Type("{ALT}wi", cpm: keyboardShortcutsCharactersPerMinuteToType);
-        Wait(globalWaitInSeconds);
-        // Switch page view to "One Page"
-        newWord.Type("{ALT}w1", cpm: keyboardShortcutsCharactersPerMinuteToType);
-        Wait(globalWaitInSeconds);
-
-        // --- Type the document content ---
-        string content = @"About Login VSI{Enter}The VDI and DaaS industry has transformed incredibly, and Login VSI has evolved alongside the world of remote and hybrid work.{Enter}Through an innovative and dynamic culture, the Login VSI team is passionate about helping enterprises worldwide understand, build, and maintain amazing digital workspaces.{Enter}Trusted globally for 360° proactive visibility of performance, cost, and capacity of virtual desktops and applications, Login Enterprise is accepted as the industry standard and used by major vendors to spot problems quicker, avoid unexpected downtime, and deliver next-level digital experiences for end-users.{Enter}Our Mission{Enter}The paradigm for remote computing has shifted with virtual app delivery coupled with the growth in Web and SaaS-based applications.{Enter}Now more than ever, organizations rely on digital workspaces to function. We give our customers 360° insights into the entire stack of virtual desktops and applications – in production or delivery and across various settings and infrastructure.{Enter}We aim to empower IT teams to take control of their virtual desktops and applications’ performance, cost, and capacity wherever they reside – traditional, hybrid, or cloud.";
-        // Type text at the specified text speed.
-        newWord.Type(content, cpm: CharactersPerMinuteToType);
-        Wait(globalWaitInSeconds);
-
-        // --- Insert BMP image into the document ---
-        Log("Inserting BMP image");
-        newWord.Type("{ALT}np", cpm: keyboardShortcutsCharactersPerMinuteToType);
-        Wait(globalWaitInSeconds);
-        // 'd' opens the insert file dialog.
-        Type("d", cpm: keyboardShortcutsCharactersPerMinuteToType);
-        StartTimer("Insert_Picture_Dialog");
-        var addPictureDialog = FindWindow(className:"Win32 Window:#32770", processName:"WINWORD", timeout:globalTimeoutInSeconds);
-        StopTimer("Insert_Picture_Dialog");
-        addPictureDialog.Focus();
-        var fileNameBoxPic = addPictureDialog.FindControl(className:"Edit:Edit", title:"File name:", timeout:globalTimeoutInSeconds);
-        Wait(globalWaitInSeconds);
-        fileNameBoxPic.Click();
-        ScriptHelpers.SetTextBoxText(this, fileNameBoxPic, bmpFile, cpm:1000);
-        fileNameBoxPic.Type("{ENTER}", cpm: keyboardShortcutsCharactersPerMinuteToType);
-        Wait(globalWaitInSeconds);
-
-        // --- Copy & Paste operations ---
-        Log("Performing copy and paste operations");
-        newWord.Type("{CTRL+a}", cpm: keyboardShortcutsCharactersPerMinuteToType);
-        Wait(globalWaitInSeconds);
-        newWord.Type("{CTRL+c}", cpm: keyboardShortcutsCharactersPerMinuteToType);
-        Wait(globalWaitInSeconds);
-        for (int i = 0; i < copyPasteRepetitions; i++)
-        {
-            newWord.Type("{CTRL+V}", cpm: keyboardShortcutsCharactersPerMinuteToType);
-            Wait(waitForCopyPasteInSeconds);            
+            var editedWindow = FindWindow(title: $"{newDocName}*", processName: "WINWORD", timeout: 2, continueOnError: true);
+            if (editedWindow != null)
+            {
+                Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Closing existing edited window");
+                editedWindow.Focus();
+                editedWindow.Maximize();
+                Wait(seconds: globalWaitInSeconds);
+                Log("Existing edited Word window found. Closing it.");
+                editedWindow.Type("{ALT+F4}", hideInLogging: false);
+                Wait(seconds: globalWaitInSeconds);
+                newWord = FindWindow(className: "Win32 Window:OpusApp", title: "loginvsi*", processName: "WINWORD", timeout: globalTimeoutInSeconds);
+                Wait(seconds: globalWaitInSeconds);
+                newWord.Focus();
+                newWord.Maximize();
+                Wait(seconds: globalWaitInSeconds);
+            }
         }
         
-        // Scroll interactions on the active tab:
+        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Format text editor pane, type to it, insert picture, copy and paste, and scroll");
+
+        // =====================================================
+        // Type Initial Commands into Word
+        // =====================================================
+        // Switch page view to "Page Width" and then to "One Page"
+        newWord.Type("{ALT}wi", cpm: keyboardShortcutsCPM, hideInLogging:false);
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Switching view...");
+        newWord.Type("{ALT}w1", cpm: keyboardShortcutsCPM, hideInLogging:false);
+        Wait(seconds: globalWaitInSeconds);
+
+        // =====================================================
+        // Type Document Content
+        // =====================================================
+        // Type each line separately with an {Enter} keypress after each line.
+        foreach (var line in documentContentLines)
+        {
+            newWord.Type(line, cpm: typingTextCPM, hideInLogging:false);
+            newWord.Type("{Enter}", cpm: typingTextCPM, hideInLogging:false);
+        }
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Content entered");
+
+        // =====================================================
+        // Insert BMP Image into Document
+        // =====================================================
+        Log("Inserting BMP image");
+        newWord.Type("{ALT}np", cpm: keyboardShortcutsCPM, hideInLogging:false);
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Preparing picture dialog");
+        // 'd' opens the insert file dialog.
+        Type("d", cpm: keyboardShortcutsCPM, hideInLogging:false);
+        StartTimer("Insert_Picture_Dialog");
+        var addPictureDialog = FindWindow(className: "Win32 Window:#32770", processName: "WINWORD", timeout: globalTimeoutInSeconds);
+        StopTimer("Insert_Picture_Dialog");
+        addPictureDialog.Focus();
+        var fileNameBoxPic = addPictureDialog.FindControl(className: "Edit:Edit", title: "File name:", timeout: globalTimeoutInSeconds);
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Typing BMP file path");
+        fileNameBoxPic.Click();
+        ScriptHelpers.SetTextBoxText(this, fileNameBoxPic, bmpFile, cpm: 300);
+        fileNameBoxPic.Type("{ENTER}", cpm: keyboardShortcutsCPM, hideInLogging:false);
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Picture inserted");
+
+        // =====================================================
+        // Copy & Paste Operations
+        // =====================================================
+        Log("Performing copy and paste operations");
+        newWord.Type("{CTRL+a}", cpm: keyboardShortcutsCPM, hideInLogging:false);
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Selecting content");
+        newWord.Type("{CTRL+c}", cpm: keyboardShortcutsCPM, hideInLogging:false);
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Content copied");
+        for (int i = 0; i < copyPasteRepetitions; i++)
+        {
+            newWord.Type("{CTRL+V}", cpm: keyboardShortcutsCPM, hideInLogging:false);
+            Wait(seconds: waitForCopyPasteInSeconds, showOnScreen: true, onScreenText: "Pasting content");
+        }
+
+        // =====================================================
+        // Helper: Scroll Function
+        // =====================================================
         // Usage of Scroll():
         //   - direction: "Down" to scroll down or "Up" to scroll up.
         //   - scrollCount: Number of scroll events to send.
@@ -194,28 +248,31 @@ public class WordDefaultScript : ScriptBase
         // Example:
         //   Scroll("Down", 20, 1, 0.2);
         //   Scroll("Up", 10, 2, 0.3);
-        // --- Scroll interactions using the helper Scroll() function ---
-        Log("Scrolling the document");        
-        newWord.Type("{ctrl+home}"); // Go to top of the doc
-        Wait(waitForCopyPasteInSeconds);
-        Scroll("Down", 40, 1, 0.1);  
-        Scroll("Up", 40, 1, 0.1);
-        newWord.Type("{ctrl+home}"); // Go to top of the doc
-        Wait(waitForCopyPasteInSeconds);
-        Scroll("Down", 40, 1, 0.1);
-        Scroll("Up", 40, 1, 0.1);  
-        newWord.Type("{ctrl+home}"); // Go to top of the doc
-        Wait(globalWaitInSeconds);
+        Log("Scrolling the document");
+        newWord.Type("{CTRL+HOME}", hideInLogging:false); // Go to the top of the document
+        Wait(seconds: waitForCopyPasteInSeconds, showOnScreen: true, onScreenText: "Scrolling...");
+        Scroll("Down", scrollDownCount, 1, scrollWaitTime);
+        Scroll("Up", scrollUpCount, 1, scrollWaitTime);
+        newWord.Type("{CTRL+HOME}", hideInLogging:false); // Return to top
+        Wait(seconds: waitForCopyPasteInSeconds, showOnScreen: true, onScreenText: "Scrolling...");
+        Scroll("Down", scrollDownCount, 1, scrollWaitTime);
+        Scroll("Up", scrollUpCount, 1, scrollWaitTime);
+        newWord.Type("{CTRL+HOME}", hideInLogging:false); // Return to top
+        Wait(seconds: globalWaitInSeconds);
 
-        // --- Simulate minimizing and maximizing the Word window ---
+        // =====================================================
+        // Minimize and Maximize Word Window
+        // =====================================================
         Log("Minimizing and maximizing Word window");
         newWord.Minimize();
-        Wait(globalWaitInSeconds);
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Minimizing...");
         newWord.Maximize();
         newWord.Focus();
-        Wait(globalWaitInSeconds);
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Restoring window");
 
-        // --- Save the Edited Document ---
+        // =====================================================
+        // Save the Edited Document
+        // =====================================================
         Log("Saving the edited Word document");
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Save the document");
         string saveFilename = $"{loginEnterpriseDir}\\{newDocName}.docx";
@@ -228,23 +285,26 @@ public class WordDefaultScript : ScriptBase
         {
             Log("No existing file to remove at: " + saveFilename);
         }
-        newWord.Type("{F12}", cpm: keyboardShortcutsCharactersPerMinuteToType);
+        newWord.Type("{F12}", cpm: keyboardShortcutsCPM, hideInLogging:false);
         StartTimer("Save_As_Dialog");
-        var saveAs = FindWindow(className:"Win32 Window:#32770", processName:"WINWORD", continueOnError:true, timeout:globalTimeoutInSeconds);
-        var saveFileNameBox = saveAs.FindControl(className:"Edit:Edit", title:"File name:", timeout:globalTimeoutInSeconds);
+        var saveAs = FindWindow(className: "Win32 Window:#32770", processName: "WINWORD", continueOnError:true, timeout: globalTimeoutInSeconds);
+        var saveFileNameBox = saveAs.FindControl(className: "Edit:Edit", title: "File name:", timeout: globalTimeoutInSeconds);
         StopTimer("Save_As_Dialog");
         saveFileNameBox.Click();
-        Wait(globalWaitInSeconds);
-        ScriptHelpers.SetTextBoxText(this, saveFileNameBox, saveFilename, cpm:1000);
-        saveAs.Type("{ENTER}");
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Typing save path");
+        ScriptHelpers.SetTextBoxText(this, saveFileNameBox, saveFilename, cpm: 300);
+        saveAs.Type("{ENTER}", hideInLogging:false);
         StartTimer("Saving_file");
-        FindWindow(title:$"{newDocName}*", processName:"WINWORD", timeout:globalTimeoutInSeconds);
+        FindWindow(title: $"{newDocName}*", processName: "WINWORD", timeout: globalTimeoutInSeconds);
         StopTimer("Saving_file");
-        Wait(globalWaitInSeconds);
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Finalizing...");
 
-        Log("Script complete. Word remains open.");        
+        Log("Script complete. Word remains open.");
     }
 
+    // =====================================================
+    // Helper: Scroll Function
+    // =====================================================
     void Scroll(string direction, int scrollCount, int notches, double waitTime)
     {
         if (waitTime <= 0)
@@ -257,30 +317,58 @@ public class WordDefaultScript : ScriptBase
         for (int i = 0; i < scrollCount; i++)
         {
             mouse_event(MOUSEEVENTF_WHEEL, 0, 0, delta, UIntPtr.Zero);
-            Wait(waitTime);
+            Wait(seconds: waitTime);
         }
     }
 
-    // Helper class for setting text in text boxes.
-    public static class ScriptHelpers
+    // =====================================================
+    // Helper: Skip First-Run Dialogs
+    // =====================================================
+    private void SkipFirstRunDialogs()
     {
-        public static void SetTextBoxText(ScriptBase script, IWindow textBox, string text, int cpm = 1000)
+        int loopCount = 2; // configurable number of loops
+        for (int i = 0; i < loopCount; i++)
         {
-            var numTries = 1;
-            string currentText = null;
-            do
+            var dialog = FindWindow(
+                className: "Win32 Window:NUIDialog", 
+                processName: "WINWORD", 
+                continueOnError: true, 
+                timeout: 5);
+            while (dialog != null)
             {
-                textBox.Type("{CTRL+a}");
-                script.Wait(0.5);
-                textBox.Type(text, cpm: cpm);
-                script.Wait(1);
-                currentText = textBox.GetText();
-                if (currentText != text)
-                    script.CreateEvent($"Typing error in attempt {numTries}", $"Expected '{text}', got '{currentText}'");
+                dialog.Close();
+                dialog = FindWindow(
+                    className: "Win32 Window:NUIDialog", 
+                    processName: "WINWORD", 
+                    continueOnError: true, 
+                    timeout: 5);
             }
-            while (++numTries < 5 && currentText != text);
-            if (currentText != text)
-                script.ABORT($"Unable to set the correct text '{text}', got '{currentText}'");
         }
+    }
+}
+
+// =====================================================
+// Helper Class for TextBox Operations
+// =====================================================
+public static class ScriptHelpers
+{
+    public static void SetTextBoxText(ScriptBase script, IWindow textBox, string text, int cpm = 300)
+    {
+        double globalWaitInSeconds = 3;           // General wait time between actions for human-like behavior
+        var numTries = 1;
+        string currentText = null;
+        do
+        {
+            textBox.Type("{CTRL+a}", hideInLogging:false);
+            script.Wait(globalWaitInSeconds);
+            textBox.Type(text, cpm: cpm, hideInLogging:false);
+            script.Wait(globalWaitInSeconds);
+            currentText = textBox.GetText();
+            if (currentText != text)
+                script.CreateEvent($"Typing error in attempt {numTries}", $"Expected '{text}', got '{currentText}'");
+        }
+        while (++numTries < 5 && currentText != text);
+        if (currentText != text)
+            script.ABORT($"Unable to set the correct text '{text}', got '{currentText}'");
     }
 }

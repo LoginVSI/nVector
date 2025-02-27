@@ -14,27 +14,38 @@ using System.Diagnostics;
 
 public class Start_Browser_DefaultScript : ScriptBase
 {
-    string browserExecutable = "msedge.exe"; // Browser executable name
-    int tabsToOpen = 10; // Number of browser tabs to open
+    // =====================================================
+    // Configurable Variables
+    // =====================================================
+    // Browser settings
+    string browserExecutable = "msedge.exe";          // Browser executable name
+    int tabsToOpen = 10;                              // Number of browser tabs to open
 
-    // Maximum wait time in seconds for the browser to initially appear.
-    int waitTimeoutInSecondsMsedgeLaunch = 5;
-    
-    // Wait time in seconds to allow the browser to fully load the defined tabs/URLs.
-    int waitInSecondsBrowserInitialize = 5;
+    int waitMessageboxInSeconds = 8;                  // Duration for onscreen wait messages
 
+    // Browser launch and initialization timing
+    int waitTimeoutInSecondsMsedgeLaunch = 60;         // Maximum wait time (in seconds) for the browser to initially appear
+    int waitInSecondsBrowserInitialize = 15;           // Wait time (in seconds) to allow the browser to fully load the defined tabs/URLs
+
+    // =====================================================
+    // Execute Method
+    // =====================================================
     void Execute()
     {
         Log("Starting browser open process.");
-        Wait(seconds:2, showOnScreen:true, onScreenText:"Starting browser open process.");
+        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Starting browser open process.");
 
+        // =====================================================
+        // Setup: Create Directory and Copy PDF
+        // =====================================================
         // Get the current user's TEMP folder path.
         string tempPath = GetEnvironmentVariable("TEMP");
+        Log("Retrieved TEMP folder: " + tempPath);
         
         // Define the subdirectory path for LoginEnterprise.
         string loginEnterpriseDir = Path.Combine(tempPath, "LoginEnterprise");
-        // Create the directory if it doesn't exist.
         Directory.CreateDirectory(loginEnterpriseDir);
+        Log("Ensured directory exists: " + loginEnterpriseDir);
 
         // Define the destination path for the PDF file.
         string pdfDestination = Path.Combine(loginEnterpriseDir, "loginvsi.pdf");
@@ -44,10 +55,17 @@ public class Start_Browser_DefaultScript : ScriptBase
         CopyFile(KnownFiles.PdfFile, pdfDestination, continueOnError: false, overwrite: true);
         Log("PDF file copied successfully.");
 
-        // Build the URL list with the local PDF file path as the second URL.
-        string urlsDefined =
+        // =====================================================
+        // Build URL List with Hardcoded PDF Path
+        // =====================================================
+        // Construct the local file URL for the PDF.
+        string pdfUrl = "file:///" + pdfDestination.Replace("\\", "/");
+        Log("Constructed local PDF URL: " + pdfUrl);
+        
+        // Build the URL list with the local PDF URL as the second URL.
+        string urlsDefined = 
             "https://euc.loginvsi.com/customer-portal/knowledge-worker-2023;" +
-            pdfDestination + ";" +
+            pdfUrl + ";" +
             "https://images.nasa.gov/;" +
             "https://www.google.com/search?q=beautiful+mountains&udm=2;" +            
             "https://www.bing.com/images/search?q=beautiful%20mountains&first=1;" +
@@ -56,55 +74,82 @@ public class Start_Browser_DefaultScript : ScriptBase
             "https://www.google.com/search?q=login+vsi&udm=2;" +
             "https://www.bing.com/images/search?q=login%20vsi&lq=0&ghsh=0&ghacc=0&first=1;" +
             "https://www.microsoft.com;";
+        Log("URL list constructed.");
 
         // Split the defined URLs into an array using semicolon as the delimiter.
         string[] urlArray = urlsDefined.Split(new char[] { ';' }, System.StringSplitOptions.RemoveEmptyEntries);
+        Log("URL array created with " + urlArray.Length + " entries.");
+
+        string firstCommand = browserExecutable + " --guest --no-session-restore";
+
+        /*
+        // Launch msedge in warm-up mode.
+        ShellExecute(firstCommand, waitForProcessEnd: false, continueOnError: false, forceKillOnExit: false);
+        Wait(waitInSecondsBrowserInitialize);
         
-        // Build the command using the helper method.
-        string command = BuildCommand(urlArray, tabsToOpen);
+        string procName = Path.GetFileNameWithoutExtension(browserExecutable);
+        var firstBrowserWindow = FindWindow(
+            className: "Win32 Window:Chrome_WidgetWin_1",
+            title: "*Microsoft​ Edge",
+            processName: procName,
+            timeout: waitTimeoutInSecondsMsedgeLaunch);
+        Wait(waitInSecondsBrowserInitialize);
+        firstBrowserWindow.Close();
+        Wait(waitMessageboxInSeconds);
+        */
 
-        StartTimer("Browser_Start"); // Start timer for opening the browser.
+        // Build the command using the helper method (includes URLs).
+        string secondCommand = BuildCommand(urlArray, tabsToOpen);
+        Log("Command built: " + secondCommand);
 
-        // Execute the browser with the dynamically constructed command line.
-        ShellExecute(command, waitForProcessEnd: false, continueOnError: false, forceKillOnExit: false);
+        StartTimer("Browser_Start");
+        Log("Timer 'Browser_Start' started.");
 
-        string browserProcessName = System.IO.Path.GetFileNameWithoutExtension(browserExecutable);
+        // Launch the msedge instance.
+        ShellExecute(secondCommand, waitForProcessEnd: false, continueOnError: false, forceKillOnExit: false);
+        Log("sedge instance launched.");
 
-        // Find the browser window (adjust className/title as needed).
+        string browserProcessName = Path.GetFileNameWithoutExtension(browserExecutable);
         FindWindow(
             className: "Win32 Window:Chrome_WidgetWin_1",
             title: "*Microsoft​ Edge",
             processName: browserProcessName,
             timeout: waitTimeoutInSecondsMsedgeLaunch);
+        Log("Browser window found.");
 
-        StopTimer("Browser_Start"); // Stop timer after the browser window is found.
+        StopTimer("Browser_Start");
+        Log("Timer 'Browser_Start' stopped.");
 
-        // Wait for the browser to fully load the tabs.
         Wait(waitInSecondsBrowserInitialize, onScreenText: "Waiting for browser to fully load tabs");
         Log("Waited " + waitInSecondsBrowserInitialize + " seconds for browser initialization.");
 
-        // Maximize and focus the browser window.
         var browserWindow = FindWindow(
             className: "Win32 Window:Chrome_WidgetWin_1",
             title: "*Microsoft​ Edge",
             processName: browserProcessName);
-        browserWindow.Maximize();        
-        browserWindow.Focus();        
+        browserWindow.Maximize();
+        Log("Browser window maximized.");
+        browserWindow.Focus();
+        Log("Browser window focused.");
 
         Log("Browser open process completed.");
     }
 
-    // Helper method to build the command string.
+    // =====================================================
+    // Helper: Build Command String
+    // =====================================================
+    // Constructs the command string for launching the browser with multiple URLs.
     string BuildCommand(string[] urls, int tabs)
     {
         StringBuilder cmdBuilder = new StringBuilder();
         cmdBuilder.Append(browserExecutable);
-        cmdBuilder.Append(" --guest");
+        cmdBuilder.Append(" --guest --no-session-restore");
         for (int i = 0; i < tabs; i++)
         {
             string url = urls[i % urls.Length].Trim();
             cmdBuilder.Append(" " + url);
         }
+        Log("BuildCommand completed.");
         return cmdBuilder.ToString();
     }
 }

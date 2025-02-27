@@ -1,4 +1,4 @@
-// TARGET:excel
+// TARGET:excel /e
 // START_IN:
 
 /////////////
@@ -15,8 +15,9 @@ public class Close_Excel_DefaultScript : ScriptBase
     {
         Wait(seconds:2, showOnScreen:true, onScreenText:"Closing Excel if open.");
         Log("Closing Excel if open.");
-        var MainWindow = FindWindow(processName:"excel", timeout:2, continueOnError:true);
+        var MainWindow = FindWindow(processName:"excel", timeout:5, continueOnError:true, title: "* Excel*");
         MainWindow?.Focus();
+        MainWindow?.Maximize();
         MainWindow?.Close();
     }
 }

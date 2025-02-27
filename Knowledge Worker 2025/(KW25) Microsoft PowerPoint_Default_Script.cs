@@ -17,54 +17,59 @@ using System.Net.Security;
 
 public class PowerPoint_DefaultScript : ScriptBase
 {
+    // =====================================================
+    // Configurable Variables
+    // =====================================================
+    // Global timings and speeds
+    int globalTimeoutInSeconds = 60;              // How long to wait for actions (e.g., opening the app)
+    int globalWaitInSeconds = 8;                  // Standard wait time between actions
+    int waitMessageboxInSeconds = 8;              // Duration for onscreen wait messages
+    int charactersPerMinuteToType = 30;           // Typing speed for keyboard shortcuts
+    int slideshowCharactersPerMinuteToType = 12;  // Typing speed for slideshow navigation
+    int pageScrollCpm = 60;                      // Typing speed for page scrolling actions
+    int transitionPopupCharactersPerMinuteToType = 60; // Typing speed for navigating transitions popup
+    int waitForPopupShowingInSeconds = 10;         // Wait time for popups to show (e.g., ribbon popups)
+    int waitSlideshowStart = 10;                   // Wait time for slideshow to start
+
+    // File download settings
+    string bmpUrl = "https://myAppliance.myOrg.com/contentDelivery/content/LoginVSI_BattlingRobots.bmp"; // URL for BMP file
+
+    // =====================================================
+    // Setup: Directories and File Downloads
+    // =====================================================
     private void Execute()
     {   
-        // Global settings
-        int globalTimeoutInSeconds = 60;              // How long to wait for actions (e.g., opening the app)
-        int waitMessageboxInSeconds = 3;              // Duration for wait message boxes
-        double globalWaitInSeconds = 3;               // Wait time between actions for human-like behavior (double value)
-        int charactersPerMinuteToType = 50;           // Typing speed for keyboard shortcuts
-        int slideshowCharactersPerMinuteToType = 50;  // How many down arrows to press per minute to go through the slideshow presentation (60 = 1 per second)
-        int waitSlideshowStart = 4;                   // Allow time for slideshow to start
-        int pageScrollCpm = 120;                      // Typing speed for page scrolling actions (60 = 1 per second)
-        int transitionPopupCharactersPerMinuteToType = 200; // How quickly to navigate around the insert transitions popup (60 = 1 per second)
-        int waitForPopupShowingInSeconds = 3;         // Wait time for popups to show, such as ribbon popups
+        // Retrieve TEMP environment variable and ensure the LoginEnterprise directory exists.
         var temp = GetEnvironmentVariable("TEMP");
-
-        // Define the BMP URL as a variable.
-        string bmpUrl = "<your URL here>"; // Replace with the actual URL for the BMP file, such as "https://myAppliance.myOrg.com/contentDelivery/content/LoginVSI_BattlingRobots.bmp";
-
-        // Ensure the LoginEnterprise directory exists.
         string loginEnterpriseDir = $"{temp}\\LoginEnterprise";
         if (!Directory.Exists(loginEnterpriseDir))
         {
             Directory.CreateDirectory(loginEnterpriseDir);
             Log("Created directory: " + loginEnterpriseDir);
         }
-        
-        // Simulate user interaction to open the Start Menu.
+
+        // =====================================================
+        // Simulate Start Menu Interaction
+        // =====================================================
         Log("Opening Start Menu");
-        Wait(seconds:2, showOnScreen:true, onScreenText:"Start Menu");
-        Type("{LWIN}");
-        Wait(3);
-        Type("{LWIN}");
-        Wait(1);
-        Type("{ESC}");
+        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Start Menu");
+        Type("{LWIN}", hideInLogging: false);
+        Wait(seconds: 3);
+        Type("{LWIN}", hideInLogging: false);
+        Wait(seconds: 1);
+        Type("{ESC}", hideInLogging: false);
 
-        // Download the PowerPoint (.pptx) file and bmp if they dont already exist.
-        Wait(seconds:waitMessageboxInSeconds, showOnScreen:true, onScreenText:"Get .pptx and .bmp file");
+        // =====================================================
+        // Download Files (Always overwrite PPTX)
+        // =====================================================
+        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Get .pptx and .bmp file");
+
+        // -- Download PowerPoint (.pptx) file (overwrite without checking existence)
         string pptxFile = $"{loginEnterpriseDir}\\loginvsi.pptx";
-        if (!FileExists(pptxFile))
-        {
-            Log("Downloading PowerPoint presentation file");
-            CopyFile(KnownFiles.PowerPointPresentation, pptxFile);
-        }
-        else
-        {
-            Log("PowerPoint file already exists");
-        }
+        Log("Downloading PowerPoint presentation file (overwrite).");
+        CopyFile(KnownFiles.PowerPointPresentation, pptxFile, overwrite: true, continueOnError: false);
 
-        // Download the BMP file if it doesn't exist.
+        // -- Download the BMP file if it doesn't exist.
         string bmpFile = $"{loginEnterpriseDir}\\LoginVSI_BattlingRobots.bmp";
         if (!FileExists(bmpFile))
         {
@@ -80,7 +85,6 @@ public class PowerPoint_DefaultScript : ScriptBase
 
                 using (WebClient client = new WebClient())
                 {
-                    // Use the defined bmpUrl variable.
                     client.DownloadFile(bmpUrl, bmpFile);
                     Log("BMP file downloaded successfully to: " + bmpFile);
                 }
@@ -95,181 +99,209 @@ public class PowerPoint_DefaultScript : ScriptBase
             Log("BMP file already exists");
         }
 
-        // Use the already open PowerPoint instance.
-        var MainWindow = FindWindow(className:"Win32 Window:PPTFrameClass", title:"*PowerPoint*", processName:"POWERPNT", timeout:globalTimeoutInSeconds);
-        Wait(globalWaitInSeconds);
-        MainWindow.Focus();
+        // =====================================================
+        // Skip First-Run Dialogs before Bringing PowerPoint into Focus
+        // =====================================================
+        SkipFirstRunDialogs();
 
-        // --- Open File Dialog to Open PPTX ---
+        // =====================================================
+        // Bring PowerPoint into Focus and Open PPTX File
+        // =====================================================
+        var MainWindow = FindWindow(className: "Win32 Window:PPTFrameClass", title: "*PowerPoint*", processName: "POWERPNT", timeout: globalTimeoutInSeconds);
+        Wait(seconds: globalWaitInSeconds);
+        MainWindow.Focus();
+        MainWindow.Maximize();
+
         Log("Opening PPTX file via open file dialog");
-        Wait(seconds:waitMessageboxInSeconds, showOnScreen:true, onScreenText:"Open pptx file");
-        MainWindow.Type("{CTRL+O}{ALT+O+O}", cpm: charactersPerMinuteToType);
+        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Open pptx file");
+        MainWindow.Type("{CTRL+O}{ALT+O+O}", cpm: charactersPerMinuteToType, hideInLogging: false);
         StartTimer("Open_PPTX_Dialog");
-        var openWindow = FindWindow(className:"Win32 Window:#32770", processName:"POWERPNT", continueOnError:false, timeout:globalTimeoutInSeconds);
+        var openWindow = FindWindow(className: "Win32 Window:#32770", processName: "POWERPNT", continueOnError: false, timeout: globalTimeoutInSeconds);
         StopTimer("Open_PPTX_Dialog");
-        
-        Wait(globalWaitInSeconds);
-        var fileNameBox = openWindow.FindControl(className:"Edit:Edit", title:"File name:", timeout:globalTimeoutInSeconds);
+        Wait(seconds: globalWaitInSeconds);
+        var fileNameBox = openWindow.FindControl(className: "Edit:Edit", title: "File name:", timeout: globalTimeoutInSeconds);
         fileNameBox.Click();
-        Wait(globalWaitInSeconds);
-        ScriptHelpers.SetTextBoxText(this, fileNameBox, pptxFile, cpm:1000);
-        Type("{enter}");
+        Wait(seconds: globalWaitInSeconds);
+        ScriptHelpers.SetTextBoxText(this, fileNameBox, pptxFile, cpm: 300);
+        Type("{enter}", hideInLogging: false);
         StartTimer("Open_Powerpoint_Document");
-        var newPowerpoint = FindWindow(className:"Win32 Window:PPTFrameClass", title:"loginvsi*", processName:"POWERPNT", timeout:globalTimeoutInSeconds);
+        var newPowerpoint = FindWindow(className: "Win32 Window:PPTFrameClass", title: "loginvsi*", processName: "POWERPNT", timeout: globalTimeoutInSeconds);
         newPowerpoint.Focus();
-        newPowerpoint.FindControl(className:"TabItem:NetUIRibbonTab", title:"Insert", timeout:globalTimeoutInSeconds);
+        newPowerpoint.Maximize();
+        newPowerpoint.FindControl(className: "TabItem:NetUIRibbonTab", title: "Insert", timeout: globalTimeoutInSeconds);
         StopTimer("Open_Powerpoint_Document");
-        Wait(globalWaitInSeconds);
-        
-        // --- Check for an existing "edited" PowerPoint window ---
+        Wait(seconds: globalWaitInSeconds);
+
+        // =====================================================
+        // Skip First-Run Dialogs before Checking for an Existing Edited Window
+        // =====================================================
+        SkipFirstRunDialogs();
+
+        // =====================================================
+        // Check and Close Existing "Edited" Window (if any)
+        // =====================================================
         string newDocName = "edited";
-        var editedWindow = FindWindow(className:"Win32 Window:PPTFrameClass", title:$"{newDocName}*", processName:"POWERPNT", timeout:2, continueOnError:true);
-        if (editedWindow != null)
+        for (int attempt = 0; attempt < 3; attempt++)
         {
-            Log("Existing edited window found. Closing it.");
-            editedWindow.Close();
-            Wait(globalWaitInSeconds);
-            newPowerpoint = FindWindow(className:"Win32 Window:PPTFrameClass", title:"loginvsi*", processName:"POWERPNT", timeout:globalTimeoutInSeconds);
-            newPowerpoint.Focus();
-            Wait(globalWaitInSeconds);
+            var editedWindow = FindWindow(className: "Win32 Window:PPTFrameClass", title: $"{newDocName}*", processName: "POWERPNT", timeout: 2, continueOnError: true);
+            if (editedWindow != null)
+            {
+                Log("Existing edited window found. Closing it.");
+                Wait(seconds: globalWaitInSeconds);
+                editedWindow.Focus();
+                editedWindow.Maximize();
+                Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Closing edited window");
+                editedWindow.Type("{ALT+F4}", hideInLogging: false);
+                Wait(seconds: globalWaitInSeconds);
+                
+                newPowerpoint = FindWindow(className: "Win32 Window:PPTFrameClass", title: "loginvsi*", processName: "POWERPNT", timeout: globalTimeoutInSeconds);
+                newPowerpoint.Focus();
+                newPowerpoint.Maximize();
+                Wait(seconds: globalWaitInSeconds);
+            }
         }
-        
-        Wait(seconds:waitMessageboxInSeconds, showOnScreen:true, onScreenText:"Adding bmp into a slide, duplicating it, and adding transitions");
+
+        // =====================================================
+        // Add Transitions, Duplicate Slides, and Insert BMP
+        // =====================================================
+        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Adding bmp into a slide, duplicating it, and adding transitions");
 
         // --- Add 'Curtains' Transition and Duplicate Slide ---
         Log("Adding 'Curtains' transition");
-        newPowerpoint.Type("{ALT+K}{ALT+T}", cpm: charactersPerMinuteToType);
-        var transitionCurtains = newPowerpoint.FindControl(title:"Curtains", timeout:globalTimeoutInSeconds);
-        Wait(globalWaitInSeconds);
+        newPowerpoint.Type("{ALT+K}{ALT+T}", cpm: charactersPerMinuteToType, hideInLogging: false);
+        var transitionCurtains = newPowerpoint.FindControl(title: "Curtains", timeout: globalTimeoutInSeconds);
+        Wait(seconds: globalWaitInSeconds);
         transitionCurtains.Click();
-        Wait(globalWaitInSeconds);
-        newPowerpoint.Type("{CTRL+M}", cpm: charactersPerMinuteToType);
-        Wait(globalWaitInSeconds);
+        Wait(seconds: globalWaitInSeconds);
+        newPowerpoint.Type("{CTRL+M}", cpm: charactersPerMinuteToType, hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
 
         // --- Insert BMP into New Slide ---
         Log("Inserting BMP into new slide");
-        newPowerpoint.Type("{ALT}NP1", cpm: charactersPerMinuteToType);
-        Wait(waitForPopupShowingInSeconds);  // Wait before typing the "d" for the BMP add popup
-        Type("d", cpm: charactersPerMinuteToType);
+        newPowerpoint.Type("{ALT}NP1", cpm: charactersPerMinuteToType, hideInLogging: false);
+        Wait(seconds: waitForPopupShowingInSeconds);
+        Type("d", cpm: charactersPerMinuteToType, hideInLogging: false);
         StartTimer("Insert_Picture_Dialog");
-        var addPictureDialog = FindWindow(className:"Win32 Window:#32770", title:"Insert Picture", processName:"POWERPNT", timeout:globalTimeoutInSeconds);
+        var addPictureDialog = FindWindow(className: "Win32 Window:#32770", title: "Insert Picture", processName: "POWERPNT", timeout: globalTimeoutInSeconds);
         StopTimer("Insert_Picture_Dialog");
         addPictureDialog.Focus();
-        var fileNameBox2 = addPictureDialog.FindControl(className:"Edit:Edit", title:"File name:", timeout:globalTimeoutInSeconds);
-        Wait(globalWaitInSeconds);
+        var fileNameBox2 = addPictureDialog.FindControl(className: "Edit:Edit", title: "File name:", timeout: globalTimeoutInSeconds);
+        Wait(seconds: globalWaitInSeconds);
         fileNameBox2.Click();
-        newPowerpoint.Type("{ALT+N}", cpm: charactersPerMinuteToType);
-        Wait(globalWaitInSeconds);
-        ScriptHelpers.SetTextBoxText(this, fileNameBox2, bmpFile, cpm:1000);
-        fileNameBox2.Type("{ENTER}", cpm: charactersPerMinuteToType);
-        Wait(globalWaitInSeconds);
-        var stillExists = FindWindow(className:"Win32 Window:#32770", title:"Insert Picture", processName:"POWERPNT", timeout:2, continueOnError:true);
-        if(stillExists != null)
+        newPowerpoint.Type("{ALT+N}", cpm: charactersPerMinuteToType, hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
+        ScriptHelpers.SetTextBoxText(this, fileNameBox2, bmpFile, cpm: 300);
+        fileNameBox2.Type("{ENTER}", cpm: charactersPerMinuteToType, hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
+        var stillExists = FindWindow(className: "Win32 Window:#32770", title: "Insert Picture", processName: "POWERPNT", timeout: 2, continueOnError: true);
+        if (stillExists != null)
         {
-            newPowerpoint.Type("{ESC}", cpm: charactersPerMinuteToType);
+            newPowerpoint.Type("{ESC}", cpm: charactersPerMinuteToType, hideInLogging: false);
         }
 
         // --- Add 'Origami' Transition and Duplicate Slide ---
         Log("Adding 'Origami' transition");
-        newPowerpoint.Type("{ALT+K}{ALT+T}", cpm: charactersPerMinuteToType);        
-        newPowerpoint.FindControl(title:"Origami", timeout:globalTimeoutInSeconds);
-        Wait(globalWaitInSeconds);
-        newPowerpoint.Type("{DOWN}", cpm: transitionPopupCharactersPerMinuteToType);
-        newPowerpoint.Type("{RIGHT}".Repeat(10), cpm: transitionPopupCharactersPerMinuteToType);
-        newPowerpoint.Type("{ENTER}");
-        Wait(globalWaitInSeconds);
-        newPowerpoint.Type("{ALT}NSI", cpm: charactersPerMinuteToType);
-        Wait(waitForPopupShowingInSeconds);  // Wait for the duplicate slide popup to show
-        Type("d", cpm: charactersPerMinuteToType);
-        Wait(globalWaitInSeconds);
+        newPowerpoint.Type("{ALT+K}{ALT+T}", cpm: charactersPerMinuteToType, hideInLogging: false);        
+        newPowerpoint.FindControl(title: "Origami", timeout: globalTimeoutInSeconds);
+        Wait(seconds: globalWaitInSeconds);
+        newPowerpoint.Type("{DOWN}", cpm: transitionPopupCharactersPerMinuteToType, hideInLogging: false);
+        newPowerpoint.Type("{RIGHT}".Repeat(10), cpm: transitionPopupCharactersPerMinuteToType, hideInLogging: false);
+        newPowerpoint.Type("{ENTER}", hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
+        newPowerpoint.Type("{ALT}NSI", cpm: charactersPerMinuteToType, hideInLogging: false);
+        Wait(seconds: waitForPopupShowingInSeconds);
+        Type("d", cpm: charactersPerMinuteToType, hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
 
         // --- Add 'Curtains' Transition and Duplicate Slide ---
         Log("Adding 'Curtains' transition");
-        newPowerpoint.Type("{ALT+K}{ALT+T}", cpm: charactersPerMinuteToType);        
-        newPowerpoint.FindControl(title:"Curtains", timeout:globalTimeoutInSeconds);
-        Wait(globalWaitInSeconds);
-        newPowerpoint.Type("{DOWN}", cpm: transitionPopupCharactersPerMinuteToType);
-        newPowerpoint.Type("{RIGHT}".Repeat(2), cpm: transitionPopupCharactersPerMinuteToType);
-        newPowerpoint.Type("{ENTER}");
-        Wait(globalWaitInSeconds);
-        newPowerpoint.Type("{ALT}NSI", cpm: charactersPerMinuteToType);
-        Wait(waitForPopupShowingInSeconds);  // Wait for the duplicate slide popup to show
-        Type("d", cpm: charactersPerMinuteToType);
-        Wait(globalWaitInSeconds);
-        
+        newPowerpoint.Type("{ALT+K}{ALT+T}", cpm: charactersPerMinuteToType, hideInLogging: false);        
+        newPowerpoint.FindControl(title: "Curtains", timeout: globalTimeoutInSeconds);
+        Wait(seconds: globalWaitInSeconds);
+        newPowerpoint.Type("{DOWN}", cpm: transitionPopupCharactersPerMinuteToType, hideInLogging: false);
+        newPowerpoint.Type("{RIGHT}".Repeat(2), cpm: transitionPopupCharactersPerMinuteToType, hideInLogging: false);
+        newPowerpoint.Type("{ENTER}", hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
+        newPowerpoint.Type("{ALT}NSI", cpm: charactersPerMinuteToType, hideInLogging: false);
+        Wait(seconds: waitForPopupShowingInSeconds);
+        Type("d", cpm: charactersPerMinuteToType, hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
+
         // --- Add 'Ripple' Transition and Duplicate Slide ---
         Log("Adding 'Ripple' transition");
-        newPowerpoint.Type("{ALT+K}{ALT+T}", cpm: charactersPerMinuteToType);        
-        newPowerpoint.FindControl(title:"Ripple", timeout:globalTimeoutInSeconds);
-        Wait(globalWaitInSeconds);
-        newPowerpoint.Type("{DOWN}", cpm: transitionPopupCharactersPerMinuteToType);
-        newPowerpoint.Type("{RIGHT}".Repeat(15), cpm: transitionPopupCharactersPerMinuteToType);
-        newPowerpoint.Type("{ENTER}");
-        Wait(globalWaitInSeconds);
-        newPowerpoint.Type("{ALT}NSI", cpm: charactersPerMinuteToType);
-        Wait(waitForPopupShowingInSeconds);  // Wait for the duplicate slide popup to show
-        Type("d", cpm: charactersPerMinuteToType);
-        Wait(globalWaitInSeconds);
-        
+        newPowerpoint.Type("{ALT+K}{ALT+T}", cpm: charactersPerMinuteToType, hideInLogging: false);        
+        newPowerpoint.FindControl(title: "Ripple", timeout: globalTimeoutInSeconds);
+        Wait(seconds: globalWaitInSeconds);
+        newPowerpoint.Type("{DOWN}", cpm: transitionPopupCharactersPerMinuteToType, hideInLogging: false);
+        newPowerpoint.Type("{RIGHT}".Repeat(15), cpm: transitionPopupCharactersPerMinuteToType, hideInLogging: false);
+        newPowerpoint.Type("{ENTER}", hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
+        newPowerpoint.Type("{ALT}NSI", cpm: charactersPerMinuteToType, hideInLogging: false);
+        Wait(seconds: waitForPopupShowingInSeconds);
+        Type("d", cpm: charactersPerMinuteToType, hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
+
         // --- Add 'Honeycomb' Transition and Duplicate Slide ---
         Log("Adding 'Honeycomb' transition");
-        newPowerpoint.Type("{ALT+K}{ALT+T}", cpm: charactersPerMinuteToType);        
-        newPowerpoint.FindControl(title:"Honeycomb", timeout:globalTimeoutInSeconds);
-        Wait(globalWaitInSeconds);
-        newPowerpoint.Type("{DOWN}", cpm: transitionPopupCharactersPerMinuteToType);
-        newPowerpoint.Type("{RIGHT}".Repeat(16), cpm: transitionPopupCharactersPerMinuteToType);
-        newPowerpoint.Type("{ENTER}");
-        Wait(globalWaitInSeconds);
-        newPowerpoint.Type("{ALT}NSI", cpm: charactersPerMinuteToType);
-        Wait(waitForPopupShowingInSeconds);  // Wait for the duplicate slide popup to show
-        Type("d", cpm: charactersPerMinuteToType);
-        Wait(globalWaitInSeconds);
-        
+        newPowerpoint.Type("{ALT+K}{ALT+T}", cpm: charactersPerMinuteToType, hideInLogging: false);        
+        newPowerpoint.FindControl(title: "Honeycomb", timeout: globalTimeoutInSeconds);
+        Wait(seconds: globalWaitInSeconds);
+        newPowerpoint.Type("{DOWN}", cpm: transitionPopupCharactersPerMinuteToType, hideInLogging: false);
+        newPowerpoint.Type("{RIGHT}".Repeat(16), cpm: transitionPopupCharactersPerMinuteToType, hideInLogging: false);
+        newPowerpoint.Type("{ENTER}", hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
+        newPowerpoint.Type("{ALT}NSI", cpm: charactersPerMinuteToType, hideInLogging: false);
+        Wait(seconds: waitForPopupShowingInSeconds);
+        Type("d", cpm: charactersPerMinuteToType, hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
+
         // --- Add 'Vortex' Transition and Duplicate Slide ---
         Log("Adding 'Vortex' transition");
-        newPowerpoint.Type("{ALT+K}{ALT+T}", cpm: charactersPerMinuteToType);        
-        newPowerpoint.FindControl(title:"Vortex", timeout:globalTimeoutInSeconds);
-        Wait(globalWaitInSeconds);
-        newPowerpoint.Type("{DOWN}".Repeat(2), cpm: transitionPopupCharactersPerMinuteToType);
-        newPowerpoint.Type("{RIGHT}", cpm: transitionPopupCharactersPerMinuteToType);
-        newPowerpoint.Type("{ENTER}");
-        Wait(globalWaitInSeconds);
+        newPowerpoint.Type("{ALT+K}{ALT+T}", cpm: charactersPerMinuteToType, hideInLogging: false);        
+        newPowerpoint.FindControl(title: "Vortex", timeout: globalTimeoutInSeconds);
+        Wait(seconds: globalWaitInSeconds);
+        newPowerpoint.Type("{DOWN}".Repeat(2), cpm: transitionPopupCharactersPerMinuteToType, hideInLogging: false);
+        newPowerpoint.Type("{RIGHT}", cpm: transitionPopupCharactersPerMinuteToType, hideInLogging: false);
+        newPowerpoint.Type("{ENTER}", hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
         
-        Wait(seconds:waitMessageboxInSeconds, showOnScreen:true, onScreenText:"Scroll, minimize, and maximize");
-        
-        // --- Scroll Through the Presentation ---
+        // =====================================================
+        // Scroll, Minimize, and Maximize Presentation
+        // =====================================================
+        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Scroll, minimize, and maximize");
         Log("Scrolling through presentation");
-        newPowerpoint.Type("{PAGEDOWN}".Repeat(20), cpm: pageScrollCpm);
-        Wait(globalWaitInSeconds);
-        newPowerpoint.Type("{PAGEUP}".Repeat(20), cpm: pageScrollCpm);
-        Wait(globalWaitInSeconds);  
+        newPowerpoint.Type("{PAGEDOWN}".Repeat(20), cpm: pageScrollCpm, hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
+        newPowerpoint.Type("{PAGEUP}".Repeat(20), cpm: pageScrollCpm, hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);  
 
-        // --- Minimize and Maximize the Presentation Window ---
         newPowerpoint.Minimize();
-        Wait(globalWaitInSeconds);
+        Wait(seconds: globalWaitInSeconds);
         newPowerpoint.Maximize();
         newPowerpoint.Focus();
-        Wait(globalWaitInSeconds);
+        Wait(seconds: globalWaitInSeconds);
         
-        Wait(seconds:waitMessageboxInSeconds, showOnScreen:true, onScreenText:"Run the slideshow");
-        
-        // --- Run the Slideshow ---
+        // =====================================================
+        // Run the Slideshow
+        // =====================================================
+        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Run the slideshow");
         Log("Starting slideshow");
-        newPowerpoint.Type("{F5}", cpm: charactersPerMinuteToType);
-        Wait(waitSlideshowStart);
-        newPowerpoint.Type("{DOWN}".Repeat(20), cpm: slideshowCharactersPerMinuteToType);
-        Wait(globalWaitInSeconds);
-        Type("{ESC}");
-        Wait(globalWaitInSeconds);
-        Type("{HOME}"); // Go to the first slide
-        Wait(globalWaitInSeconds);
+        newPowerpoint.Type("{F5}", cpm: charactersPerMinuteToType, hideInLogging: false);
+        Wait(seconds: waitSlideshowStart);
+        newPowerpoint.Type("{DOWN}".Repeat(8), cpm: slideshowCharactersPerMinuteToType, hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
+        Type("{ESC}", hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
+        Type("{HOME}", hideInLogging: false); // Go to the first slide
+        Wait(seconds: globalWaitInSeconds);
 
-        // --- Save the Edited Slideshow ---
+        // =====================================================
+        // Save the Edited Slideshow
+        // =====================================================
         Log("Saving the edited slideshow");        
-        Wait(seconds:waitMessageboxInSeconds, showOnScreen:true, onScreenText:"Save the slideshow");
-        // newDocName already defined above.
+        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Save the slideshow");
         string saveFilename = $"{loginEnterpriseDir}\\{newDocName}.pptx";
-        if(FileExists(saveFilename))
+        if (FileExists(saveFilename))
         {
             Log("Removing existing file: " + saveFilename);
             RemoveFile(saveFilename);
@@ -278,40 +310,65 @@ public class PowerPoint_DefaultScript : ScriptBase
         {
             Log("No existing file to remove at: " + saveFilename);
         }
-        newPowerpoint.Type("{F12}", cpm: charactersPerMinuteToType);
+        newPowerpoint.Type("{F12}", hideInLogging: false);
         StartTimer("Save_As_Dialog");
-        var saveAs = FindWindow(className:"Win32 Window:#32770", processName:"POWERPNT", continueOnError:true, timeout:globalTimeoutInSeconds);
-        if (saveAs == null)
-        {
-            ABORT("Save file dialog could not be found");
-        }
-        var saveFileNameBox = saveAs.FindControl(className:"Edit:Edit", title:"File name:", timeout:globalTimeoutInSeconds);
+        var saveAs = FindWindow(className: "Win32 Window:#32770", processName: "POWERPNT", timeout: globalTimeoutInSeconds);
+        StopTimer("Save_As_Dialog");
+        var saveFileNameBox = saveAs.FindControl(className: "Edit:Edit", title: "File name:", timeout: globalTimeoutInSeconds);
         saveFileNameBox.Click();
-        Wait(globalWaitInSeconds);
-        ScriptHelpers.SetTextBoxText(this, saveFileNameBox, saveFilename, cpm:1000);
-        saveAs.Type("{ENTER}", cpm: charactersPerMinuteToType);
+        Wait(seconds: globalWaitInSeconds);
+        ScriptHelpers.SetTextBoxText(this, saveFileNameBox, saveFilename, cpm: 300);
+        saveAs.Type("{ENTER}", hideInLogging: false);
         StartTimer("Saving_file");        
-        FindWindow(title:$"{newDocName}*", processName:"POWERPNT", timeout:globalTimeoutInSeconds);
+        FindWindow(title: $"{newDocName}*", processName: "POWERPNT", timeout: globalTimeoutInSeconds);
         StopTimer("Saving_file");
-        Wait(globalWaitInSeconds);
+        Wait(seconds: globalWaitInSeconds);
 
-        Log("Script complete. PowerPoint remains open.");        
+        Log("Script complete. PowerPoint remains open.");
+    }
+
+    // =====================================================
+    // Helper: Skip First-Run Dialogs
+    // =====================================================
+    private void SkipFirstRunDialogs()
+    {
+        int loopCount = 2; // configurable number of loops
+        for (int i = 0; i < loopCount; i++)
+        {
+            var dialog = FindWindow(
+                className: "Win32 Window:NUIDialog", 
+                processName: "POWERPNT", 
+                continueOnError: true, 
+                timeout: 5);
+            while (dialog != null)
+            {
+                dialog.Close();
+                dialog = FindWindow(
+                    className: "Win32 Window:NUIDialog", 
+                    processName: "POWERPNT", 
+                    continueOnError: true, 
+                    timeout: 5);
+            }
+        }
     }
 }
 
-// Helper class for setting text in text boxes.
+// =====================================================
+// Helper Class for TextBox Operations
+// =====================================================
 public static class ScriptHelpers
 {
-    public static void SetTextBoxText(ScriptBase script, IWindow textBox, string text, int cpm = 1000)
+    public static void SetTextBoxText(ScriptBase script, IWindow textBox, string text, int cpm = 300)
     {
+        int globalWaitInSeconds = 3;                  // Standard wait time between actions
         var numTries = 1;
         string currentText = null;
         do
         {
-            textBox.Type("{CTRL+a}");
-            script.Wait(0.5);
-            textBox.Type(text, cpm: cpm);
-            script.Wait(1);
+            textBox.Type("{CTRL+a}", hideInLogging: false);
+            script.Wait(globalWaitInSeconds);
+            textBox.Type(text, cpm: cpm, hideInLogging: false);
+            script.Wait(globalWaitInSeconds);
             currentText = textBox.GetText();
             if (currentText != text)
                 script.CreateEvent($"Typing error in attempt {numTries}", $"Expected '{text}', got '{currentText}'");
