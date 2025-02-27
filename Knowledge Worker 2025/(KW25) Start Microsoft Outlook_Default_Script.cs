@@ -1,4 +1,4 @@
-// TARGET:outlook.exe /importprf %TEMP%\LoginEnterprise\Outlook.prf
+// TARGET:outlook.exe /importprf %TEMP%\LoginPI\Outlook.prf
 // START_IN:
 
 /////////////
@@ -32,8 +32,8 @@ public class M365Outlook_InvocationScript : ScriptBase
         var temp = GetEnvironmentVariable("TEMP");
 
         // Define the target directory.
-        string targetDir = $"{temp}\\LoginEnterprise";
-        // Create the "Login Enterprise" directory if it doesn't exist.
+        string targetDir = $"{temp}\\LoginPI";
+        // Create the "Login PI" directory if it doesn't exist.
         if (!Directory.Exists(targetDir))
         {
             Directory.CreateDirectory(targetDir);
