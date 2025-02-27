@@ -121,6 +121,7 @@ public class WordDefaultScript : ScriptBase
         // =====================================================
         // Skip First-Run Dialogs before Bringing Word into Focus
         // =====================================================
+        Wait(globalWaitInSeconds);
         SkipFirstRunDialogs();
 
         // =====================================================
@@ -156,6 +157,7 @@ public class WordDefaultScript : ScriptBase
         // =====================================================
         // Skip First-Run Dialogs before Checking for an Existing Edited Window
         // =====================================================
+        Wait(globalWaitInSeconds);
         SkipFirstRunDialogs();
 
         // =====================================================

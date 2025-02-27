@@ -63,6 +63,7 @@ public class Start_Word_DefaultScript : ScriptBase
         Wait(seconds:2, showOnScreen:true, onScreenText:"Starting Word");
         Log("Starting Word");
         START(mainWindowTitle: "*Word*", mainWindowClass: "Win32 Window:OpusApp", processName: "WINWORD", timeout: 60);
+        Wait(3);
         SkipFirstRunDialogs();
         MainWindow.Maximize();
         MainWindow.Focus();

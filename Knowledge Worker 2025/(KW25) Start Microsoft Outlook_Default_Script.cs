@@ -47,8 +47,8 @@ public class M365Outlook_InvocationScript : ScriptBase
         string pstFile = $"{targetDir}\\Outlook.pst";
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Get PRF & PST");
         Log("Downloading PRF & PST files.");
-        CopyFile(KnownFiles.OutlookConfiguration, prfFile, continueOnError: false, overwrite: true);
-        CopyFile(KnownFiles.OutlookData, pstFile, continueOnError: false, overwrite: true);
+        CopyFile(KnownFiles.OutlookConfiguration, prfFile, continueOnError: true);
+        CopyFile(KnownFiles.OutlookData, pstFile, continueOnError: true);
 
         // =====================================================
         // Update PRF File

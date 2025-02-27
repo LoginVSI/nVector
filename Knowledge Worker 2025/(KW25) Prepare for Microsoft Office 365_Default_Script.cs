@@ -112,7 +112,8 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         START(mainWindowTitle:"*Word*", processName:"WINWORD", timeout:600);
         Wait(1);
         FindWindow(className : "Win32 Window:OpusApp", title : "*Word*", processName : "WINWORD", continueOnError:true).Focus();
-        FindWindow(className : "Win32 Window:OpusApp", title : "*Word*", processName : "WINWORD", continueOnError:true).Maximize();      
+        FindWindow(className : "Win32 Window:OpusApp", title : "*Word*", processName : "WINWORD", continueOnError:true).Maximize();
+        Wait(3);      
         SkipFirstRunDialogs();        
 
         STOP();

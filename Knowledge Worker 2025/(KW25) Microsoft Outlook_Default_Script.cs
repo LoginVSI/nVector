@@ -169,7 +169,8 @@ public class Outlook_DefaultScript : ScriptBase
         // =====================================================
         // Bring Outlook to Focus and Dismiss Popups
         // =====================================================
-        // SkipFirstRunDialogs();
+        Wait(seconds: globalWaitInSeconds);
+        SkipFirstRunDialogs();
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Dismiss any Outlook popups");
         var mainWindow = FindWindow(title: "Inbox -*", processName: "OUTLOOK", timeout: globalTimeoutInSeconds);
         mainWindow.Focus();
@@ -343,7 +344,7 @@ public class Outlook_DefaultScript : ScriptBase
 
         Log("Outlook prepared for next iteration. Main window persists; all other windows closed.");
     }
-    /* // =====================================================
+    // =====================================================
     // Helper: Skip First-Run Dialogs
     // =====================================================
     private void SkipFirstRunDialogs()
@@ -361,7 +362,7 @@ public class Outlook_DefaultScript : ScriptBase
                 Log("Dismissed a first-run dialog.");
             }
         }
-    } */
+    }
 }
 
 // =====================================================

@@ -103,6 +103,7 @@ public class PowerPoint_DefaultScript : ScriptBase
         // =====================================================
         // Skip First-Run Dialogs before Bringing PowerPoint into Focus
         // =====================================================
+        Wait(seconds: globalWaitInSeconds);
         SkipFirstRunDialogs();
 
         // =====================================================
@@ -136,6 +137,7 @@ public class PowerPoint_DefaultScript : ScriptBase
         // =====================================================
         // Skip First-Run Dialogs before Checking for an Existing Edited Window
         // =====================================================
+        Wait(seconds: globalWaitInSeconds);
         SkipFirstRunDialogs();
 
         // =====================================================

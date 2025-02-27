@@ -64,6 +64,7 @@ public class Start_Excel_DefaultScript : ScriptBase
         Wait(seconds:2, showOnScreen:true, onScreenText:"Starting Excel");
         Log("Starting Excel");
         START(mainWindowTitle: "*Excel*", mainWindowClass: "*XLMAIN*", timeout: 60);
+        Wait(3);
         SkipFirstRunDialogs();
         MainWindow.Maximize();
         MainWindow.Focus();

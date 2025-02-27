@@ -78,6 +78,7 @@ public class Excel_DefaultScript : ScriptBase
         // -------------------------------
         // Skip First-Run Dialogs (Pre-Excel)
         // -------------------------------
+        Wait(globalWaitInSeconds);
         SkipFirstRunDialogs();
         
         // -------------------------------

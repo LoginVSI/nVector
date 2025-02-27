@@ -65,7 +65,7 @@ public class Start_Browser_DefaultScript : ScriptBase
         // Build the URL list with the local PDF URL as the second URL.
         string urlsDefined = 
             "https://euc.loginvsi.com/customer-portal/knowledge-worker-2023;" +
-            "http://distribution.bbb3d.renderfarming.net/video/mp4/bbb_sunflower_2160p_30fps_normal.mp4;" +
+            "http://distribution.bbb3d.renderfarming.net/video/mp4/bbb_sunflower_1080p_30fps_normal.mp4;" +
             pdfUrl + ";" +
             "https://images.nasa.gov/;" +
             "https://www.google.com/search?q=beautiful+mountains&udm=2;" +            
