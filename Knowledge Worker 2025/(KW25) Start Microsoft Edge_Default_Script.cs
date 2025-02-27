@@ -75,6 +75,8 @@ public class Start_Browser_DefaultScript : ScriptBase
             "https://www.bing.com/images/search?q=login%20vsi&lq=0&ghsh=0&ghacc=0&first=1;" +
             "https://www.microsoft.com;";
         Log("URL list constructed.");
+        // Good GPU impact site using WebGL: https://webglsamples.org/aquarium/aquarium.html;
+        // And one for a high def autoplaying streaming video: http://distribution.bbb3d.renderfarming.net/video/mp4/bbb_sunflower_2160p_30fps_normal.mp4
 
         // Split the defined URLs into an array using semicolon as the delimiter.
         string[] urlArray = urlsDefined.Split(new char[] { ';' }, System.StringSplitOptions.RemoveEmptyEntries);
