@@ -48,10 +48,10 @@ $BaseUrl      = "https://myDomain.LoginEnterprise.com/" # The Login Enterprise b
 $ApiEndpoint  = "publicApi/v7-preview/platform-metrics"
 $EnvironmentId= "abcd1234-abcd1234-abcd1234-abcd1"
 $MetricId     = "nVectorMetricId"
-$DisplayName  = "nVectorDisplayName"
+$DisplayName  = "Endpoint Latency"
 $Unit         = "Latency (ms)"
 $Instance     = $env:COMPUTERNAME #"nVectorInstanceName"
-$Group        = "nVectorGroup"
+$Group        = "nVector"
 $ComponentType= "vm"
 
 # -----------------------------
