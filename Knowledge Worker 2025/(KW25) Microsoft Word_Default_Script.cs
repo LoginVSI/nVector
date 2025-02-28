@@ -36,6 +36,7 @@ public class WordDefaultScript : ScriptBase
     int typingTextCPM = 600;                  // Typing speed for document text
     int copyPasteRepetitions = 1;             // Number of times to perform the copy-paste action
     int waitForCopyPasteInSeconds = 5;        // Wait time after copy-paste actions
+    int startMenuWaitInSeconds = 5;                // Duration for Start Menu wait between interactions
 
     // Scrolling parameters (for document navigation)
     int scrollDownCount = 40;                 // Number of scroll events for scrolling down
@@ -111,12 +112,14 @@ public class WordDefaultScript : ScriptBase
         // Open/Close Start Menu
         // =====================================================
         Log("Opening Start Menu");
+        Wait(startMenuWaitInSeconds);
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Start Menu");
         Type("{LWIN}", hideInLogging:false);
-        Wait(seconds: 3);
+        Wait(startMenuWaitInSeconds);
         Type("{LWIN}", hideInLogging:false);
         Wait(seconds: 1);
         Type("{ESC}", hideInLogging:false);
+        Wait(startMenuWaitInSeconds);
 
         // =====================================================
         // Skip First-Run Dialogs before Bringing Word into Focus

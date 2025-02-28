@@ -37,6 +37,7 @@ public class Browser_MultipleTabs_DefaultScript : ScriptBase
     // Additional global wait times
     int globalWaitInSeconds = 3;                    // Standard wait time between actions
     int waitMessageboxInSeconds = 2;                // Duration for onscreen wait messages
+    int startMenuWaitInSeconds = 5;                // Duration for Start Menu wait between interactions
 
     private void Execute()
     {
@@ -44,12 +45,14 @@ public class Browser_MultipleTabs_DefaultScript : ScriptBase
         // Simulate Start Menu Interaction
         // =====================================================
         Log("Simulating Start Menu interaction.");
+        Wait(startMenuWaitInSeconds);
         Type("{LWIN}",hideInLogging:false);
-        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Opening Start Menu");
+        Wait(seconds: Wait(startMenuWaitInSeconds);, showOnScreen: true, onScreenText: "Opening Start Menu");
         Type("{LWIN}",hideInLogging:false);
-        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Closing Start Menu");
+        Wait(seconds: 1, showOnScreen: true, onScreenText: "Closing Start Menu");
         Type("{ESC}",hideInLogging:false);
         Log("Start Menu simulation complete.");
+        Wait(startMenuWaitInSeconds);
 
         // =====================================================
         // Bring Browser Window into Focus

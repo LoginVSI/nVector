@@ -31,6 +31,7 @@ public class PowerPoint_DefaultScript : ScriptBase
     int waitForPopupShowingInSeconds = 10;         // Wait time for popups to show (e.g., ribbon popups)
     int waitSlideshowStart = 10;                   // Wait time for slideshow to start
     int typingTextCharacterPerMinute = 600;         // Typing speed for saving and opening the file
+    int startMenuWaitInSeconds = 5;                // Duration for Start Menu wait between interactions
 
     // File download settings
     string bmpUrl = "https://myAppliance.myOrg.com/contentDelivery/content/LoginVSI_BattlingRobots.bmp"; // URL for BMP file
@@ -53,12 +54,14 @@ public class PowerPoint_DefaultScript : ScriptBase
         // Simulate Start Menu Interaction
         // =====================================================
         Log("Opening Start Menu");
+        Wait(startMenuWaitInSeconds);
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Start Menu");
         Type("{LWIN}", hideInLogging: false);
-        Wait(seconds: 3);
+        Wait(startMenuWaitInSeconds);
         Type("{LWIN}", hideInLogging: false);
         Wait(seconds: 1);
         Type("{ESC}", hideInLogging: false);
+        Wait(startMenuWaitInSeconds);
 
         // =====================================================
         // Download Files (Always overwrite PPTX)

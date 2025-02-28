@@ -36,6 +36,7 @@ public class Outlook_DefaultScript : ScriptBase
     int keyboardShortcutsCPM = 30;                  // Typing speed for keyboard shortcuts
     int typingTextCharacterPerMinute = 600;         // Typing speed for email body text
     int copyPasteRepetitions = 2;                   // Number of times to copy-paste email body content
+    int startMenuWaitInSeconds = 5;                // Duration for Start Menu wait between interactions
 
     // Scrolling parameters for navigating emails
     int inboxDownRepeat = 5;                        // How many times to press DOWN in the inbox list
@@ -159,12 +160,14 @@ public class Outlook_DefaultScript : ScriptBase
         // Open/Close Start Menu
         // =====================================================
         Log("Opening Start Menu");
+        Wait(startMenuWaitInSeconds);
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Start Menu");
         Type("{LWIN}", hideInLogging: false);
-        Wait(seconds: 3);
+        Wait(startMenuWaitInSeconds);
         Type("{LWIN}", hideInLogging: false);
         Wait(seconds: 1);
         Type("{ESC}", hideInLogging: false);
+        Wait(startMenuWaitInSeconds);
 
         // =====================================================
         // Bring Outlook to Focus and Dismiss Popups

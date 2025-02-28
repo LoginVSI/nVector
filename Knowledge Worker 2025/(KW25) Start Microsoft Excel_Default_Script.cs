@@ -76,7 +76,7 @@ public class Start_Excel_DefaultScript : ScriptBase
         {
             var dialog = FindWindow(
                 className: "Win32 Window:NUIDialog", 
-                processName: ProcessName, 
+                processName: "EXCEL", 
                 continueOnError: true, 
                 timeout: 5);
             while (dialog != null)
@@ -84,7 +84,7 @@ public class Start_Excel_DefaultScript : ScriptBase
                 dialog.Close();
                 dialog = FindWindow(
                     className: "Win32 Window:NUIDialog", 
-                    processName: ProcessName, 
+                    processName: "EXCEL", 
                     continueOnError: true, 
                     timeout: 5);
             }

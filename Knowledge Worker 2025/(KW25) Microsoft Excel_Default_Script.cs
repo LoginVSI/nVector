@@ -23,6 +23,7 @@ public class Excel_DefaultScript : ScriptBase
     int waitMessageboxInSeconds = 2;              // Duration for onscreen wait messages
     int keyboardShortcutsCPM = 30;                // Typing speed for keyboard shortcuts
     int charactersPerMinuteToType = 600;          // Typing speed for file dialogs and text input
+    int startMenuWaitInSeconds = 5;                // Duration for Start Menu wait between interactions
 
     // New timing variables for chart insertion
     int waitForGraphToShow = 15;                   // Wait time for the graph to show
@@ -62,18 +63,20 @@ public class Excel_DefaultScript : ScriptBase
         string excelFilePath = $"{downloadDir}\\loginvsi.xlsx";
         // Force download by always overwriting
         Log("Downloading Excel file");
-        CopyFile(KnownFiles.ExcelSheet, excelFilePath, continueOnError: false);
+        CopyFile(KnownFiles.ExcelSheet, excelFilePath, continueOnError: true);
         
         // -------------------------------
         // Simulate Start Menu Interaction
         // -------------------------------
         Log("Opening Start Menu");
+        Wait(startMenuWaitInSeconds);
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Start Menu");
         Type("{LWIN}", hideInLogging: false);
-        Wait(seconds: 3);
+        Wait(seconds: startMenuWaitInSeconds);
         Type("{LWIN}", hideInLogging: false);
         Wait(seconds: 1);
         Type("{ESC}", hideInLogging: false);
+        Wait(startMenuWaitInSeconds);
         
         // -------------------------------
         // Skip First-Run Dialogs (Pre-Excel)
@@ -127,6 +130,15 @@ public class Excel_DefaultScript : ScriptBase
                 Wait(seconds: globalWaitInSeconds);
             }
         }
+
+        // =====================================================
+        // Refresh Excel Main Window
+        // =====================================================
+        _activeDocument.Minimize();
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Minimizing Excel");
+        _activeDocument.Maximize();
+        _activeDocument.Focus();
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Maximizing Excel");
         
         // =====================================================
         // Helper: Scroll Function
