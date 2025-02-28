@@ -61,8 +61,8 @@ public class Excel_DefaultScript : ScriptBase
         }
         string excelFilePath = $"{downloadDir}\\loginvsi.xlsx";
         // Force download by always overwriting
-        Log("Downloading Excel file (overwrite).");
-        CopyFile(KnownFiles.ExcelSheet, excelFilePath, continueOnError: false, overwrite: true);
+        Log("Downloading Excel file");
+        CopyFile(KnownFiles.ExcelSheet, excelFilePath, continueOnError: false);
         
         // -------------------------------
         // Simulate Start Menu Interaction

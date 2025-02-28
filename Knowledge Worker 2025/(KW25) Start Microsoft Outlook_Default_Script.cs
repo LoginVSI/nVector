@@ -82,7 +82,7 @@ public class M365Outlook_InvocationScript : ScriptBase
     // =====================================================
     private void SkipFirstRunDialogs()
     {
-        int firstRunRetryCount = 2;
+        int firstRunRetryCount = 4;
         for (int i = 0; i < firstRunRetryCount; i++)
         {
             var signinWindow = MainWindow.FindControlWithXPath(
