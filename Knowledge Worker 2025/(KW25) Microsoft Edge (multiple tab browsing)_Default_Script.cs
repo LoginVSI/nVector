@@ -47,7 +47,7 @@ public class Browser_MultipleTabs_DefaultScript : ScriptBase
         Log("Simulating Start Menu interaction.");
         Wait(startMenuWaitInSeconds);
         Type("{LWIN}",hideInLogging:false);
-        Wait(seconds: Wait(startMenuWaitInSeconds);, showOnScreen: true, onScreenText: "Opening Start Menu");
+        Wait(seconds: startMenuWaitInSeconds, showOnScreen: true, onScreenText: "Opening Start Menu");
         Type("{LWIN}",hideInLogging:false);
         Wait(seconds: 1, showOnScreen: true, onScreenText: "Closing Start Menu");
         Type("{ESC}",hideInLogging:false);
