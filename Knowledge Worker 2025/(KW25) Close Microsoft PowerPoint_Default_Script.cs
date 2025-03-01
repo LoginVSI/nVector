@@ -16,8 +16,10 @@ public class Close_PowerPoint_DefaultScript : ScriptBase
         Wait(seconds:2, showOnScreen:true, onScreenText:"Closing PowerPoint if open.");
         Log("Closing PowerPoint if open.");
         var MainWindow = FindWindow(processName:"powerpnt", timeout:5, continueOnError:true);
+        Wait(2);
         MainWindow?.Focus();
         MainWindow?.Maximize();
+        Wait(2);
         MainWindow?.Close();
     }
 }

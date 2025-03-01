@@ -32,7 +32,8 @@ public class WordDefaultScript : ScriptBase
     int globalTimeoutInSeconds = 60;          // Timeout for actions (e.g., finding the app window)
     int waitMessageboxInSeconds = 2;          // Duration for onscreen wait messages (in seconds)
     double globalWaitInSeconds = 3;           // General wait time between actions for human-like behavior
-    int keyboardShortcutsCPM = 30;            // Typing speed for keyboard shortcuts
+    int keyboardShortcutsCPM = 15;            // Typing speed for keyboard shortcuts
+    int waitInBetweenKeyboardShortcuts = 3;       // Wait time between keyboard shortcuts
     int typingTextCPM = 600;                  // Typing speed for document text
     int copyPasteRepetitions = 1;             // Number of times to perform the copy-paste action
     int waitForCopyPasteInSeconds = 5;        // Wait time after copy-paste actions
@@ -140,7 +141,9 @@ public class WordDefaultScript : ScriptBase
         // =====================================================
         Log("Opening .docx file via open file dialog");
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Open .docx file");
-        MainWindow.Type("{CTRL+O}{ALT+O+O}", cpm: keyboardShortcutsCPM, hideInLogging:false);
+        MainWindow.Type("{CTRL+O}", cpm: keyboardShortcutsCPM, hideInLogging:false);
+        Wait(seconds: waitInBetweenKeyboardShortcuts);
+        MainWindow.Type("{ALT+O+O}", cpm: keyboardShortcutsCPM, hideInLogging:false);
         StartTimer("Open_DOCX_Dialog");
         var openWindow = FindWindow(className: "Win32 Window:#32770", processName: "WINWORD", continueOnError:false, timeout: globalTimeoutInSeconds);
         StopTimer("Open_DOCX_Dialog");
@@ -194,9 +197,9 @@ public class WordDefaultScript : ScriptBase
         // =====================================================
         // Switch page view to "Page Width" and then to "One Page"
         newWord.Type("{ALT}wi", cpm: keyboardShortcutsCPM, hideInLogging:false);
-        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Switching view...");
+        Wait(seconds: waitInBetweenKeyboardShortcuts);
         newWord.Type("{ALT}w1", cpm: keyboardShortcutsCPM, hideInLogging:false);
-        Wait(seconds: globalWaitInSeconds);
+        Wait(seconds: waitInBetweenKeyboardShortcuts);
 
         // =====================================================
         // Type Document Content
@@ -214,9 +217,8 @@ public class WordDefaultScript : ScriptBase
         // =====================================================
         Log("Inserting BMP image");
         newWord.Type("{ALT}np", cpm: keyboardShortcutsCPM, hideInLogging:false);
-        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Preparing picture dialog");
-        // 'd' opens the insert file dialog.
-        Type("d", cpm: keyboardShortcutsCPM, hideInLogging:false);
+        Wait(seconds: waitInBetweenKeyboardShortcuts);
+        Type("d", cpm: keyboardShortcutsCPM, hideInLogging:false); // 'd' opens the insert file dialog.
         StartTimer("Insert_Picture_Dialog");
         var addPictureDialog = FindWindow(className: "Win32 Window:#32770", processName: "WINWORD", timeout: globalTimeoutInSeconds);
         StopTimer("Insert_Picture_Dialog");
@@ -226,16 +228,15 @@ public class WordDefaultScript : ScriptBase
         fileNameBoxPic.Click();
         ScriptHelpers.SetTextBoxText(this, fileNameBoxPic, bmpFile, cpm: typingTextCPM);
         fileNameBoxPic.Type("{ENTER}", cpm: keyboardShortcutsCPM, hideInLogging:false);
-        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Picture inserted");
+        Wait(seconds: waitInBetweenKeyboardShortcuts, showOnScreen: true, onScreenText: "Picture inserted");
 
         // =====================================================
         // Copy & Paste Operations
         // =====================================================
         Log("Performing copy and paste operations");
-        newWord.Type("{CTRL+a}", cpm: keyboardShortcutsCPM, hideInLogging:false);
-        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Selecting content");
-        newWord.Type("{CTRL+c}", cpm: keyboardShortcutsCPM, hideInLogging:false);
-        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Content copied");
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Copy and pasting content");
+        newWord.Type("{CTRL+a}{CTRL+c}", cpm: keyboardShortcutsCPM, hideInLogging:false);
+        Wait(seconds: waitInBetweenKeyboardShortcuts);
         for (int i = 0; i < copyPasteRepetitions; i++)
         {
             newWord.Type("{CTRL+V}", cpm: keyboardShortcutsCPM, hideInLogging:false);

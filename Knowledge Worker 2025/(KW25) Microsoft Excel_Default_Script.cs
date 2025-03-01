@@ -21,7 +21,7 @@ public class Excel_DefaultScript : ScriptBase
     int globalTimeoutInSeconds = 60;              // Timeout for actions
     int globalWaitInSeconds = 3;                  // Standard wait time between actions
     int waitMessageboxInSeconds = 2;              // Duration for onscreen wait messages
-    int keyboardShortcutsCPM = 30;                // Typing speed for keyboard shortcuts
+    int keyboardShortcutsCPM = 15;                // Typing speed for keyboard shortcuts
     int charactersPerMinuteToType = 600;          // Typing speed for file dialogs and text input
     int startMenuWaitInSeconds = 5;                // Duration for Start Menu wait between interactions
 
@@ -94,7 +94,9 @@ public class Excel_DefaultScript : ScriptBase
         
         Log("Opening Excel file via open file dialog");
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Open Excel file");
-        mainWindow.Type("{CTRL+O}{ALT+O+O}", cpm: keyboardShortcutsCPM, hideInLogging: false);
+        mainWindow.Type("{CTRL+O}", cpm: keyboardShortcutsCPM, hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
+        mainWindow.Type("{ALT+O+O}", cpm: keyboardShortcutsCPM, hideInLogging: false);
         StartTimer("Open_Excel_Dialog");
         var openWindow = FindWindow(className: "Win32 Window:#32770", processName: "EXCEL", continueOnError: false, timeout: globalTimeoutInSeconds);
         StopTimer("Open_Excel_Dialog");
@@ -169,7 +171,6 @@ public class Excel_DefaultScript : ScriptBase
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Add a graph, make it fullscreen, and change the graph layout");
         // Open Insert Chart window via shortcut {ALT}NR
         _activeDocument.Type("{ALT}NR", cpm: keyboardShortcutsCPM, hideInLogging: false);
-        Wait(seconds: globalWaitInSeconds);
         // Find the Insert Chart dialog
         var insertChartDialog = FindWindow(className: "Win32 Window:NUIDialog", title: "Insert Chart", processName: "EXCEL", timeout: globalTimeoutInSeconds);
         // In the dialog, click the "All Charts" tab

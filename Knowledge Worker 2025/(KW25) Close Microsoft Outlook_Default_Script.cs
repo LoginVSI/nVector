@@ -16,8 +16,10 @@ public class Close_Outlook_DefaultScript : ScriptBase
         Wait(seconds:2, showOnScreen:true, onScreenText:"Closing Outlook if open.");
         Log("Closing Outlook if open.");
         var MainWindow = FindWindow(processName:"outlook", title:"* - Outlook*", timeout:5, continueOnError:true);
+        Wait(2);
         MainWindow?.Focus();
         MainWindow?.Maximize();
+        Wait(2);
         MainWindow?.Close();
     }
 }

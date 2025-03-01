@@ -16,8 +16,10 @@ public class Close_Browser_DefaultScript : ScriptBase
         Wait(seconds:2, showOnScreen:true, onScreenText:"Closing browser if open.");
         Log("Closing browser if open.");
         var MainWindow = FindWindow(processName:"msedge", timeout:5, continueOnError:true);
+        Wait(2);
         MainWindow?.Focus();
         MainWindow?.Maximize();
+        Wait(2);
         MainWindow?.Close();
     }
 }

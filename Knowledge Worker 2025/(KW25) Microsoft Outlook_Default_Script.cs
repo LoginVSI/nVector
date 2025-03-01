@@ -33,10 +33,11 @@ public class Outlook_DefaultScript : ScriptBase
     int globalTimeoutInSeconds = 60;                // How long to wait for actions
     int globalWaitInSeconds = 3;                    // Wait time between actions
     int waitMessageboxInSeconds = 2;                // Duration for onscreen wait messages
-    int keyboardShortcutsCPM = 30;                  // Typing speed for keyboard shortcuts
+    int keyboardShortcutsCPM = 15;                  // Typing speed for keyboard shortcuts
+    int waitInBetweenKeyboardShortcuts = 4;         // Wait time between keyboard shortcuts
     int typingTextCharacterPerMinute = 600;         // Typing speed for email body text
     int copyPasteRepetitions = 2;                   // Number of times to copy-paste email body content
-    int startMenuWaitInSeconds = 5;                // Duration for Start Menu wait between interactions
+    int startMenuWaitInSeconds = 5;                 // Duration for Start Menu wait between interactions
 
     // Scrolling parameters for navigating emails
     int inboxDownRepeat = 5;                        // How many times to press DOWN in the inbox list
@@ -196,6 +197,7 @@ public class Outlook_DefaultScript : ScriptBase
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Navigating inbox");
         inboxWindow.Type("{DOWN}".Repeat(inboxDownRepeat), cpm: keyboardShortcutsCPM, hideInLogging: false);
         inboxWindow.Type("{UP}".Repeat(inboxUpRepeat), cpm: keyboardShortcutsCPM, hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds);
         inboxWindow.Type("{ENTER}", cpm: keyboardShortcutsCPM, hideInLogging: false);
 
         StartTimer("Open_Existing_Email");
@@ -245,7 +247,7 @@ public class Outlook_DefaultScript : ScriptBase
         toField.Type(toFieldText, cpm: typingTextCharacterPerMinute, hideInLogging: false);
         // Switch focus to the subject field.
         newEmail.Type("{ALT+U}", cpm: keyboardShortcutsCPM, hideInLogging: false);
-        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Entering subject");
+        Wait(seconds: waitInBetweenKeyboardShortcuts);
         newEmail.Type(emailSubject, cpm: typingTextCharacterPerMinute, hideInLogging: false);
         newEmail.Type("{TAB}", cpm: keyboardShortcutsCPM, hideInLogging: false); // Move to email body.
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Entering email body");
@@ -282,14 +284,12 @@ public class Outlook_DefaultScript : ScriptBase
         // Expand Email Content via Copy & Paste
         // =====================================================
         Log("Copying and pasting email body content");
-        newEmail.Type("{CTRL+A}", cpm: keyboardShortcutsCPM, hideInLogging: false);
-        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Selecting email content");
-        newEmail.Type("{CTRL+C}", cpm: keyboardShortcutsCPM, hideInLogging: false);
-        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Copying email content");
+        newEmail.Type("{CTRL+A}{CTRL+C}", cpm: keyboardShortcutsCPM, hideInLogging: false);
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Selecting email content; copying content");
         for (int i = 0; i < copyPasteRepetitions; i++)
         {
             newEmail.Type("{CTRL+V}", cpm: keyboardShortcutsCPM, hideInLogging: false);
-            Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Pasting email content");
+            Wait(seconds: waitInBetweenKeyboardShortcuts);
         }
 
         // =====================================================
@@ -323,7 +323,7 @@ public class Outlook_DefaultScript : ScriptBase
         // =====================================================
         Log("Attaching BMP file to email");
         newEmail.Type("{ALT}naf", cpm: keyboardShortcutsCPM, hideInLogging: false); // Insert and Attach command
-        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Waiting for attachment dialog");
+        Wait(seconds: waitInBetweenKeyboardShortcuts, showOnScreen: true, onScreenText: "Waiting for attachment dialog");
         newEmail.Type("b", cpm: keyboardShortcutsCPM, hideInLogging: false);           // 'b' for browse
         StartTimer("Add_Attachment_Dialog");
         var addAttachmentDialog = FindWindow(className: "Win32 Window:#32770", title: "Insert File", processName: "OUTLOOK", timeout: globalTimeoutInSeconds);

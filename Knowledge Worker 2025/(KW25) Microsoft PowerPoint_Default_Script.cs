@@ -24,7 +24,8 @@ public class PowerPoint_DefaultScript : ScriptBase
     int globalTimeoutInSeconds = 60;              // How long to wait for actions (e.g., opening the app)
     int globalWaitInSeconds = 3;                  // Standard wait time between actions
     int waitMessageboxInSeconds = 2;              // Duration for onscreen wait messages
-    int charactersPerMinuteToType = 30;           // Typing speed for keyboard shortcuts
+    int charactersPerMinuteToType = 15;           // Typing speed for keyboard shortcuts
+    int waitInBetweenKeyboardShortcuts = 4;       // Wait time between keyboard shortcuts
     int slideshowCharactersPerMinuteToType = 12;  // Typing speed for slideshow navigation
     int pageScrollCpm = 60;                      // Typing speed for page scrolling actions
     int transitionPopupCharactersPerMinuteToType = 60; // Typing speed for navigating transitions popup
@@ -119,7 +120,9 @@ public class PowerPoint_DefaultScript : ScriptBase
 
         Log("Opening PPTX file via open file dialog");
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Open pptx file");
-        MainWindow.Type("{CTRL+O}{ALT+O+O}", cpm: charactersPerMinuteToType, hideInLogging: false);
+        MainWindow.Type("{CTRL+O}", cpm: charactersPerMinuteToType, hideInLogging: false);
+        Wait(seconds: waitInBetweenKeyboardShortcuts);
+        MainWindow.Type("{ALT+O+O}", cpm: charactersPerMinuteToType, hideInLogging: false);
         StartTimer("Open_PPTX_Dialog");
         var openWindow = FindWindow(className: "Win32 Window:#32770", processName: "POWERPNT", continueOnError: false, timeout: globalTimeoutInSeconds);
         StopTimer("Open_PPTX_Dialog");
@@ -177,7 +180,7 @@ public class PowerPoint_DefaultScript : ScriptBase
         newPowerpoint.Maximize();
         Wait(seconds: globalWaitInSeconds);
         newPowerpoint.Type("{CTRL+M}", cpm: charactersPerMinuteToType, hideInLogging: false);
-        Wait(seconds: globalWaitInSeconds);
+        Wait(seconds: waitInBetweenKeyboardShortcuts);
 
         // --- Insert BMP into New Slide ---
         Log("Inserting BMP into new slide");
@@ -192,7 +195,7 @@ public class PowerPoint_DefaultScript : ScriptBase
         Wait(seconds: globalWaitInSeconds);
         fileNameBox2.Click();
         newPowerpoint.Type("{ALT+N}", cpm: charactersPerMinuteToType, hideInLogging: false);
-        Wait(seconds: globalWaitInSeconds);
+        Wait(seconds: waitInBetweenKeyboardShortcuts);
         ScriptHelpers.SetTextBoxText(this, fileNameBox2, bmpFile, cpm: typingTextCharacterPerMinute);
         fileNameBox2.Type("{ENTER}", cpm: charactersPerMinuteToType, hideInLogging: false);
         Wait(seconds: globalWaitInSeconds);
@@ -209,6 +212,7 @@ public class PowerPoint_DefaultScript : ScriptBase
         Wait(seconds: globalWaitInSeconds);
         newPowerpoint.Type("{DOWN}", cpm: transitionPopupCharactersPerMinuteToType, hideInLogging: false);
         newPowerpoint.Type("{RIGHT}".Repeat(16), cpm: transitionPopupCharactersPerMinuteToType, hideInLogging: false);
+        Wait(seconds: waitInBetweenKeyboardShortcuts);
         newPowerpoint.Type("{ENTER}", hideInLogging: false);
         Wait(seconds: globalWaitInSeconds);
 
@@ -306,7 +310,7 @@ public class PowerPoint_DefaultScript : ScriptBase
         newPowerpoint.Type("{F5}", cpm: charactersPerMinuteToType, hideInLogging: false);
         Wait(seconds: waitSlideshowStart);
         newPowerpoint.Type("{DOWN}".Repeat(5), cpm: slideshowCharactersPerMinuteToType, hideInLogging: false);
-        Wait(seconds: globalWaitInSeconds);
+        Wait(seconds: waitInBetweenKeyboardShortcuts);
         Type("{ESC}", hideInLogging: false);
         Wait(seconds: globalWaitInSeconds);
         Type("{HOME}", hideInLogging: false); // Go to the first slide
