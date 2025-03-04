@@ -67,49 +67,49 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
 
         // Set registry values; this should be a run-once preparation
         Wait(seconds:2, showOnScreen:true, onScreenText:"Setting Reg Values #1");
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Common\General",@"ShownFirstRunOptin",@"dword:00000001"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Common\Licensing",@"DisableActivationUI",@"dword:00000001"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Registration",@"AcceptAllEulas",@"dword:00000001"));
-        
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\excel\Security\ProtectedView",@"DisableAttachmentsInPV",@"dword:00000001"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\excel\Security\ProtectedView",@"DisableInternetFilesInPV",@"dword:00000001"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\excel\Security\ProtectedView",@"DisableUnsafeLocationsInPV",@"dword:00000001"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\excel\Options", @"SaveAutoRecoverInfoEvery", @"dword:00000000"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Excel\Resiliency", @"DisableAutoRecover", @"dword:00000001"));
-        
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Word\Security\ProtectedView",@"DisableAttachmentsInPV",@"dword:00000001"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Word\Security\ProtectedView",@"DisableInternetFilesInPV",@"dword:00000001"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Word\Security\ProtectedView",@"DisableUnsafeLocationsInPV",@"dword:00000001"));
-        
-        
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Powerpoint\Security\ProtectedView",@"DisableAttachmentsInPV",@"dword:00000001"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Powerpoint\Security\ProtectedView",@"DisableInternetFilesInPV",@"dword:00000001"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Powerpoint\Security\ProtectedView",@"DisableUnsafeLocationsInPV",@"dword:00000001"));
-        
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Powerpoint\options", @"DisableHardwareNotification",@"dword:00000001"));
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Common\General", @"ShownFirstRunOptin", @"dword:00000001")); // Marks that the first run opt-in dialog has been shown.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Common\Licensing", @"DisableActivationUI", @"dword:00000001")); // Disables the Office activation UI prompt.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Registration", @"AcceptAllEulas", @"dword:00000001")); // Automatically accepts all End User License Agreements (EULAs).
 
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Powerpoint\Options", @"SaveAutoRecoverInfoEvery", @"dword:00000000"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\PowerPoint", @"AutoRecover", @"dword:00000000"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\PowerPoint\Options", @"DisableAutoRecover", @"dword:00000001"));
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\excel\Security\ProtectedView", @"DisableAttachmentsInPV", @"dword:00000001")); // Disables attachments in Protected View for Excel.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\excel\Security\ProtectedView", @"DisableInternetFilesInPV", @"dword:00000001")); // Disables files from internet sources in Protected View for Excel.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\excel\Security\ProtectedView", @"DisableUnsafeLocationsInPV", @"dword:00000001")); // Disables files from unsafe locations in Protected View for Excel.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\excel\Options", @"SaveAutoRecoverInfoEvery", @"dword:00000000")); // Disables the automatic saving of AutoRecover information in Excel.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Excel\Resiliency", @"DisableAutoRecover", @"dword:00000001")); // Disables the AutoRecover feature in Excel.
 
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\sharepointintegration", @"hidelearnmorelink", @"dword:00000001"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\graphics", @"disablehardwareacceleration", @"dword:00000001"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\graphics", @"disableanimations", @"dword:00000001"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\general",@"skydrivesigninoption", @"dword:00000000"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\general", @"disableboottoofficestart", @"dword:00000001"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\firstrun", @"disablemovie", @"dword:00000001"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\firstrun", @"bootedrtm", @"dword:00000001"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\excel\options", @"defaultformat", @"dword:00000051"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\powerpoint\options", @"defaultformat", @"dword:00000027"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\word\options", @"defaultformat",@""));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Word\Options", @"SaveAutoRecoverInfoEvery", @"dword:00000000"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\options", @"PrivacyNoticeShown", @"dword:00000002"));
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\PromoDialogShown", @"FluentWelcomeDialogShown", @"dword:00000001"));
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Word\Security\ProtectedView", @"DisableAttachmentsInPV", @"dword:00000001")); // Disables attachments in Protected View for Word.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Word\Security\ProtectedView", @"DisableInternetFilesInPV", @"dword:00000001")); // Disables files from internet sources in Protected View for Word.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Word\Security\ProtectedView", @"DisableUnsafeLocationsInPV", @"dword:00000001")); // Disables files from unsafe locations in Protected View for Word.
 
-        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\Outlook\Preferences", @"ReopenWindowsOption", @"dword:00000001"));
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Powerpoint\Security\ProtectedView", @"DisableAttachmentsInPV", @"dword:00000001")); // Disables attachments in Protected View for PowerPoint.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Powerpoint\Security\ProtectedView", @"DisableInternetFilesInPV", @"dword:00000001")); // Disables files from internet sources in Protected View for PowerPoint.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Powerpoint\Security\ProtectedView", @"DisableUnsafeLocationsInPV", @"dword:00000001")); // Disables files from unsafe locations in Protected View for PowerPoint.
 
-        // RegImport(create_regfile(@"HKEY_CURRENT_USER\software\Policies\Microsoft\Edge", @"RestoreOnStartup", @"dword:00000000"));
-        // RegImport(create_regfile(@"HKEY_CURRENT_USER\software\Policies\Microsoft\Edge", @"HideRestoreDialogEnabled", @"dword:00000001"));
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Office\16.0\Powerpoint\options", @"DisableHardwareNotification", @"dword:00000001")); // Disables hardware acceleration notifications in PowerPoint.
+
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Powerpoint\Options", @"SaveAutoRecoverInfoEvery", @"dword:00000000")); // Disables AutoRecover information saving in PowerPoint.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\PowerPoint", @"AutoRecover", @"dword:00000000")); // Disables the AutoRecover feature in PowerPoint.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\PowerPoint\Options", @"DisableAutoRecover", @"dword:00000001")); // Confirms disabling of AutoRecover in PowerPoint.
+
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\sharepointintegration", @"hidelearnmorelink", @"dword:00000001")); // Hides the "Learn More" link for SharePoint integration.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\graphics", @"disablehardwareacceleration", @"dword:00000001")); // Disables hardware acceleration for Office graphics.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\graphics", @"disableanimations", @"dword:00000001")); // Disables animations within Office applications.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\general", @"skydrivesigninoption", @"dword:00000000")); // Disables the SkyDrive (OneDrive) sign-in option in Office.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\general", @"disableboottoofficestart", @"dword:00000001")); // Disables booting directly to the Office start screen.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\firstrun", @"disablemovie", @"dword:00000001")); // Disables the first run introductory movie/video.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\firstrun", @"bootedrtm", @"dword:00000001")); // Marks Office as having completed the initial first run experience.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\excel\options", @"defaultformat", @"dword:00000051")); // Sets the default file format for Excel (value 0x51 likely corresponds to XLSX).
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\powerpoint\options", @"defaultformat", @"dword:00000027")); // Sets the default file format for PowerPoint (value 0x27 likely corresponds to PPTX).
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\word\options", @"defaultformat", @"")); // Leaves the default file format for Word unchanged or resets it to system default.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Word\Options", @"SaveAutoRecoverInfoEvery", @"dword:00000000")); // Disables AutoRecover information saving in Word.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\options", @"PrivacyNoticeShown", @"dword:00000002")); // Indicates that the Privacy Notice has been shown or dismissed.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\PromoDialogShown", @"FluentWelcomeDialogShown", @"dword:00000001")); // Marks the Fluent Welcome dialog as already shown.
+
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\Outlook\Preferences", @"ReopenWindowsOption", @"dword:00000001")); // Enables the option to reopen previous windows in Outlook.
+
+        // RegImport(create_regfile(@"HKEY_CURRENT_USER\software\Policies\Microsoft\Edge", @"RestoreOnStartup", @"dword:00000000")); // Would configure Microsoft Edge to not restore tabs on startup.
+        // RegImport(create_regfile(@"HKEY_CURRENT_USER\software\Policies\Microsoft\Edge", @"HideRestoreDialogEnabled", @"dword:00000001")); // Would hide the restore dialog in Microsoft Edge.
+
         
         // Start Application
         Log("Starting Word");
