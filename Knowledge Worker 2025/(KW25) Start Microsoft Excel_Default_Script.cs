@@ -94,7 +94,7 @@ public class Start_Excel_DefaultScript : ScriptBase
             Log("Deleted existing file: " + excelFile);
         }
         Log("Downloading Excel file if it doesn't exist");
-        CopyFile(KnownFiles.ExcelSheet, excelFile, overwrite: true, continueOnError: true);
+        CopyFile(KnownFiles.ExcelSheet, excelFile, overwrite: false, continueOnError: true);
     }
     
     private void SkipFirstRunDialogs()

@@ -87,7 +87,7 @@ public class Start_PowerPoint_DefaultScript : ScriptBase
             Log("Deleted existing file: " + pptxFile);
         }
         Log("Downloading PowerPoint presentation file if it doesn't exist");
-        CopyFile(KnownFiles.PowerPointPresentation, pptxFile, overwrite: true, continueOnError: true);
+        CopyFile(KnownFiles.PowerPointPresentation, pptxFile, overwrite: false, continueOnError: true);
     }
     
     private void SkipFirstRunDialogs()

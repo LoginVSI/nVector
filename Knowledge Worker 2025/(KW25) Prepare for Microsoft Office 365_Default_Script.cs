@@ -90,7 +90,8 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Powerpoint\Options", @"SaveAutoRecoverInfoEvery", @"dword:00000000")); // Disables AutoRecover information saving in PowerPoint.
         RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\PowerPoint", @"AutoRecover", @"dword:00000000")); // Disables the AutoRecover feature in PowerPoint.
         RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\PowerPoint\Options", @"DisableAutoRecover", @"dword:00000001")); // Confirms disabling of AutoRecover in PowerPoint.
-
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Excel\Options", @"DisableAutoRecover", @"dword:00000001")); // Confirms disabling of AutoRecover in Excel.
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Word\Options", @"DisableAutoRecover", @"dword:00000001")); // Confirms disabling of AutoRecover in Word.
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\sharepointintegration", @"hidelearnmorelink", @"dword:00000001")); // Hides the "Learn More" link for SharePoint integration.
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\graphics", @"disablehardwareacceleration", @"dword:00000001")); // Disables hardware acceleration for Office graphics.
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\graphics", @"disableanimations", @"dword:00000001")); // Disables animations within Office applications.

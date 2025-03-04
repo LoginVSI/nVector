@@ -43,12 +43,38 @@ public class M365Outlook_InvocationScript : ScriptBase
         // =====================================================
         // Download PRF and PST Files
         // =====================================================
-        string prfFile = $"{targetDir}\\Outlook.prf";
-        string pstFile = $"{targetDir}\\Outlook.pst";
+        string prfFile = Path.Combine(targetDir, "Outlook.prf");
+        string pstFile = Path.Combine(targetDir, "Outlook.pst");
+
+        // Attempt to delete the files if they exist, but continue on error
+        try
+        {
+            if (File.Exists(prfFile))
+            {
+                File.Delete(prfFile);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Optionally log the error: Log($"Error deleting file {prfFile}: {ex.Message}");
+        }
+
+        try
+        {
+            if (File.Exists(pstFile))
+            {
+                File.Delete(pstFile);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Optionally log the error: Log($"Error deleting file {pstFile}: {ex.Message}");
+        }
+
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Get PRF & PST");
         Log("Downloading PRF & PST files.");
-        CopyFile(KnownFiles.OutlookConfiguration, prfFile, continueOnError: true);
-        CopyFile(KnownFiles.OutlookData, pstFile, continueOnError: true);
+        CopyFile(KnownFiles.OutlookConfiguration, prfFile, continueOnError: true, overwrite: false);
+        CopyFile(KnownFiles.OutlookData, pstFile, continueOnError: true, overwrite: false);
 
         // =====================================================
         // Update PRF File

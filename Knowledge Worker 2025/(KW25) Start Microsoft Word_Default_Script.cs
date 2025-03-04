@@ -94,7 +94,7 @@ public class Start_Word_DefaultScript : ScriptBase
             Log("Deleted existing file: " + docxFile);
         }
         Log("Downloading Word document file if it doesn't exist");
-        CopyFile(KnownFiles.WordDocument, docxFile, overwrite: true, continueOnError: true);
+        CopyFile(KnownFiles.WordDocument, docxFile, overwrite: false, continueOnError: true);
     }
     
     private void SkipFirstRunDialogs()
