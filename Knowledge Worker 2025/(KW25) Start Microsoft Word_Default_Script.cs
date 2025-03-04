@@ -34,45 +34,74 @@ public class Start_Word_DefaultScript : ScriptBase
     
     private void DeleteTempFiles()
     {
+        // Define relevant folders
         string wordFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Word");
+        string unsavedFilesFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "Office", "UnsavedFiles");
         string tempFolder = Path.GetTempPath();
 
+        // Delete from Word AutoRecover folder
         if (Directory.Exists(wordFolder))
         {
-            foreach (var file in Directory.GetFiles(wordFolder, "*.asd"))
+            foreach (var file in Directory.GetFiles(wordFolder, "*.asd")) // Word AutoRecover files
             {
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
-            foreach (var file in Directory.GetFiles(wordFolder, "*.wbk"))
+            foreach (var file in Directory.GetFiles(wordFolder, "*.wbk")) // Word backup files
             {
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
-            foreach (var file in Directory.GetFiles(wordFolder, "*.docx"))
+            foreach (var file in Directory.GetFiles(wordFolder, "*.docx")) // Word documents
+            {
+                File.Delete(file);
+                Log("Deleted file: " + file);
+            }
+            foreach (var file in Directory.GetFiles(wordFolder, "*.docm")) // Macro-enabled Word documents
+            {
+                File.Delete(file);
+                Log("Deleted file: " + file);
+            }
+            foreach (var file in Directory.GetFiles(wordFolder, "*.dotx")) // Word templates
+            {
+                File.Delete(file);
+                Log("Deleted file: " + file);
+            }
+            foreach (var file in Directory.GetFiles(wordFolder, "*.dotm")) // Macro-enabled Word templates
             {
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
         }
+
+        // Delete from Office Unsaved Files folder (NEW ADDITION)
+        if (Directory.Exists(unsavedFilesFolder))
+        {
+            foreach (var file in Directory.GetFiles(unsavedFilesFolder, "*.doc*")) // Unsaved Word documents
+            {
+                File.Delete(file);
+                Log("Deleted file: " + file);
+            }
+        }
+
+        // Delete from Temp folder
         if (Directory.Exists(tempFolder))
         {
-            foreach (var file in Directory.GetFiles(tempFolder, "~WRD*.tmp"))
+            foreach (var file in Directory.GetFiles(tempFolder, "~WRD*.tmp")) // Word temp files
             {
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
-            foreach (var file in Directory.GetFiles(tempFolder, "~$*.docx"))
+            foreach (var file in Directory.GetFiles(tempFolder, "~$*.doc*")) // Word lock files
             {
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
-            /* Commented out because it may delete other important temp files
-            foreach (var file in Directory.GetFiles(tempFolder, "*.tmp"))
+            foreach (var file in Directory.GetFiles(tempFolder, "Word*.tmp")) // More Word-related temp files
             {
                 File.Delete(file);
                 Log("Deleted file: " + file);
-            } */
+            }
         }
     }
     

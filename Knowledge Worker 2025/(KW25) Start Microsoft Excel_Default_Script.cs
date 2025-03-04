@@ -34,45 +34,64 @@ public class Start_Excel_DefaultScript : ScriptBase
     
     private void DeleteTempFiles()
     {
+        // Define relevant folders
         string excelFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Excel");
+        string unsavedFilesFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "Office", "UnsavedFiles");
         string tempFolder = Path.GetTempPath();
 
+        // Delete from Excel AutoRecover folder
         if (Directory.Exists(excelFolder))
         {
-            foreach (var file in Directory.GetFiles(excelFolder, "*.xlsb"))
+            foreach (var file in Directory.GetFiles(excelFolder, "*.xlsb")) // Binary workbooks
             {
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
-            foreach (var file in Directory.GetFiles(excelFolder, "*.xar"))
+            foreach (var file in Directory.GetFiles(excelFolder, "*.xar")) // Excel archive files (rare, but keeping your logic)
             {
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
-            foreach (var file in Directory.GetFiles(excelFolder, "*.xls*"))
+            foreach (var file in Directory.GetFiles(excelFolder, "*.xls*")) // All Excel formats (xlsx, xlsm, etc.)
             {
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
-            foreach (var file in Directory.GetFiles(excelFolder, "*.tmp"))
+            foreach (var file in Directory.GetFiles(excelFolder, "*.tmp")) // Temporary Excel files
+            {
+                File.Delete(file);
+                Log("Deleted file: " + file);
+            }
+            foreach (var file in Directory.GetFiles(excelFolder, "~$*.xls*")) // Excel lock files
             {
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
         }
-        if (Directory.Exists(tempFolder))
+
+        // Delete from Office Unsaved Files folder (NEW ADDITION)
+        if (Directory.Exists(unsavedFilesFolder))
         {
-            foreach (var file in Directory.GetFiles(tempFolder, "~$*.xls*"))
+            foreach (var file in Directory.GetFiles(unsavedFilesFolder, "*.xls*")) // Unsaved Excel files
             {
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
-            /* Commented out because it may delete other important temp files 
-            foreach (var file in Directory.GetFiles(tempFolder, "*.tmp"))
+        }
+
+        // Delete from Temp folder
+        if (Directory.Exists(tempFolder))
+        {
+            foreach (var file in Directory.GetFiles(tempFolder, "~$*.xls*")) // Excel lock files
             {
                 File.Delete(file);
                 Log("Deleted file: " + file);
-            } */
+            }
+            foreach (var file in Directory.GetFiles(tempFolder, "Excel*.tmp")) // Excel-related temp files
+            {
+                File.Delete(file);
+                Log("Deleted file: " + file);
+            }
         }
     }
     
