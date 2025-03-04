@@ -69,7 +69,7 @@ public class M365Outlook_InvocationScript : ScriptBase
         MainWindow.Focus();
 
         // =====================================================
-        // Dismiss First Run Dialogs
+        // Dismiss Activation Dialogs
         // =====================================================
         int activateOfficeRetryCount = 2;
         for (int i = 0; i < activateOfficeRetryCount; i++)

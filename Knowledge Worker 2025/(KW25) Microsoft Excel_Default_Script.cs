@@ -25,6 +25,7 @@ public class Excel_DefaultScript : ScriptBase
     int keyboardShortcutsCPM = 15;                // Typing speed for keyboard shortcuts
     int charactersPerMinuteToType = 600;          // Typing speed for file dialogs and text input
     int startMenuWaitInSeconds = 5;               // Duration for Start Menu wait between interactions
+    int waitAfterScrolling = 8;                   // Duration after scrolling before inserting chart
 
     // Additional timing variables (chart insertion, etc.)
     int waitForGraphToShow = 15;
@@ -142,6 +143,7 @@ public class Excel_DefaultScript : ScriptBase
         Scroll("Up", 30, 1, 0.1);
 
         // Insert Chart Workflow 
+        Wait(waitAfterScrolling);
         Wait(waitMessageboxInSeconds, true, "Add a graph, make it fullscreen, and change the graph layout");
         _activeDocument.Type("{ALT}NR", cpm: keyboardShortcutsCPM, hideInLogging:false);
         var insertChartDialog = FindWindow(className:"Win32 Window:NUIDialog", processName:"EXCEL", timeout:globalTimeoutInSeconds);

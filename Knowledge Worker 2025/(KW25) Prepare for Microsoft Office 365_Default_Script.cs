@@ -90,7 +90,7 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
 
         RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Powerpoint\Options", @"SaveAutoRecoverInfoEvery", @"dword:00000000"));
         RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\PowerPoint", @"AutoRecover", @"dword:00000000"));
-        
+        RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\PowerPoint\Options", @"DisableAutoRecover", @"dword:00000001"));
 
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\sharepointintegration", @"hidelearnmorelink", @"dword:00000001"));
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\graphics", @"disablehardwareacceleration", @"dword:00000001"));

@@ -38,6 +38,8 @@ public class Outlook_DefaultScript : ScriptBase
     int typingTextCharacterPerMinute = 600;         // Typing speed for email body text
     int copyPasteRepetitions = 2;                   // Number of times to copy-paste email body content
     int startMenuWaitInSeconds = 5;                 // Duration for Start Menu wait between interactions
+    int waitOpenExistingEmail = 8;                  // Wait time for opening an existing email after inbox scrolling
+    int waitBeforePictureInsert = 8;               // Wait time before inserting a picture in the email
 
     // Scrolling parameters for navigating emails
     int inboxDownRepeat = 5;                        // How many times to press DOWN in the inbox list
@@ -204,7 +206,7 @@ public class Outlook_DefaultScript : ScriptBase
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Navigating inbox");
         inboxWindow.Type("{DOWN}".Repeat(inboxDownRepeat), cpm: keyboardShortcutsCPM, hideInLogging: false);
         inboxWindow.Type("{UP}".Repeat(inboxUpRepeat), cpm: keyboardShortcutsCPM, hideInLogging: false);
-        Wait(seconds: globalWaitInSeconds);
+        Wait(seconds: waitOpenExistingEmail);
         inboxWindow.Type("{ENTER}", cpm: keyboardShortcutsCPM, hideInLogging: false);
 
         StartTimer("Open_Existing_Email");
@@ -322,7 +324,7 @@ public class Outlook_DefaultScript : ScriptBase
         // =====================================================
         Log("Attaching BMP file to email");
         newEmail.Type("{ALT}naf", cpm: keyboardShortcutsCPM, hideInLogging: false); // Insert and Attach command
-        Wait(seconds: waitInBetweenKeyboardShortcuts, showOnScreen: true, onScreenText: "Waiting for attachment dialog");
+        Wait(waitBeforePictureInsert);
         newEmail.Type("b", cpm: keyboardShortcutsCPM, hideInLogging: false);           // 'b' for browse
         StartTimer("Add_Attachment_Dialog");
         var addAttachmentDialog = FindWindow(className: "Win32 Window:#32770", title: "Insert File", processName: "OUTLOOK", timeout: globalTimeoutInSeconds);
