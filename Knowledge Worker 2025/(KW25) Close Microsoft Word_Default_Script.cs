@@ -23,7 +23,7 @@ public class Close_Word_DefaultScript : ScriptBase
         Wait(globalWaitInSeconds);
         MainWindow?.Close();
         Wait(globalWaitInSeconds);
-        MainWindow?.Type("{alt+f4}")
+        MainWindow?.Type("{alt+f4}");
         Wait(globalWaitInSeconds);
         MainWindow?.Type("n");
         Wait(globalWaitInSeconds);

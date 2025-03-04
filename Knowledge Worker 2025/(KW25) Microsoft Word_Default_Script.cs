@@ -117,7 +117,7 @@ public class WordDefaultScript : ScriptBase
         {
             ABORT("Error starting process: " + ex.Message);
         }
-        var MainWindow = FindWindow(title:"*Document*Word*", processName:"WINWORD", continueOnError:false, timeout:globalTimeoutInSeconds);
+        var newExcelWindow = FindWindow(title:"*Document*Word*", processName:"WINWORD", continueOnError:false, timeout:globalTimeoutInSeconds);
         Wait(globalWaitInSeconds);
 
         // =====================================================
@@ -128,7 +128,8 @@ public class WordDefaultScript : ScriptBase
 
         // =====================================================
         // Skip First-Run Dialogs before Bringing Word into Focus
-        // =====================================================
+        // =====================================================)
+        Wait(globalWaitInSeconds);
         SkipFirstRunDialogs();
 
         // =====================================================
@@ -139,7 +140,6 @@ public class WordDefaultScript : ScriptBase
         MainWindow.Maximize();
         MainWindow.Focus();
         Wait(globalWaitInSeconds);
-        CloseExtraWindows("WINWORD", "*Document*");
 
         // =====================================================
         // Open .docx File via Open File Dialog using MainWindow
@@ -163,6 +163,9 @@ public class WordDefaultScript : ScriptBase
         StartTimer("Open_Word_Document");
         var newWord = FindWindow(className:"Win32 Window:OpusApp", title:"loginvsi*", processName:"WINWORD", timeout:globalTimeoutInSeconds);
         StopTimer("Open_Word_Document");
+        
+        // Close any stray "Document" windows
+        CloseExtraWindows("WINWORD", "*Document*");
         Wait(globalWaitInSeconds);
         newWord.Focus();
         newWord.Maximize();

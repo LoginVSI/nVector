@@ -126,6 +126,7 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
 
     private void SkipFirstRunDialogs()
     {
+        int globalWaitInSeconds = 3; // Standard wait time between actions
         int loopCount = 2; // configurable number of loops
         for (int i = 0; i < loopCount; i++)
         {

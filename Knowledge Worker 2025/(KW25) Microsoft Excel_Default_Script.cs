@@ -99,6 +99,7 @@ public class Excel_DefaultScript : ScriptBase
         // =====================================================
         // Bring new Excel instance into focus and open file via dialog
         // =====================================================
+        Wait(startMenuWaitInSeconds);
         newExcelWindow.Focus();
         newExcelWindow.Maximize();
         Log("Opening Excel file via open file dialog");

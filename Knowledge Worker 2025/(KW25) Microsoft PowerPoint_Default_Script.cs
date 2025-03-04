@@ -82,8 +82,15 @@ public class PowerPoint_DefaultScript : ScriptBase
         CloseExtraWindows("POWERPNT", "*edited*");
 
         // =====================================================
+        // Skip First-Run Dialogs before Bringing PowerPoint into Focus
+        // =====================================================)
+        Wait(globalWaitInSeconds);
+        SkipFirstRunDialogs();
+
+        // =====================================================
         // Bring new PowerPoint instance into focus and open file via dialog
         // =====================================================
+        Wait(startMenuWaitInSeconds);
         newPowerpointWindow.Focus();
         newPowerpointWindow.Maximize();
         Log("Opening PPTX file via open file dialog");
@@ -260,6 +267,20 @@ public class PowerPoint_DefaultScript : ScriptBase
         while (++numTries < 5 && currentText != text);
         if (currentText != text)
             ABORT($"Unable to set the correct text '{text}', got '{currentText}'");
+    }
+        private void SkipFirstRunDialogs()
+    {
+        int loopCount = 2;
+        for (int i = 0; i < loopCount; i++)
+        {
+            var dialog = FindWindow(className:"Win32 Window:NUIDialog", processName:"POWERPNT", continueOnError:true, timeout:3);
+            while (dialog != null)
+            {
+                Wait(globalWaitInSeconds);
+                dialog.Close();
+                dialog = FindWindow(className:"Win32 Window:NUIDialog", processName:"POWERPNT", continueOnError:true, timeout:3);
+            }
+        }
     }
 }
  

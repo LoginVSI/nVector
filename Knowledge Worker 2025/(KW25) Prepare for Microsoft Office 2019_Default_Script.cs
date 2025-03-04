@@ -113,7 +113,7 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
                 }
                 else
                 {
-                    globalWaitInSeconds
+                    Wait(globalWaitInSeconds);
                     openDialog.Type("{ESC}");
                 }
             }
