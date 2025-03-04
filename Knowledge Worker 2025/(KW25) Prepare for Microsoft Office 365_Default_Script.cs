@@ -112,7 +112,7 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         // RegImport(create_regfile(@"HKEY_CURRENT_USER\software\Policies\Microsoft\Edge", @"HideRestoreDialogEnabled", @"dword:00000001")); // Would hide the restore dialog in Microsoft Edge.
 
         
-        // Start Application
+        /* // Start Application
         Log("Starting Word");
         Wait(seconds:globalWaitInSeconds, showOnScreen:true, onScreenText:"Starting Word; finding first run dialogs, if any, then stopping App");
         START(mainWindowTitle:"*Word*", processName:"WINWORD", timeout:60);
@@ -120,12 +120,12 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         FindWindow(className : "Win32 Window:OpusApp", title : "*Word*", processName : "WINWORD", continueOnError:true).Focus();
         FindWindow(className : "Win32 Window:OpusApp", title : "*Word*", processName : "WINWORD", continueOnError:true).Maximize();
         Wait(globalWaitInSeconds);      
-        SkipFirstRunDialogs();        
+        SkipFirstRunDialogs();  
 
-        STOP();
+        STOP(); */
     }
 
-    private void SkipFirstRunDialogs()
+    /* private void SkipFirstRunDialogs()
     {
         int globalWaitInSeconds = 3; // Standard wait time between actions
         int loopCount = 2; // configurable number of loops
@@ -147,7 +147,7 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
                     timeout: 5);
             }
         }
-    }
+    } */
 
     private string create_regfile(string key, string value, string data)
     {            
