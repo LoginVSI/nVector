@@ -40,7 +40,7 @@ public class WordDefaultScript : ScriptBase
     int startMenuWaitInSeconds = 5;           // Duration for Start Menu wait
 
     // File download for BMP remains in run script (if needed)
-    private string bmpUrl = "https://myAppliance.myOrg.com/contentDelivery/content/LoginVSI_BattlingRobots.bmp";
+    private string bmpUrl = "https://myAppliance.myOrg.com/contentDelivery/content/LoginVSI_BattlingRobots.bmp"; // Replace with your actual URL
 
     // Document content to be typed into Word, broken into separate lines.
     string[] documentContentLines = new string[] 

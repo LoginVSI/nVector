@@ -34,7 +34,7 @@ public class PowerPoint_DefaultScript : ScriptBase
     int typingTextCharacterPerMinute = 600;
     int startMenuWaitInSeconds = 5;
 
-    string bmpUrl = "https://myAppliance.myOrg.com/contentDelivery/content/LoginVSI_BattlingRobots.bmp";
+    string bmpUrl = "https://myAppliance.myOrg.com/contentDelivery/content/LoginVSI_BattlingRobots.bmp"; // Replace with your actual URL
 
     private void Execute()
     {   
