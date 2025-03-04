@@ -89,12 +89,12 @@ public class Outlook_DefaultScript : ScriptBase
     // Dismisses the Reminder popup if it appears.
     private void DismissReminderPopup(LoginPI.Engine.ScriptBase.Components.IWindow mainWindow, int waitTime)
     {
-        var reminderWindow = FindWindow(className: "Win32 Window:#32770", title: "*Reminder(s)", processName: "OUTLOOK", timeout: 2, continueOnError: true);
+        var reminderWindow = FindWindow(className: "Win32 Window:#32770", title: "*Reminder(s)", processName: "OUTLOOK", timeout: 3, continueOnError: true);
         if (reminderWindow != null)
         {
             Wait(seconds: waitTime, showOnScreen: true, onScreenText: "Dismissing Reminder");
             // Try clicking "Dismiss &All"
-            var dismissAllBtn = reminderWindow.FindControl(className: "Button:Button", title: "Dismiss &All", continueOnError: true, timeout: 2);
+            var dismissAllBtn = reminderWindow.FindControl(className: "Button:Button", title: "Dismiss &All", continueOnError: true, timeout: 3);
             if (dismissAllBtn != null)
             {
                 reminderWindow.Focus();
@@ -158,16 +158,15 @@ public class Outlook_DefaultScript : ScriptBase
         }
 
         // =====================================================
-        // Open/Close Start Menu
+        // Simulate Start Menu Interaction
         // =====================================================
-        Log("Opening Start Menu");
+        Log("Simulating Start Menu interaction.");
         Wait(startMenuWaitInSeconds);
-        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Start Menu");
-        Type("{LWIN}", hideInLogging: false);
-        Wait(startMenuWaitInSeconds);
-        Type("{LWIN}", hideInLogging: false);
+        Type("{LWIN}",hideInLogging:false);
+        Wait(seconds: startMenuWaitInSeconds);
+        Type("{LWIN}",hideInLogging:false);
         Wait(seconds: 1);
-        Type("{ESC}", hideInLogging: false);
+        Type("{ESC}",hideInLogging:false);
         Wait(startMenuWaitInSeconds);
 
         // =====================================================
@@ -180,6 +179,14 @@ public class Outlook_DefaultScript : ScriptBase
         mainWindow.Focus();
         mainWindow.Maximize();
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Focusing Outlook");
+        // =====================================================
+        // Refresh Outlook Main Window
+        // =====================================================
+        mainWindow.Minimize();
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Minimizing Outlook");
+        mainWindow.Maximize();
+        mainWindow.Focus();
+        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Maximizing Outlook");
 
         // Dismiss the Reminder popup if it exists.
         DismissReminderPopup(mainWindow, globalWaitInSeconds);
@@ -216,15 +223,6 @@ public class Outlook_DefaultScript : ScriptBase
         InlineScroll("Down", existingEmailScrollDownCount, 1, 0.1);
         InlineScroll("Up", existingEmailScrollUpCount, 1, 0.1);
         openEmail.Close();
-
-        // =====================================================
-        // Refresh Outlook Main Window
-        // =====================================================
-        mainWindow.Minimize();
-        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Minimizing Outlook");
-        mainWindow.Maximize();
-        mainWindow.Focus();
-        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Maximizing Outlook");
 
         // =====================================================
         // Compose a New Email
@@ -273,12 +271,13 @@ public class Outlook_DefaultScript : ScriptBase
         StopTimer("Insert_Picture_Dialog");
         var insertPictureDialogFileName = insertPictureDialog.FindControl(className: "Edit:Edit", title: "File name:", timeout: globalTimeoutInSeconds);
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Focusing file name box");
+        insertPictureDialog.Type("{alt+n}",hideInLogging:false);
         insertPictureDialogFileName.Click();
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Typing BMP file path");
         // Use the helper method to set text in the file name textbox reliably.
         ScriptHelpers.SetTextBoxText(this, insertPictureDialogFileName, bmpFile, cpm: typingTextCharacterPerMinute);
         Type("{ENTER}", hideInLogging: false);
-        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Picture inserted");
+        Wait(globalWaitInSeconds);
 
         // =====================================================
         // Expand Email Content via Copy & Paste
@@ -309,8 +308,8 @@ public class Outlook_DefaultScript : ScriptBase
         Log("Scrolling within the new email window");
         newEmail.Focus();
         newEmail.Maximize();
-        newEmail.MoveMouseToCenter();
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Preparing to scroll");
+        newEmail.MoveMouseToCenter();
         newEmail.Click();
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Scrolling email");
         InlineScroll("Up", newEmailScrollUpCount, 1, 0.1);
@@ -331,7 +330,7 @@ public class Outlook_DefaultScript : ScriptBase
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Attachment dialog ready");
         addAttachmentDialog.Focus();
         Type("{alt+n}", hideInLogging: false);
-        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Typing BMP file path for attachment");
+        Wait(globalWaitInSeconds);
         // Use SetTextBoxText helper for the attachment dialog textbox.
         ScriptHelpers.SetTextBoxText(this, addAttachmentDialog.FindControl(className: "Edit:Edit", title: "File name:", timeout: globalTimeoutInSeconds), bmpFile, cpm: typingTextCharacterPerMinute);
         Type("{ENTER}", hideInLogging: false);
@@ -375,14 +374,15 @@ public static class ScriptHelpers
 {
     public static void SetTextBoxText(ScriptBase script, LoginPI.Engine.ScriptBase.Components.IWindow textBox, string text, int cpm = 600)
     {
+        int globalWaitInSeconds = 3; // Wait time between actions
         var numTries = 1;
         string currentText = null;
         do
         {
             textBox.Type("{CTRL+a}", hideInLogging: false);
-            script.Wait(0.5);
+            script.Wait(globalWaitInSeconds);
             textBox.Type(text, cpm: cpm, hideInLogging: false);
-            script.Wait(1);
+            script.Wait(globalWaitInSeconds);
             currentText = textBox.GetText();
             if (currentText != text)
                 script.CreateEvent($"Typing error in attempt {numTries}", $"Expected '{text}', got '{currentText}'");

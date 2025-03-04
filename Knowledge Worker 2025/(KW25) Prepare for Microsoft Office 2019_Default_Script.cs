@@ -16,6 +16,8 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
 {
     private void Execute()
     {
+        int globalWaitInSeconds = 3; // Standard wait time between actions
+
         // Delete all Microsoft Word AutoRecover, backup, and temporary files
         Log("Deleting all Microsoft Word AutoRecover, backup, and temporary files...");
 
@@ -95,7 +97,7 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
                     if (openDialog is object)
                     {
                         openDialog.Type("{ALT+i}", hideInLogging: false);
-                        Wait(1);
+                        Wait(globalWaitInSeconds);
                         openDialog.Type("{ALT+a}", hideInLogging: false);
                     }
                     
@@ -111,12 +113,13 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
                 }
                 else
                 {
+                    globalWaitInSeconds
                     openDialog.Type("{ESC}");
                 }
             }
         }
 
-        Wait(2);
+        Wait(globalWaitInSeconds);
         STOP();
     }
 }

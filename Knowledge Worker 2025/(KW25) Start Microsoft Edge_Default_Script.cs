@@ -20,8 +20,8 @@ public class Start_Browser_DefaultScript : ScriptBase
     // Browser settings
     string browserExecutable = "msedge.exe";          // Browser executable name
     int tabsToOpen = 10;                              // Number of browser tabs to open
-
     int waitMessageboxInSeconds = 2;                  // Duration for onscreen wait messages
+    int globalWaitInSeconds = 3;                      // Standard wait time between actions
 
     // Browser launch and initialization timing
     int waitTimeoutInSecondsMsedgeLaunch = 60;         // Maximum wait time (in seconds) for the browser to initially appear
@@ -105,35 +105,22 @@ public class Start_Browser_DefaultScript : ScriptBase
         Log("Command built: " + secondCommand);
 
         StartTimer("Browser_Start");
-        Log("Timer 'Browser_Start' started.");
-
         // Launch the msedge instance.
         ShellExecute(secondCommand, waitForProcessEnd: false, continueOnError: false, forceKillOnExit: false);
-        Log("sedge instance launched.");
-
         string browserProcessName = Path.GetFileNameWithoutExtension(browserExecutable);
-        FindWindow(
+        var browserWindow = FindWindow(
             className: "Win32 Window:Chrome_WidgetWin_1",
             title: "*Microsoft​ Edge",
             processName: browserProcessName,
             timeout: waitTimeoutInSecondsMsedgeLaunch);
-        Log("Browser window found.");
-
         StopTimer("Browser_Start");
-        Log("Timer 'Browser_Start' stopped.");
 
         Wait(waitInSecondsBrowserInitialize, onScreenText: "Waiting for browser to fully load tabs");
         Log("Waited " + waitInSecondsBrowserInitialize + " seconds for browser initialization.");
 
-        var browserWindow = FindWindow(
-            className: "Win32 Window:Chrome_WidgetWin_1",
-            title: "*Microsoft​ Edge",
-            processName: browserProcessName);
         browserWindow.Maximize();
-        Log("Browser window maximized.");
         browserWindow.Focus();
-        Log("Browser window focused.");
-
+        Wait(globalWaitInSeconds);
         Log("Browser open process completed.");
     }
 

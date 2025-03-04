@@ -1,4 +1,4 @@
-// TARGET:powerpnt.exe
+// TARGET:powerpnt.exe %temp%\LoginEnterprise\loginvsi.pptx
 // START_IN:
 
 /////////////
@@ -14,13 +14,27 @@ using System.IO;
 public class Start_PowerPoint_DefaultScript : ScriptBase
 {
     void Execute()
-    {        
-        // Delete all Microsoft PowerPoint AutoRecover, backup, and temporary files
-        Log("Deleting all Microsoft PowerPoint AutoRecover, backup, and temporary files...");
-        
+    {
+        int globalWaitInSeconds = 3; // Standard wait time between actions
+        int waitMessageboxInSeconds = 2; // Duration for onscreen wait messages
+
+        DeleteTempFiles();
+        DownloadPowerPointPresentation();
+
+        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Starting PowerPoint");
+        Log("Starting PowerPoint");
+        START(mainWindowTitle: "*loginvsi*PowerPoint*", mainWindowClass: "*PPTFrameClass*", timeout: 60);
+        Wait(globalWaitInSeconds);
+        SkipFirstRunDialogs();
+        MainWindow.Maximize();
+        MainWindow.Focus();
+    }
+    
+    private void DeleteTempFiles()
+    {
         string pptUnsavedFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "Office", "UnsavedFiles");
         string tempFolder = Path.GetTempPath();
-        
+
         if (Directory.Exists(pptUnsavedFolder))
         {
             foreach (var file in Directory.GetFiles(pptUnsavedFolder, "*.pptx"))
@@ -39,7 +53,6 @@ public class Start_PowerPoint_DefaultScript : ScriptBase
                 Log("Deleted file: " + file);
             }
         }
-        
         if (Directory.Exists(tempFolder))
         {
             foreach (var file in Directory.GetFiles(tempFolder, "ppt*.tmp"))
@@ -47,40 +60,55 @@ public class Start_PowerPoint_DefaultScript : ScriptBase
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
-            /* Commented out becasue it may delete other important temp files 
+            /* Commented out because it may delete other important temp files 
             foreach (var file in Directory.GetFiles(tempFolder, "*.tmp"))
             {
                 File.Delete(file);
                 Log("Deleted file: " + file);
             } */
         }
-
-        Wait(seconds:2, showOnScreen:true, onScreenText:"Starting PowerPoint");
-        Log("Starting PowerPoint");
-        START(mainWindowTitle:"*PowerPoint*", mainWindowClass:"*PPTFrameClass*", timeout:60);
-        Wait(3);
-        SkipFirstRunDialogs();
-        MainWindow.Maximize();       
-        MainWindow.Focus(); 
     }
+    
+    private void DownloadPowerPointPresentation()
+    {
+        int waitMessageboxInSeconds = 2;
+        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Downloading PowerPoint presentation file if it doesn't exist");
+        var temp = GetEnvironmentVariable("TEMP");
+        string loginEnterpriseDir = $"{temp}\\LoginEnterprise";
+        if (!Directory.Exists(loginEnterpriseDir))
+        {
+            Directory.CreateDirectory(loginEnterpriseDir);
+            Log("Created directory: " + loginEnterpriseDir);
+        }
+        string pptxFile = $"{loginEnterpriseDir}\\loginvsi.pptx";
+        if (File.Exists(pptxFile))
+        {
+            File.Delete(pptxFile);
+            Log("Deleted existing file: " + pptxFile);
+        }
+        Log("Downloading PowerPoint presentation file if it doesn't exist");
+        CopyFile(KnownFiles.PowerPointPresentation, pptxFile, overwrite: true, continueOnError: true);
+    }
+    
     private void SkipFirstRunDialogs()
     {
         int loopCount = 2; // configurable number of loops
         for (int i = 0; i < loopCount; i++)
         {
             var dialog = FindWindow(
-                className: "Win32 Window:NUIDialog", 
-                processName: "POWERPNT", 
-                continueOnError: true, 
-                timeout: 5);
+                className: "Win32 Window:NUIDialog",
+                processName: "POWERPNT",
+                continueOnError: true,
+                timeout: 3);
             while (dialog != null)
             {
+                Wait(seconds: 2, showOnScreen: true, onScreenText: "Closing first run dialog if it exists");
                 dialog.Close();
                 dialog = FindWindow(
-                    className: "Win32 Window:NUIDialog", 
-                    processName: "POWERPNT", 
-                    continueOnError: true, 
-                    timeout: 5);
+                    className: "Win32 Window:NUIDialog",
+                    processName: "POWERPNT",
+                    continueOnError: true,
+                    timeout: 3);
             }
         }
     }

@@ -71,22 +71,22 @@ public class M365Outlook_InvocationScript : ScriptBase
         // =====================================================
         // Dismiss First Run Dialogs
         // =====================================================
-        Wait(globalWaitInSeconds);
-
         int activateOfficeRetryCount = 2;
         for (int i = 0; i < activateOfficeRetryCount; i++)
         {
             var activateOfficeWindow = MainWindow.FindControlWithXPath(
                 "Win32 Window:BasicEmbeddedBrowser", 
-                timeout: 5, 
+                timeout: 3, 
                 continueOnError: true);
             if (activateOfficeWindow != null)
             {
+                Wait(seconds: globalWaitInSeconds);
                 activateOfficeWindow.Type("{ESC}", hideInLogging: false);
                 Log("Dismissed an Activate Office dialog.");
             }
         }
 
+        Wait(seconds: globalWaitInSeconds);
         SkipFirstRunDialogs();
         MainWindow.Maximize();
         MainWindow.Focus();
@@ -103,10 +103,11 @@ public class M365Outlook_InvocationScript : ScriptBase
         {
             var signinWindow = MainWindow.FindControlWithXPath(
                 "Win32 Window:NUIDialog", 
-                timeout: 5, 
+                timeout: 3, 
                 continueOnError: true);
             if (signinWindow != null)
             {
+                Wait(seconds: globalWaitInSeconds);
                 signinWindow.Type("{ESC}", hideInLogging: false);
                 Log("Dismissed a first-run dialog.");
             }

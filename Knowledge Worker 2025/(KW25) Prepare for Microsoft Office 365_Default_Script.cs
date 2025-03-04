@@ -15,6 +15,8 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
 {
     private void Execute()
     {           
+        int globalWaitInSeconds = 3; // Standard wait time between actions
+        
         // Delete all Microsoft Word AutoRecover, backup, and temporary files
         Log("Deleting all Microsoft Word AutoRecover, backup, and temporary files...");
 
@@ -111,12 +113,12 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         
         // Start Application
         Log("Starting Word");
-        Wait(seconds:2, showOnScreen:true, onScreenText:"Starting Word; finding first run dialogs, if any, then stopping App");
-        START(mainWindowTitle:"*Word*", processName:"WINWORD", timeout:600);
-        Wait(1);
+        Wait(seconds:globalWaitInSeconds, showOnScreen:true, onScreenText:"Starting Word; finding first run dialogs, if any, then stopping App");
+        START(mainWindowTitle:"*Word*", processName:"WINWORD", timeout:60);
+        Wait(globalWaitInSeconds);
         FindWindow(className : "Win32 Window:OpusApp", title : "*Word*", processName : "WINWORD", continueOnError:true).Focus();
         FindWindow(className : "Win32 Window:OpusApp", title : "*Word*", processName : "WINWORD", continueOnError:true).Maximize();
-        Wait(3);      
+        Wait(globalWaitInSeconds);      
         SkipFirstRunDialogs();        
 
         STOP();
@@ -134,6 +136,7 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
                 timeout: 5);
             while (dialog != null)
             {
+                Wait(globalWaitInSeconds);
                 dialog.Close();
                 dialog = FindWindow(
                     className: "Win32 Window:NUIDialog",

@@ -47,11 +47,10 @@ public class Browser_MultipleTabs_DefaultScript : ScriptBase
         Log("Simulating Start Menu interaction.");
         Wait(startMenuWaitInSeconds);
         Type("{LWIN}",hideInLogging:false);
-        Wait(seconds: startMenuWaitInSeconds, showOnScreen: true, onScreenText: "Opening Start Menu");
+        Wait(seconds: startMenuWaitInSeconds);
         Type("{LWIN}",hideInLogging:false);
-        Wait(seconds: 1, showOnScreen: true, onScreenText: "Closing Start Menu");
+        Wait(seconds: 1);
         Type("{ESC}",hideInLogging:false);
-        Log("Start Menu simulation complete.");
         Wait(startMenuWaitInSeconds);
 
         // =====================================================
@@ -61,11 +60,12 @@ public class Browser_MultipleTabs_DefaultScript : ScriptBase
             className: "Win32 Window:Chrome_WidgetWin_1",
             title: "*Microsoft​ Edge",
             processName: browserProcessName);
+        Wait(globalWaitInSeconds);
         browserWindow.Minimize();
-        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Minimizing Browser");
+        Wait(globalWaitInSeconds);
         browserWindow.Maximize();
         browserWindow.Focus();
-        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Focusing Browser");
+        Wait(globalWaitInSeconds);
 
         // =====================================================
         // Setup Iteration Message and Wait Time
