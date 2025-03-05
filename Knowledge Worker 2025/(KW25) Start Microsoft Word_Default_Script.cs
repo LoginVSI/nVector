@@ -118,21 +118,7 @@ public class Start_Word_DefaultScript : ScriptBase
             Log("Created directory: " + loginEnterpriseDir);
         }
 
-        string docxFile = $"{loginEnterpriseDir}\\loginvsi.docx";
-        string editedDocxFile = $"{loginEnterpriseDir}\\edited.docx";
-
-        if (File.Exists(docxFile))
-        {
-            File.Delete(docxFile);
-            Log("Deleted existing file: " + docxFile);
-        }
-
-        if (File.Exists(editedDocxFile))
-        {
-            File.Delete(editedDocxFile);
-            Log("Deleted existing file: " + editedDocxFile);
-        }
-
+        Wait(waitMessageboxInSeconds);
         Log("Downloading Word document file if it doesn't exist");
         CopyFile(KnownFiles.WordDocument, docxFile, overwrite: false, continueOnError: true);
     }

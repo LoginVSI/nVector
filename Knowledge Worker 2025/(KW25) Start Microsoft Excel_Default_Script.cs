@@ -107,22 +107,7 @@ public class Start_Excel_DefaultScript : ScriptBase
             Directory.CreateDirectory(loginEnterpriseDir);
             Log("Created directory: " + loginEnterpriseDir);
         }
-
-        string excelFile = $"{loginEnterpriseDir}\\loginvsi.xlsx";
-        string editedExcelFile = $"{loginEnterpriseDir}\\edited.xlsx";
-
-        if (File.Exists(excelFile))
-        {
-            File.Delete(excelFile);
-            Log("Deleted existing file: " + excelFile);
-        }
-
-        if (File.Exists(editedExcelFile))
-        {
-            File.Delete(editedExcelFile);
-            Log("Deleted existing file: " + editedExcelFile);
-        }
-
+        Wait(waitMessageboxInSeconds);
         Log("Downloading Excel file if it doesn't exist");
         CopyFile(KnownFiles.ExcelSheet, excelFile, overwrite: false, continueOnError: true);
     }

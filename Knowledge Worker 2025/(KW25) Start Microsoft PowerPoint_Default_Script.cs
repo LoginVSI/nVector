@@ -77,7 +77,7 @@ public class Start_PowerPoint_DefaultScript : ScriptBase
             }
         }
 
-        // Delete from Office Unsaved Files folder (NEW ADDITION)
+        // Delete from Office Unsaved Files folder
         if (Directory.Exists(unsavedFilesFolder))
         {
             foreach (var file in Directory.GetFiles(unsavedFilesFolder, "*.ppt*")) // Unsaved PowerPoint files
@@ -116,21 +116,7 @@ public class Start_PowerPoint_DefaultScript : ScriptBase
             Log("Created directory: " + loginEnterpriseDir);
         }
 
-        string pptxFile = $"{loginEnterpriseDir}\\loginvsi.pptx";
-        string editedPptxFile = $"{loginEnterpriseDir}\\edited.pptx";
-
-        if (File.Exists(pptxFile))
-        {
-            File.Delete(pptxFile);
-            Log("Deleted existing file: " + pptxFile);
-        }
-
-        if (File.Exists(editedPptxFile))
-        {
-            File.Delete(editedPptxFile);
-            Log("Deleted existing file: " + editedPptxFile);
-        }
-
+        Wait(waitMessageboxInSeconds);
         Log("Downloading PowerPoint presentation file if it doesn't exist");
         CopyFile(KnownFiles.PowerPointPresentation, pptxFile, overwrite: false, continueOnError: true);
     }
