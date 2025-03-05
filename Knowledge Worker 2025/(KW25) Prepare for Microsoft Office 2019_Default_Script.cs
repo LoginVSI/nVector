@@ -46,7 +46,6 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
                 Log("Deleted file: " + file);
             }
         }
-
         if (Directory.Exists(tempFolder))
         {
             foreach (var file in Directory.GetFiles(tempFolder, "~WRD*.tmp"))
@@ -59,7 +58,7 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
-            /* Commented out because it may delete other important temp files 
+            /* Commented out because it may delete other important temp files
             foreach (var file in Directory.GetFiles(tempFolder, "*.tmp"))
             {
                 File.Delete(file);
