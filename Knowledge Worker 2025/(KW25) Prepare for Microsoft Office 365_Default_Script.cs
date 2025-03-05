@@ -19,10 +19,12 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         int globalWaitInSeconds = 3; // Standard wait time between actions
         
         // Delete all Microsoft Word AutoRecover, backup, and temporary files
-        Log("Deleting all Microsoft Word AutoRecover, backup, and temporary files...");
+        Log("Deleting all Microsoft Word AutoRecover, backup, *loginvsi*/*edited*, and temporary files...");
 
         string wordFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Word");
         string tempFolder = Path.GetTempPath();
+        string temp = GetEnvironmentVariable("TEMP");
+        string loginEnterpriseDir = $"{temp}\\LoginEnterprise";
 
         if (Directory.Exists(wordFolder))
         {
@@ -55,7 +57,7 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
-            /* Commented out becasue it may delete other important temp files 
+            /* Commented out because it may delete other important temp files 
             foreach (var file in Directory.GetFiles(tempFolder, "*.tmp"))
             {
                 File.Delete(file);
@@ -63,11 +65,22 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
             } */
         }
 
-        // Define environement variables to use with Workload
-        var temp = GetEnvironmentVariable("TEMP");
+        // Delete all "loginvsi*" and "edited*" files in LoginEnterprise directory
+        if (Directory.Exists(loginEnterpriseDir))
+        {
+            foreach (var file in Directory.GetFiles(loginEnterpriseDir))
+            {
+                string fileName = Path.GetFileName(file).ToLower();
+                if (fileName.Contains("loginvsi") || fileName.Contains("edited"))
+                {
+                    File.Delete(file);
+                    Log("Deleted file: " + file);
+                }
+            }
+        }
 
         // Set registry values; this should be a run-once preparation
-        Wait(seconds:2, showOnScreen:true, onScreenText:"Setting Reg Values #1");
+        Wait(seconds:2, showOnScreen:true, onScreenText:"Setting Reg Values");
         RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Common\General", @"ShownFirstRunOptin", @"dword:00000001")); // Marks that the first run opt-in dialog has been shown.
         RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Common\Licensing", @"DisableActivationUI", @"dword:00000001")); // Disables the Office activation UI prompt.
         RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Registration", @"AcceptAllEulas", @"dword:00000001")); // Automatically accepts all End User License Agreements (EULAs).
@@ -130,7 +143,8 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
             ABORT("Error starting process: " + ex.Message);
         }
 
-        var MainWindow = FindWindow(title:"*Document*Word*", processName:"WINWORD", continueOnError:false, timeout:60);
+        Wait(globalWaitInSeconds);
+        var MainWindow = FindWindow(title:"*Word*", processName:"WINWORD", className:"Win32 Window:OpusApp", continueOnError:false, timeout:60);
         Wait(globalWaitInSeconds);
         MainWindow.Focus();
         MainWindow.Maximize();
@@ -152,6 +166,69 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
             ABORT("Error terminating Word process: " + ex.Message);
         }   
         
+        Wait(globalWaitInSeconds);
+
+        // Open and close Excel and PowerPoint as a preparation
+        // =====================================================
+        // Launch new blank Excel document using ProcessStartInfo
+        // =====================================================
+        try
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = "excel.exe",
+                Arguments = "/s",
+                UseShellExecute = true
+            };
+            Process.Start(startInfo);
+        }
+        catch (Exception ex)
+        {
+            ABORT("Error starting Excel process: " + ex.Message);
+        }
+
+        // =====================================================
+        // Launch new blank PowerPoint presentation using ProcessStartInfo
+        // =====================================================
+        try
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = "powerpnt.exe",
+                Arguments = "/n",
+                UseShellExecute = true
+            };
+            Process.Start(startInfo);
+        }
+        catch (Exception ex)
+        {
+            ABORT("Error starting PowerPoint process: " + ex.Message);
+        }
+        FindWindow(title:"*Excel*", processName:"EXCEL", className:"Win32 Window:XLMAIN", continueOnError:false, timeout:60);
+        FindWindow(title:"*PowerPoint*", processName:"POWERPNT", className:"Win32 Window:PPTFrameClass", continueOnError:false, timeout:60);
+        Wait(globalWaitInSeconds);
+
+        // Close Excel and PowerPoint
+        Log("Closing Excel and PowerPoint...");
+        string[] processesToKill = { "EXCEL", "POWERPNT" };
+
+        try
+        {
+            foreach (var processName in processesToKill)
+            {
+                foreach (var process in Process.GetProcessesByName(processName))
+                {
+                    process.Kill();
+                    process.WaitForExit(); // Ensure the process is terminated
+                    Log($"Terminated process: {processName}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ABORT("Error terminating Office processes: " + ex.Message);
+        }
+
         Wait(globalWaitInSeconds);
     }
 

@@ -101,21 +101,31 @@ public class Start_Excel_DefaultScript : ScriptBase
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Downloading Excel file if it doesn't exist");
         var temp = GetEnvironmentVariable("TEMP");
         string loginEnterpriseDir = $"{temp}\\LoginEnterprise";
+
         if (!Directory.Exists(loginEnterpriseDir))
         {
             Directory.CreateDirectory(loginEnterpriseDir);
             Log("Created directory: " + loginEnterpriseDir);
         }
+
         string excelFile = $"{loginEnterpriseDir}\\loginvsi.xlsx";
+        string editedExcelFile = $"{loginEnterpriseDir}\\edited.xlsx";
+
         if (File.Exists(excelFile))
         {
             File.Delete(excelFile);
             Log("Deleted existing file: " + excelFile);
         }
+
+        if (File.Exists(editedExcelFile))
+        {
+            File.Delete(editedExcelFile);
+            Log("Deleted existing file: " + editedExcelFile);
+        }
+
         Log("Downloading Excel file if it doesn't exist");
         CopyFile(KnownFiles.ExcelSheet, excelFile, overwrite: false, continueOnError: true);
     }
-    
     private void SkipFirstRunDialogs()
     {
         int loopCount = 2; // configurable number of loops

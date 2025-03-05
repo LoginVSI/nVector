@@ -109,17 +109,28 @@ public class Start_PowerPoint_DefaultScript : ScriptBase
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Downloading PowerPoint presentation file if it doesn't exist");
         var temp = GetEnvironmentVariable("TEMP");
         string loginEnterpriseDir = $"{temp}\\LoginEnterprise";
+
         if (!Directory.Exists(loginEnterpriseDir))
         {
             Directory.CreateDirectory(loginEnterpriseDir);
             Log("Created directory: " + loginEnterpriseDir);
         }
+
         string pptxFile = $"{loginEnterpriseDir}\\loginvsi.pptx";
+        string editedPptxFile = $"{loginEnterpriseDir}\\edited.pptx";
+
         if (File.Exists(pptxFile))
         {
             File.Delete(pptxFile);
             Log("Deleted existing file: " + pptxFile);
         }
+
+        if (File.Exists(editedPptxFile))
+        {
+            File.Delete(editedPptxFile);
+            Log("Deleted existing file: " + editedPptxFile);
+        }
+
         Log("Downloading PowerPoint presentation file if it doesn't exist");
         CopyFile(KnownFiles.PowerPointPresentation, pptxFile, overwrite: false, continueOnError: true);
     }

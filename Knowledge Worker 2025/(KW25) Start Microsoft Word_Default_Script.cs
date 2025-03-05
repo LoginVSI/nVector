@@ -111,17 +111,28 @@ public class Start_Word_DefaultScript : ScriptBase
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Downloading Word document file if it doesn't exist");
         var temp = GetEnvironmentVariable("TEMP");
         string loginEnterpriseDir = $"{temp}\\LoginEnterprise";
+
         if (!Directory.Exists(loginEnterpriseDir))
         {
             Directory.CreateDirectory(loginEnterpriseDir);
             Log("Created directory: " + loginEnterpriseDir);
         }
+
         string docxFile = $"{loginEnterpriseDir}\\loginvsi.docx";
+        string editedDocxFile = $"{loginEnterpriseDir}\\edited.docx";
+
         if (File.Exists(docxFile))
         {
             File.Delete(docxFile);
             Log("Deleted existing file: " + docxFile);
         }
+
+        if (File.Exists(editedDocxFile))
+        {
+            File.Delete(editedDocxFile);
+            Log("Deleted existing file: " + editedDocxFile);
+        }
+
         Log("Downloading Word document file if it doesn't exist");
         CopyFile(KnownFiles.WordDocument, docxFile, overwrite: false, continueOnError: true);
     }
