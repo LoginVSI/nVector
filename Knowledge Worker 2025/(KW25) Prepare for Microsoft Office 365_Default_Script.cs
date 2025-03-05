@@ -149,8 +149,11 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         MainWindow.Focus();
         MainWindow.Maximize();
         Wait(globalWaitInSeconds);
-        SkipFirstRunDialogs();          
+        SkipFirstRunDialogs();
+        Wait(globalWaitInSeconds);
+        MainWindow.Close();          
 
+        /*
         // Close Word
         Log("Closing Word...");
         try
@@ -168,6 +171,7 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         
         Wait(globalWaitInSeconds);
 
+        
         // Open and close Excel and PowerPoint as a preparation
         // =====================================================
         // Launch new blank Excel document using ProcessStartInfo
@@ -228,6 +232,7 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         {
             ABORT("Error terminating Office processes: " + ex.Message);
         }
+        */
 
         Wait(globalWaitInSeconds);
     }

@@ -160,7 +160,10 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
                 }
             }
         }
+        Wait(globalWaitInSeconds);
+        MainWindow.Close();
 
+        /*
         // Close Word
         Log("Closing Word...");
         try
@@ -238,6 +241,7 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
         {
             ABORT("Error terminating Office processes: " + ex.Message);
         }
+        */
 
         Wait(globalWaitInSeconds);
     }
