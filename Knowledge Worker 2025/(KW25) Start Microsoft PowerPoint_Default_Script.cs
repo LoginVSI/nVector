@@ -32,74 +32,40 @@ public class Start_PowerPoint_DefaultScript : ScriptBase
     
     private void DeleteTempFiles()
     {
-        // Define relevant folders
-        string pptFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "PowerPoint");
-        string unsavedFilesFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "Office", "UnsavedFiles");
+        string pptUnsavedFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "Office", "UnsavedFiles");
         string tempFolder = Path.GetTempPath();
 
-        // Delete from PowerPoint AutoRecover folder
-        if (Directory.Exists(pptFolder))
+        if (Directory.Exists(pptUnsavedFolder))
         {
-            foreach (var file in Directory.GetFiles(pptFolder, "*.pptx")) // Standard PowerPoint presentations
+            foreach (var file in Directory.GetFiles(pptUnsavedFolder, "*.pptx"))
             {
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
-            foreach (var file in Directory.GetFiles(pptFolder, "*.pptm")) // Macro-enabled PowerPoint files
+            foreach (var file in Directory.GetFiles(pptUnsavedFolder, "*.tmp"))
             {
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
-            foreach (var file in Directory.GetFiles(pptFolder, "*.ppsx")) // PowerPoint Show files
-            {
-                File.Delete(file);
-                Log("Deleted file: " + file);
-            }
-            foreach (var file in Directory.GetFiles(pptFolder, "*.ppsm")) // PowerPoint Show macro-enabled
-            {
-                File.Delete(file);
-                Log("Deleted file: " + file);
-            }
-            foreach (var file in Directory.GetFiles(pptFolder, "*.tmp")) // Temporary PowerPoint files
-            {
-                File.Delete(file);
-                Log("Deleted file: " + file);
-            }
-            foreach (var file in Directory.GetFiles(pptFolder, "*.asd")) // AutoRecover files (rare for PowerPoint)
-            {
-                File.Delete(file);
-                Log("Deleted file: " + file);
-            }
-            foreach (var file in Directory.GetFiles(pptFolder, "~$*.ppt*")) // PowerPoint lock files
+            foreach (var file in Directory.GetFiles(pptUnsavedFolder, "*.asd"))
             {
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
         }
-
-        // Delete from Office Unsaved Files folder
-        if (Directory.Exists(unsavedFilesFolder))
-        {
-            foreach (var file in Directory.GetFiles(unsavedFilesFolder, "*.ppt*")) // Unsaved PowerPoint files
-            {
-                File.Delete(file);
-                Log("Deleted file: " + file);
-            }
-        }
-
-        // Delete from Temp folder
         if (Directory.Exists(tempFolder))
         {
-            foreach (var file in Directory.GetFiles(tempFolder, "~$*.ppt*")) // PowerPoint lock files
+            foreach (var file in Directory.GetFiles(tempFolder, "ppt*.tmp"))
             {
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
-            foreach (var file in Directory.GetFiles(tempFolder, "ppt*.tmp")) // PowerPoint-related temp files
+            /* Commented out because it may delete other important temp files 
+            foreach (var file in Directory.GetFiles(tempFolder, "*.tmp"))
             {
                 File.Delete(file);
                 Log("Deleted file: " + file);
-            }
+            } */
         }
     }
     
