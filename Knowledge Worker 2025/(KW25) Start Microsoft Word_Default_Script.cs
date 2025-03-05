@@ -118,6 +118,7 @@ public class Start_Word_DefaultScript : ScriptBase
             Log("Created directory: " + loginEnterpriseDir);
         }
 
+        string docxFile = $"{loginEnterpriseDir}\\loginvsi.docx";
         Wait(waitMessageboxInSeconds);
         Log("Downloading Word document file if it doesn't exist");
         CopyFile(KnownFiles.WordDocument, docxFile, overwrite: false, continueOnError: true);

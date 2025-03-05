@@ -116,6 +116,7 @@ public class Start_PowerPoint_DefaultScript : ScriptBase
             Log("Created directory: " + loginEnterpriseDir);
         }
 
+        string pptxFile = $"{loginEnterpriseDir}\\loginvsi.pptx";
         Wait(waitMessageboxInSeconds);
         Log("Downloading PowerPoint presentation file if it doesn't exist");
         CopyFile(KnownFiles.PowerPointPresentation, pptxFile, overwrite: false, continueOnError: true);

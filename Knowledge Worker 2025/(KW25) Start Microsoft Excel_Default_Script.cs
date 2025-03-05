@@ -107,6 +107,8 @@ public class Start_Excel_DefaultScript : ScriptBase
             Directory.CreateDirectory(loginEnterpriseDir);
             Log("Created directory: " + loginEnterpriseDir);
         }
+
+        string excelFile = $"{loginEnterpriseDir}\\loginvsi.xlsx";
         Wait(waitMessageboxInSeconds);
         Log("Downloading Excel file if it doesn't exist");
         CopyFile(KnownFiles.ExcelSheet, excelFile, overwrite: false, continueOnError: true);
