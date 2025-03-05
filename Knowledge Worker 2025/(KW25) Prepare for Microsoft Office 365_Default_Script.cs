@@ -10,6 +10,7 @@
 using LoginPI.Engine.ScriptBase;
 using System;
 using System.IO;
+using System.Diagnostics;
 
 public class M365PrivacyPrep_DefaultScript : ScriptBase
 {
@@ -111,21 +112,50 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         // RegImport(create_regfile(@"HKEY_CURRENT_USER\software\Policies\Microsoft\Edge", @"RestoreOnStartup", @"dword:00000000")); // Would configure Microsoft Edge to not restore tabs on startup.
         // RegImport(create_regfile(@"HKEY_CURRENT_USER\software\Policies\Microsoft\Edge", @"HideRestoreDialogEnabled", @"dword:00000001")); // Would hide the restore dialog in Microsoft Edge.
 
-        
-        /* // Start Application
-        Log("Starting Word");
-        Wait(seconds:globalWaitInSeconds, showOnScreen:true, onScreenText:"Starting Word; finding first run dialogs, if any, then stopping App");
-        START(mainWindowTitle:"*Word*", processName:"WINWORD", timeout:60);
-        Wait(globalWaitInSeconds);
-        FindWindow(className : "Win32 Window:OpusApp", title : "*Word*", processName : "WINWORD", continueOnError:true).Focus();
-        FindWindow(className : "Win32 Window:OpusApp", title : "*Word*", processName : "WINWORD", continueOnError:true).Maximize();
-        Wait(globalWaitInSeconds);      
-        SkipFirstRunDialogs();  
+        // =====================================================
+        // Launch new blank Word document using ProcessStartInfo
+        // =====================================================
+        try
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = "winword.exe",
+                Arguments = "/t",
+                UseShellExecute = true
+            };
+            Process.Start(startInfo);
+        }
+        catch (Exception ex)
+        {
+            ABORT("Error starting process: " + ex.Message);
+        }
 
-        STOP(); */
+        var MainWindow = FindWindow(title:"*Document*Word*", processName:"WINWORD", continueOnError:false, timeout:60);
+        Wait(globalWaitInSeconds);
+        MainWindow.Focus();
+        MainWindow.Maximize();
+        Wait(globalWaitInSeconds);
+        SkipFirstRunDialogs();          
+
+        // Close Word
+        Log("Closing Word...");
+        try
+        {
+            foreach (var process in Process.GetProcessesByName("WINWORD"))
+            {
+                process.Kill();
+                process.WaitForExit(); // Ensure the process is terminated
+            }
+        }
+        catch (Exception ex)
+        {
+            ABORT("Error terminating Word process: " + ex.Message);
+        }   
+        
+        Wait(globalWaitInSeconds);
     }
 
-    /* private void SkipFirstRunDialogs()
+    private void SkipFirstRunDialogs()
     {
         int globalWaitInSeconds = 3; // Standard wait time between actions
         int loopCount = 2; // configurable number of loops
@@ -135,7 +165,7 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
                 className: "Win32 Window:NUIDialog",
                 processName: "WINWORD",
                 continueOnError: true,
-                timeout: 5);
+                timeout: 3);
             while (dialog != null)
             {
                 Wait(globalWaitInSeconds);
@@ -144,10 +174,10 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
                     className: "Win32 Window:NUIDialog",
                     processName: "WINWORD",
                     continueOnError: true,
-                    timeout: 5);
+                    timeout: 3);
             }
         }
-    } */
+    } 
 
     private string create_regfile(string key, string value, string data)
     {            

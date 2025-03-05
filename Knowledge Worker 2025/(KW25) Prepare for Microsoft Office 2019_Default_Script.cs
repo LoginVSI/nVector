@@ -11,6 +11,8 @@ using LoginPI.Engine.ScriptBase;
 using LoginPI.Engine.ScriptBase.Components;
 using System;
 using System.IO;
+using System.Diagnostics;
+
 
 public class PrepareOffice2019_DefaultScript : ScriptBase
 {
@@ -63,14 +65,37 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
             } */
         }
 
+        // =====================================================
+        // Launch new blank Word document using ProcessStartInfo
+        // =====================================================
+        try
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = "winword.exe",
+                Arguments = "/t",
+                UseShellExecute = true
+            };
+            Process.Start(startInfo);
+        }
+        catch (Exception ex)
+        {
+            ABORT("Error starting process: " + ex.Message);
+        }
+
+        var MainWindow = FindWindow(title:"*Document*Word*", processName:"WINWORD", continueOnError:false, timeout:60);
+        Wait(globalWaitInSeconds);
+        MainWindow.Focus();
+        MainWindow.Maximize();
+        Wait(globalWaitInSeconds);        
         Log("Dismissing first run Word dialogs");
-        START(mainWindowTitle: "*Word*", mainWindowClass: "Win32 Window:OpusApp", processName: "WINWORD", timeout: 60, continueOnError: true);
+
         int loopCount = 2; // configurable number of loops
         for (int i = 0; i < loopCount; i++)
         {
             var openDialog = MainWindow.FindControlWithXPath(
                 xPath: "*:NUIDialog", 
-                timeout: 5, 
+                timeout: 3, 
                 continueOnError: true);
             
             if (openDialog is object)
@@ -119,7 +144,21 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
             }
         }
 
+        // Close Word
+        Log("Closing Word...");
+        try
+        {
+            foreach (var process in Process.GetProcessesByName("WINWORD"))
+            {
+                process.Kill();
+                process.WaitForExit(); // Ensure the process is terminated
+            }
+        }
+        catch (Exception ex)
+        {
+            ABORT("Error terminating Word process: " + ex.Message);
+        }
+
         Wait(globalWaitInSeconds);
-        STOP();
     }
 }
