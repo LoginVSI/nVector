@@ -62,7 +62,7 @@ public class Start_Browser_DefaultScript : ScriptBase
         string pdfUrl = "file:///" + pdfDestination.Replace("\\", "/");
         Log("Constructed local PDF URL: " + pdfUrl);
         
-        // Build the URL list with the local PDF URL as the second URL.
+        // Build the URL list.
         string urlsDefined = 
             "https://euc.loginvsi.com/customer-portal/knowledge-worker-2023;" +
             "http://distribution.bbb3d.renderfarming.net/video/mp4/bbb_sunflower_1080p_30fps_normal.mp4;" +

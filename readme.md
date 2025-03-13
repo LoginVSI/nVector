@@ -1,212 +1,292 @@
-# nVector Metrics Uploader Script
+# nVector and Login Enterprise integration scripts
 
-This script, created on **14 January 2025**, automates the monitoring of a results CSV file for visual latency metrics and uploads the data to the Login Enterprise API. It integrates NVIDIA nVector with Login VSI to provide end-to-end performance insights into desktop environments.
+This repository contains a suite of integration scripts that wrap NVIDIA's **nvector-agent.exe** for use with the Login Enterprise platform. These scripts enable you to collect and upload round-trip latency data—measured via NVIDIA nVector’s watermarking mechanism—to the Login Enterprise API as **Platform Metrics**. The metrics can then be visualized in the Login Enterprise web interface or retrieved via our API.
 
----
+> **Important:**  
+> The nvector-agent.exe and its associated components are developed and distributed by **NVIDIA**. You must obtain this executable from NVIDIA and deploy it in your environment. For now, the nvector-agent.exe is not packaged with Login Enterprise and must be sourced directly from NVIDIA.
 
-## Overview
+## Repository Overview
 
-- **Visual Latency Monitoring**: Measures latency between the display and client-side rendering using NVIDIA nVector’s watermarking technique.  
-- **Data Integration**: Automatically uploads latency metrics to Login Enterprise for centralized analysis.  
-- **Time Offset Adjustments**: Adjusts timestamps for local time zones, ensuring accurate data interpretation.  
-- **Robust Error Handling**: Logs errors and ensures continuity during execution.  
-- **Scalable and Configurable**: Suitable for a variety of setups with minimal configuration.
+This repository provides four key scripts (plus a C# workload) to integrate nVector functionality with Login Enterprise:
 
----
+1. **nVector_Client_Prepare.ps1** – *Client Role Wrapper*  
+2. **nVector_Desktop_Prepare (C# workload)** – *Desktop/Target Role Wrapper*  
+3. **nVector_Startup_Script.cmd** – *Invoker for Client Script*  
+4. **get_nVectorMetrics.ps1** – *Raw Platform Metrics Data Retrieval*
 
-## Use Case
+Below you’ll find details on each script, including their purpose, main configurable parameters, and usage examples.
 
-This script is designed for monitoring latency in business-critical applications to ensure that end-users experience optimal performance. By measuring visual latency—the time deviation between desktop rendering and client display—the script helps IT teams:
+## 1. nVector_Client_Prepare.ps1
 
-- **Identify Latency Bottlenecks**: Proactively address performance issues before they impact users.  
-- **Quantify Visual Latency**: Provide objective metrics for troubleshooting and optimization.  
-- **Maintain Productivity**: Ensure smooth operation of graphics-intensive workloads, especially under load.
+### Purpose
 
----
+- Ensures the **Login Enterprise Launcher** process is running and starts it if it's not already active.
+- Invokes `nvector-agent.exe` with the **client role** to measure round-trip latency.
+- Terminates any running instances of `nvector-agent.exe` before restarting it with user-defined parameters.
+- Monitors a CSV file for new latency results and uploads them to the Login Enterprise API as **Platform Metrics**.
 
-## Script Workflow
-
-1. **Terminate Running `nvector-agent` Instances**  
-   Checks for existing `nvector-agent` processes and terminates them to avoid conflicts.
-
-2. **Start `nvector-agent`**  
-   - Verifies the existence of the executable (`nvector-agent.exe`).  
-   - Starts the agent with the following arguments:  
-     - `-r client`  
-     - `-m <CsvFilePath>`  
-     - `-p <NvectorAgentCheckIntervalMs>`  
-     - `-s <NvectorScreenshotDir>`  
-     - `-l <NvectorLogFile>`
-
-3. **Ensure Launcher Process is Running**  
-   Verifies and starts the `LoginEnterprise.Launcher.UI` process if not already running.
-
-4. **Monitor CSV File for New Lines**  
-   - Continuously reads the metrics CSV file to identify unprocessed lines.  
-   - Updates the processed line count to avoid duplication.
-
-5. **Build and Upload Metrics to the API**  
-   - Parses CSV lines for timestamps and latency values.  
-   - Adjusts timestamps using the configured offset.  
-   - Filters out invalid or excessive values.  
-   - Constructs JSON payloads for new metrics.  
-   - Sends data to the Login Enterprise API endpoint.
-
----
-
-## Configurable Variables
-
-### Paths
+### Key Variables & Parameters
 
 - **`NvectorAgentExePath`**  
-  Path to the `nvector-agent.exe` executable.  
-  ```powershell
-  $NvectorAgentExePath = "C:\temp\nVector-agent\nvector-agent.exe"
-  ```
+  Full path to the `nvector-agent.exe` on the Login Enterprise Launcher.
 
 - **`CsvFilePath`**  
-  Path to the metrics CSV file.
-  ```powershell
-  $CsvFilePath = "C:\temp\nvector\latency_metrics.csv"
-  ```
+  Path to the CSV file where the nvector-agent writes latency metrics.
 
 - **`NvectorScreenshotDir`**  
-  Directory for screenshots (required by nVector for some tests).
-  ```powershell
-  $NvectorScreenshotDir = "C:\temp\nvidia\SSIM_screenshots"
-  ```
+  Directory for screenshots (if required by nVector).
 
 - **`NvectorLogFile`**  
-  Log file for the nvector-agent.
-  ```powershell
-  $NvectorLogFile = "C:\temp\nvidia\agent.log"
-  ```
+  Log file path for the nvector-agent.
 
 - **`ScriptLogFile`**  
-  Path for this script’s logs.
-  ```powershell
-  $ScriptLogFile = "C:\temp\nVectorAgent_ClientMeasurements_Uploader.txt"
-  ```
+  Path for logs produced by this PowerShell script.
 
-### API Configuration
+- **`NvectorAgentCheckIntervalMs`**  
+  How often (in milliseconds) the nvector-agent checks latency.
+
+- **`PollingInterval`**  
+  How frequently (in seconds) this script checks the CSV for new entries.
+
+- **`MaxLatencyThreshold`**  
+  Maximum allowed latency (in ms) before a reading is discarded as spurious.
+
+- **`TimeOffset`**  
+  Optional offset from UTC (e.g., `"0:00"`, `"-7:00"`, `"+2:00"`).
 
 - **`ConfigurationAccessToken`**  
-  Token for Login Enterprise API authentication.
-  
-  To obtain:
-  1. Log into Login Enterprise.
-  2. Navigate to **External Notifications → Public API**.
-  3. Click **New System Access Token**.
-  4. Provide a name and select **Configuration** as the Access Level.
-  5. Save and copy the token.
+  Login Enterprise API token with **Configuration** access level.
 
 - **`BaseUrl`**  
   Base URL of the Login Enterprise instance.
-  ```powershell
-  $BaseUrl = "https://myLoginEnterprise.myDomain.com/"
-  ```
 
 - **`ApiEndpoint`**  
-  API endpoint for metrics upload.
-  ```powershell
-  $ApiEndpoint = "publicApi/v7-preview/platform-metrics"
-  ```
+  Endpoint for posting the latency metrics (default: `publicApi/v7-preview/platform-metrics`).
 
 - **`EnvironmentId`**  
-  Unique identifier for the environment.
+  Unique environment identifier in Login Enterprise (obtained from your appliance).
 
-### Time Offset
+### Usage Example
 
-- **`TimeOffset`**  
-  Adjusts timestamps relative to UTC.
-  
-  Examples:
-  - `"0:00"`: UTC.
-  - `"-7:00"`: Pacific Standard Time (PST).
-  - `"+2:00"`: Central European Summer Time (CEST).
+1. **Edit the Script Variables:**  
+   At the top of `nVector_Client_Prepare.ps1`, set paths, thresholds, time offsets, and API configuration details to match your environment.
 
-### Intervals and Thresholds
+2. **Invoke the Script:**  
+   - Manually via PowerShell:  
+     ```powershell
+     .\nVector_Client_Prepare.ps1
+     ```
+   - Or automatically through `nVector_Startup_Script.cmd` or a scheduled task.
 
-- **`NvectorAgentCheckIntervalMs`**  
-  Frequency for nvector-agent polling, in milliseconds.  
-  *Default: 5000*
+3. **Verification:**  
+   - Check the PowerShell console or the `ScriptLogFile` to confirm that:
+     - The **Login Enterprise Launcher** process is running.
+     - The **nvector-agent.exe** was started in **client mode**.
+     - New lines in the CSV are being uploaded to the **Login Enterprise API**.
 
-- **`PollingInterval`**  
-  Script’s CSV monitoring frequency, in seconds.  
-  *Default: 10*
+## 2. nVector_Desktop_Prepare (C# Workload)
 
-- **`MaxLatencyThreshold`**  
-  Maximum allowable latency, in milliseconds, before discarding data.  
-  *Default: 10000*
+### Purpose
 
-### CSV Existence Check
+- Runs on the **Target/Desktop** machine in Login Enterprise, often configured as a **workload**.
+- Ensures the **nvector-agent.exe** is available by downloading it from the Login Enterprise virtual appliance if necessary.
+- Starts `nvector-agent.exe` with the **desktop role** (`-r desktop`) to generate a watermark for latency measurement.
+- The **client role** `nvector-agent.exe` running on the Login Enterprise Launcher detects these watermarks to calculate round-trip latency.
 
-- **`CsvCheckTimeoutSeconds`**  
-  How many seconds to wait for the CSV file to appear.  
-  *Default: 5*
+### Key Variables & Parameters
 
-- **`CsvCheckIntervalSeconds`**  
-  How often (in seconds) to re-check for the CSV file within that timeout period.  
-  *Default: 1*
+- **`downloadUrl`**  
+  URL for `nvector-agent.exe` on your Login Enterprise appliance (e.g., `https://myDomain.LoginEnterprise.com/contentDelivery/content/nvidia/nvector-agent.exe`).
 
-### Prerequisites
+- **`tempDir`**  
+  Location (commonly `%TEMP%`) where the agent will be temporarily stored.
 
-- **NVIDIA nVector Installation**: Ensure the `nvector-agent` is installed on both the desktop and client machines.
-- **Login Enterprise**: Tested with Login Enterprise version 5.13.6 or later.
-- **Access Tokens and IDs**: Obtain a configuration access token and environment ID from your Login Enterprise instance.
+- **`logFilePath`**  
+  Path for the desktop agent’s log file.
 
-### Benefits
+### Usage Example
 
-- **End-User Experience Monitoring**: Accurately measures visual latency that impacts user productivity.
-- **Proactive Performance Management**: Detects and quantifies latency issues before they escalate.
-- **Data Integration**: Consolidates latency metrics for analysis in Login Enterprise.
-- **Scalability**: Configurable for diverse setups and environments.
+1. **Upload the Workload:**  
+   - Use the **Login Enterprise web interface** to upload `nVector_Desktop_Prepare.cs` as a **custom workload**.
+   - Configure the workload settings (e.g., set to **Run Once** if applicable).
 
-### Examples of Latency Results
+2. **Adjust Variables as Needed:**  
+   - Update `downloadUrl` to match the HTTPS path where `nvector-agent.exe` is hosted on your appliance.
+   - Change `logFilePath` if needed to specify a different location for the log output.
 
-#### Hourly View
+3. **Run the Workload:**  
+   - When executed, the workload downloads and runs `nvector-agent.exe` in **desktop mode** (`-r desktop`).
+   - The **client role** `nvector-agent.exe` on the Login Enterprise Launcher will detect the watermark changes and use them to compute round-trip latency.
 
-*Hourly View Placeholder*  
-Figure: Latency metrics displayed over an hour timeframe.
+## 3. nVector_Startup_Script.cmd
 
-#### Daily View
+### Purpose
 
-*Daily View Placeholder*  
-Figure: Latency metrics displayed over a day timeframe.
+- A simple **Windows CMD script** that invokes `nVector_Client_Prepare.ps1` on the **Login Enterprise Launcher**.
+- Ensures that the **client script** runs automatically at user login without requiring manual execution.
+- Can be placed in the **Windows Startup folder** or configured as a **scheduled task**.
 
-### Setup Steps
+### Key Configuration
 
-1. **Upload the Target Workload**  
-   *(Placeholder: Additional information to be added if needed.)*
+- **File Path to PowerShell Script:**  
+  Update the CMD file with the correct path to `nVector_Client_Prepare.ps1` to match its location on the **Login Enterprise Launcher**.
 
-2. **Place the Script**  
-   - Save the script as `nVector Prepare.ps1`.
-   - Configure the script to run automatically on the Login Enterprise Launcher upon user login (or another preferred schedule).
+### Usage Example
 
-### Script Reference
+To automatically start `nVector_Client_Prepare.ps1` at user login, create the following **CMD script**:
 
-For the full PowerShell script, see the file `nVector Prepare.ps1` in your environment. This script:
+```@echo off
+powershell.exe -ExecutionPolicy Bypass -File "C:\Path\To\nVector_Client_Prepare.ps1"
+```
 
-- Terminates any running `nvector-agent` processes.
-- Starts `nvector-agent` with the specified arguments.
-- Ensures the Login Enterprise launcher process is running.
-- Checks for the CSV file and its header.
-- Continuously monitors the CSV for new data lines and uploads valid latency metrics to the Login Enterprise API.
+#### **Save and Place:**
+- Save the CMD file and place it in the **Windows Startup folder**:  
+```
+C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup
+```
 
-### Additional Information
+#### **Automatic Invocation:**
+- When a user logs in, the CMD file runs and starts the **client integration** automatically.
+- Alternatively, configure it as a **Windows Task Scheduler job** for more control over execution timing.
 
-- **Best Practices**:
-  - Use clear and concise variable configurations.
-  - Follow error-handling and logging best practices.
-  
-- **Notes**:
-  - Modify the variables at the top of the script to suit your environment.
-  - Ensure both the desktop and client machines meet NVIDIA nVector requirements.
+## 4. get_nVectorMetrics.ps1
 
-### Change Log
+### Purpose
 
-**v1.0 (14 January 2025)**
+- Retrieves raw **Platform Metrics data** (including **nVector latency**) from the **Login Enterprise API**.
+- Queries the **v7-preview/platform-metrics** API endpoint.
+- Allows users to **export latency data** for further analysis in **CSV or JSON format**.
+- Can be used to **validate latency measurements** retrieved from the **nVector client script**.
 
-- Initial release of the nVector Metrics Uploader script.
+### Key Parameters
 
-© 2025 NVIDIA nVector and Login VSI. All rights reserved. For support, contact [support@loginvsi.com](mailto:support@loginvsi.com).
+- **`StartTime`, `EndTime` (Mandatory)**  
+  - Defines the time range for retrieving metrics.  
+  - Must be in **ISO 8601 Zulu format** (e.g., `"2025-02-07T00:00:00.000Z"`).  
+
+- **`EnvironmentId` (Mandatory)**  
+  - Unique identifier for the **Login Enterprise environment**.  
+  - Filters metrics to only include data from the specified environment.  
+
+- **`ApiAccessToken` (Optional)**  
+  - Overrides the default **Login Enterprise API token**.  
+
+- **`BaseUrl` (Optional)**  
+  - Overrides the default **Login Enterprise API Base URL**.  
+
+- **`OutputCsvFilePath`, `OutputJsonFilePath` (Optional)**  
+  - Defines where the retrieved metrics will be saved.  
+  - If omitted, defaults to:
+    - CSV: `C:\temp\get_nVectorMetrics.csv`
+    - JSON: `C:\temp\get_nVectorMetrics.json`
+
+- **`LogFilePath` (Optional)**  
+  - Specifies a log file to store script execution details.  
+  - Default: `C:\temp\get_nVectorMetrics_Log.txt`
+
+### Usage Example
+
+To retrieve **nVector latency metrics** from the **Login Enterprise API**, run the following command:
+
+```
+.\get_nVectorMetrics.ps1 -StartTime "2025-02-07T00:00:00.000Z" -EndTime "2025-02-07T23:59:59.999Z" -EnvironmentId "abcdef1234" -ApiAccessToken "MY_TOKEN" -BaseUrl "https://mydomain.LoginEnterprise.com" -OutputCsvFilePath "C:\temp\nVector.csv" -OutputJsonFilePath "C:\temp\nVector.json" -LogFilePath "C:\temp\MetricsLog.txt"
+```
+
+#### Expected Behavior:
+
+- Retrieves **Platform Metrics data** for the specified time range.  
+- Saves results as:
+
+  - **JSON file** (`OutputJsonFilePath`)
+  - **CSV file** (`OutputCsvFilePath`)  
+- Logs execution details in **LogFilePath**.
+
+## Setup & Deployment Steps
+
+### 1. Upload `nvector-agent.exe` to the Login Enterprise Appliance
+
+- Place the executable on the **Login Enterprise virtual appliance** at:  
+```
+/loginvsi/content/nvidia/nvector-agent.exe
+```
+
+- Use **SFTP tools like WinSCP** if necessary to transfer the file.
+
+### 2. Configure Scripts
+
+- In **nVector_Client_Prepare.ps1**, set paths for the **CSV file, logs, time offsets, and API configuration**.
+- In **nVector_Desktop_Prepare**, update the `downloadUrl` to point to where `nvector-agent.exe` is hosted.
+- In **get_nVectorMetrics.ps1**, modify default **output file paths and API parameters** if necessary.
+
+### 3. Automation
+
+- Place `nVector_Startup_Script.cmd` in the **Windows Startup folder** to ensure the client script runs on user login.
+- Upload and configure the **desktop workload** in the **Login Enterprise web interface**.  
+Refer to:
+- [Application Upload Documentation](https://support.loginvsi.com/hc/en-us/articles/360001341979-Applications)
+- [Login Enterprise Script Editor](https://support.loginvsi.com/hc/en-us/articles/360014619659-Login-Enterprise-Script-Editor)
+
+### 4. Testing
+
+- Verify that the **Desktop workload successfully downloads and runs `nvector-agent.exe`** in desktop mode.  
+- Confirm that the **client script processes CSV data and uploads metrics**.  
+- Use `get_nVectorMetrics.ps1` to **retrieve and validate the platform metrics data**.
+
+## Examples of Latency Results
+
+### Hourly View
+
+#### Screenshot  
+The following **example graph** visualizes **nVector latency measurements** over an **hourly timeframe** in the Login Enterprise web interface.  
+
+**Screenshot File:** `nvector/LoginEnterprise_nVectorLatency_Example.png`  
+
+![Hourly View of nVector Latency](nVector/LoginEnterprise_nVectorLatency_Example.png)
+
+---
+
+#### **Explanation of Graph Elements:**
+
+- **Y-Axis (Latency in ms)** → Each **datapoint** represents a **latency measurement in milliseconds**.  
+- **X-Axis (Time in Hourly Span)** → Represents the **time range** for **nVector latency measurements**.  
+- **"Latency (ms)"** → This corresponds with the **`unit` key** in the API datapoint.  
+- **"Endpoint Latency"** → This corresponds with the **`displayName` key** in the API datapoint.  
+- **Hostname (e.g., BP-SCLaunchNV01)** → This corresponds with the **`instance` key** in the API datapoint.  
+- **"vm" (Component Type)** → This corresponds with the **`componentType` key** in the API datapoint.  
+
+These labels align **directly with the API response structure** and are displayed in the **Login Enterprise web interface graphs**.
+
+## Additional Information
+
+### Best Practices
+
+- Use **clear and concise** variable configurations.
+- Follow **robust error-handling and logging practices**.
+- Ensure that both the **desktop (Target) and client (Launcher) machines** meet **NVIDIA’s nVector system requirements**.
+- Regularly **verify CSV file processing** and API uploads to confirm data integrity.
+
+### Notes
+
+- The **integration scripts act as wrappers** around NVIDIA’s `nvector-agent.exe`, orchestrating its execution in both **client and desktop modes**.
+- Latency results can **vary** based on **system load and graphical intensity** on the Target machine.
+- The `get_nVectorMetrics.ps1` script **bypasses certificate validation**—only use it in **trusted environments**.
+
+### Documentation Links
+
+- [Login Enterprise Application Upload](https://support.loginvsi.com/hc/en-us/articles/360001341979-Applications)
+- [Login Enterprise Script Editor](https://support.loginvsi.com/hc/en-us/articles/360014619659-Login-Enterprise-Script-Editor)
+
+## Change Log
+
+### v1.0
+
+- Initial release of the **nVector Metrics Uploader Integration scripts**.  
+- Includes:
+  - **Client Prepare Script (`nVector_Client_Prepare.ps1`)** for invoking `nvector-agent.exe` in client mode.
+  - **Desktop Prepare Workload (`nVector_Desktop_Prepare.cs`)** for running `nvector-agent.exe` in desktop mode.
+  - **Startup Script (`nVector_Startup_Script.cmd`)** for automating client script execution.
+  - **Metrics Retrieval Script (`get_nVectorMetrics.ps1`)** for querying and exporting latency data from the Login Enterprise API.
+- Documentation includes **setup, automation, and API integration details**.
+
+© NVIDIA nVector and Login VSI. All rights reserved.  
+For support, contact [support@loginvsi.com](mailto:support@loginvsi.com).
