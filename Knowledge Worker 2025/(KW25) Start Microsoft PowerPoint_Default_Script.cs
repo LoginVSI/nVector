@@ -18,7 +18,7 @@ public class Start_PowerPoint_DefaultScript : ScriptBase
         int globalWaitInSeconds = 3; // Standard wait time between actions
         int waitMessageboxInSeconds = 2; // Duration for onscreen wait messages
 
-        DeleteTempFiles();
+        // DeleteTempFiles();
         DownloadPowerPointPresentation();
 
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Starting PowerPoint");
@@ -30,6 +30,7 @@ public class Start_PowerPoint_DefaultScript : ScriptBase
         MainWindow.Focus();
     }
     
+    /*
     private void DeleteTempFiles()
     {
         string pptUnsavedFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "Office", "UnsavedFiles");
@@ -62,12 +63,9 @@ public class Start_PowerPoint_DefaultScript : ScriptBase
             }
             /* Commented out because it may delete other important temp files 
             foreach (var file in Directory.GetFiles(tempFolder, "*.tmp"))
-            {
-                File.Delete(file);
-                Log("Deleted file: " + file);
-            } */
         }
     }
+    */
     
     private void DownloadPowerPointPresentation()
     {

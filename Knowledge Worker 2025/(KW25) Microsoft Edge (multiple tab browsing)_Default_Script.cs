@@ -14,7 +14,7 @@ using System.Runtime.InteropServices;
 public class Browser_MultipleTabs_DefaultScript : ScriptBase
 {
     // =====================================================
-    // Import and Constants
+    // Import and Constants for mouse scrolling
     // =====================================================
     [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
     public static extern void mouse_event(uint dwFlags, uint dx, uint dy, int dwData, UIntPtr dwExtraInfo);
@@ -24,7 +24,7 @@ public class Browser_MultipleTabs_DefaultScript : ScriptBase
     // Configurable Variables
     // =====================================================
     // Global timings and iterations
-    int ctrlTabIterations = 5;                     // Number of iterations for tab switching and scrolling interactions
+    int ctrlTabIterations = 5;                      // Number of iterations for tab switching and scrolling interactions
     int ctrlTabWaitSecondsBeforeScroll = 3;         // Wait time before scrolling to allow the page to load
     int ctrlTabWaitSecondsAfterScroll = 1;          // Wait time after scrolling before next iteration
     string browserProcessName = "msedge";           // Process name for Microsoft Edge
@@ -92,6 +92,7 @@ public class Browser_MultipleTabs_DefaultScript : ScriptBase
 
             if (i > 0)
             {
+                Wait(seconds: 1);
                 Log("Switching to next tab with Ctrl+Tab.");
                 browserWindow.Type("{ctrl+tab}", hideInLogging: false);
                 browserWindow.Type("{f5}",hideInLogging:false);

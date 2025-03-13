@@ -18,7 +18,7 @@ public class Start_Word_DefaultScript : ScriptBase
         int globalWaitInSeconds = 3; // Standard wait time between actions
         int waitMessageboxInSeconds = 2; // Duration for onscreen wait messages
 
-        DeleteTempFiles();
+        // DeleteTempFiles();
         DownloadWordDocument();
 
         // Running Word
@@ -32,6 +32,7 @@ public class Start_Word_DefaultScript : ScriptBase
         Wait(globalWaitInSeconds);
     }
     
+    /* 
     private void DeleteTempFiles()
     {
         string wordFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Word");
@@ -67,14 +68,9 @@ public class Start_Word_DefaultScript : ScriptBase
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
-            /* Commented out because it may delete other important temp files
-            foreach (var file in Directory.GetFiles(tempFolder, "*.tmp"))
-            {
-                File.Delete(file);
-                Log("Deleted file: " + file);
-            } */
         }
     }
+    */
     
     private void DownloadWordDocument()
     {

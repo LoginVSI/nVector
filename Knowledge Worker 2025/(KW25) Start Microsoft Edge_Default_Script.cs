@@ -84,22 +84,6 @@ public class Start_Browser_DefaultScript : ScriptBase
 
         string firstCommand = browserExecutable + " --guest --no-session-restore";
 
-        /*
-        // Launch msedge in warm-up mode.
-        ShellExecute(firstCommand, waitForProcessEnd: false, continueOnError: false, forceKillOnExit: false);
-        Wait(waitInSecondsBrowserInitialize);
-        
-        string procName = Path.GetFileNameWithoutExtension(browserExecutable);
-        var firstBrowserWindow = FindWindow(
-            className: "Win32 Window:Chrome_WidgetWin_1",
-            title: "*Microsoft​ Edge",
-            processName: procName,
-            timeout: waitTimeoutInSecondsMsedgeLaunch);
-        Wait(waitInSecondsBrowserInitialize);
-        firstBrowserWindow.Close();
-        Wait(waitMessageboxInSeconds);
-        */
-
         // Build the command using the helper method (includes URLs).
         string secondCommand = BuildCommand(urlArray, tabsToOpen);
         Log("Command built: " + secondCommand);

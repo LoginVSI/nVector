@@ -19,7 +19,7 @@ public class Start_Excel_DefaultScript : ScriptBase
         int globalWaitInSeconds = 3; // Standard wait time between actions
         int waitMessageboxInSeconds = 2; // Duration for onscreen wait messages
 
-        DeleteTempFiles();
+        // DeleteTempFiles();
         DownloadExcelFile();
 
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Starting Excel");
@@ -32,7 +32,8 @@ public class Start_Excel_DefaultScript : ScriptBase
         Wait(globalWaitInSeconds);
     }
     
-     private void DeleteTempFiles()
+    /*
+    private void DeleteTempFiles()
     {
         string excelFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Excel");
         string tempFolder = Path.GetTempPath();
@@ -67,14 +68,9 @@ public class Start_Excel_DefaultScript : ScriptBase
                 File.Delete(file);
                 Log("Deleted file: " + file);
             }
-            /* Commented out because it may delete other important temp files 
-            foreach (var file in Directory.GetFiles(tempFolder, "*.tmp"))
-            {
-                File.Delete(file);
-                Log("Deleted file: " + file);
-            } */
         }
     }
+    */
     
     private void DownloadExcelFile()
     {
