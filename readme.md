@@ -236,12 +236,10 @@ Refer to:
 
 ### Hourly View
 
-#### Screenshot  
-The following **example graph** visualizes **nVector latency measurements** over an **hourly timeframe** in the Login Enterprise web interface.  
+#### Screenshot
+The following example graph visualizes nVector latency measurements over an hourly timeframe in the Login Enterprise web interface.
 
-**Screenshot File:** `nvector/LoginEnterprise_nVectorLatency_Example.png`  
-
-![Hourly View of nVector Latency](nVector/LoginEnterprise_nVectorLatency_Example.png)
+![Hourly View of nVector Latency](LoginEnterprise_nVectorLatency_Example.png)
 
 ---
 
