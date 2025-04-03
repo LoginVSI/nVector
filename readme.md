@@ -56,6 +56,7 @@ Below you’ll find details on each script, including their purpose, main config
 
 - **`ConfigurationAccessToken`**  
   Login Enterprise API token with **Configuration** access level.
+  Refer to: [Public API: Adding a system access token](https://support.loginvsi.com/hc/en-us/articles/360009534760-Public-API#h_01HPKWM3D9D67KG9T7D40A0EYX)
 
 - **`BaseUrl`**  
   Base URL of the Login Enterprise instance.
@@ -65,6 +66,7 @@ Below you’ll find details on each script, including their purpose, main config
 
 - **`EnvironmentId`**  
   Unique environment identifier in Login Enterprise (obtained from your appliance).
+  Refer to: [Environments](https://support.loginvsi.com/hc/en-us/articles/7946104119324-Environments)
 
 ### Usage Example
 
@@ -273,6 +275,8 @@ These labels align **directly with the API response structure** and are displaye
 
 - [Login Enterprise Application Upload](https://support.loginvsi.com/hc/en-us/articles/360001341979-Applications)
 - [Login Enterprise Script Editor](https://support.loginvsi.com/hc/en-us/articles/360014619659-Login-Enterprise-Script-Editor)
+- [Public API: Adding a system access token](https://support.loginvsi.com/hc/en-us/articles/360009534760-Public-API#h_01HPKWM3D9D67KG9T7D40A0EYX)
+- [Environments](https://support.loginvsi.com/hc/en-us/articles/7946104119324-Environments)
 
 ## Change Log
 
