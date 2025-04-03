@@ -84,22 +84,26 @@ public class Browser_MultipleTabs_DefaultScript : ScriptBase
             Log($"Iteration {i + 1} started.");
             Wait(seconds: ctrlTabWaitSecondsBeforeScroll);
 
-            // Ensure browser window is maximized and in focus
-            browserWindow.Maximize();
-            browserWindow.MoveMouseToCenter(continueOnError: true, hoverTimeAfterMove: 1);
+            // Ensure browser window is maximized and in focus\
             browserWindow.Focus();
             browserWindow.Maximize();
+            Wait(seconds: 1);
+            browserWindow.MoveMouseToCenter(continueOnError: true);
+            RightClick(x:300,y:300);
+            Wait(0.5);
+            Type("{ESC}", hideInLogging: false); // Close the context menu if it appears, to ensure we are on the page.
 
             if (i > 0)
             {
-                Wait(seconds: 1);
+                Wait(seconds: 0.5);
                 Log("Switching to next tab with Ctrl+Tab.");
                 browserWindow.Type("{ctrl+tab}", hideInLogging: false);
+                Wait(seconds: 0.5);
                 browserWindow.Type("{f5}",hideInLogging:false);
                 Wait(seconds: ctrlTabWaitSecondsBeforeScroll);
-                browserWindow.Maximize();
-                browserWindow.MoveMouseToCenter(continueOnError: true, hoverTimeAfterMove: 1);
                 browserWindow.Focus();
+                browserWindow.Maximize();
+                browserWindow.MoveMouseToCenter(continueOnError: true);                
                 Log("Switched tab and refocused window.");
             }
             
@@ -118,10 +122,10 @@ public class Browser_MultipleTabs_DefaultScript : ScriptBase
             // Scroll Interactions on Active Tab
             // =====================================================
             Log("Starting scroll interactions on the active tab.");
+            Wait(seconds: 1);
             Scroll("Down", scrollDownCount, 1, scrollWaitTime);
             Scroll("Up", scrollUpCount, 1, scrollWaitTime);
             Log("Scroll interactions completed for this iteration.");
-
             Wait(seconds: ctrlTabWaitSecondsAfterScroll, showOnScreen: true, onScreenText: "Waiting after scrolling");
             Log($"Iteration {i + 1} complete. Waiting {ctrlTabWaitSecondsAfterScroll} seconds before next iteration.");
         }

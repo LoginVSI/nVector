@@ -1,2 +1,2 @@
 @echo off
-powershell.exe -ExecutionPolicy Bypass -File "" # Put the path to the nVector_Client_Prepare.ps1 here
+start "" /min powershell.exe -WindowStyle Minimized -ExecutionPolicy Bypass -File "C:\Path\To\nVector_Client_Prepare.ps1" # Put the path to the nVector_Client_Prepare.ps1 here
