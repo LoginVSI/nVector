@@ -19,7 +19,6 @@ public class Start_Excel_DefaultScript : ScriptBase
         int globalWaitInSeconds = 3; // Standard wait time between actions
         int waitMessageboxInSeconds = 2; // Duration for onscreen wait messages
 
-        // DeleteTempFiles();
         DownloadExcelFile();
 
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Starting Excel");
@@ -31,46 +30,6 @@ public class Start_Excel_DefaultScript : ScriptBase
         MainWindow.Focus();
         Wait(globalWaitInSeconds);
     }
-    
-    /*
-    private void DeleteTempFiles()
-    {
-        string excelFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Excel");
-        string tempFolder = Path.GetTempPath();
-
-        if (Directory.Exists(excelFolder))
-        {
-            foreach (var file in Directory.GetFiles(excelFolder, "*.xlsb"))
-            {
-                File.Delete(file);
-                Log("Deleted file: " + file);
-            }
-            foreach (var file in Directory.GetFiles(excelFolder, "*.xar"))
-            {
-                File.Delete(file);
-                Log("Deleted file: " + file);
-            }
-            foreach (var file in Directory.GetFiles(excelFolder, "*.xls*"))
-            {
-                File.Delete(file);
-                Log("Deleted file: " + file);
-            }
-            foreach (var file in Directory.GetFiles(excelFolder, "*.tmp"))
-            {
-                File.Delete(file);
-                Log("Deleted file: " + file);
-            }
-        }
-        if (Directory.Exists(tempFolder))
-        {
-            foreach (var file in Directory.GetFiles(tempFolder, "~$*.xls*"))
-            {
-                File.Delete(file);
-                Log("Deleted file: " + file);
-            }
-        }
-    }
-    */
     
     private void DownloadExcelFile()
     {

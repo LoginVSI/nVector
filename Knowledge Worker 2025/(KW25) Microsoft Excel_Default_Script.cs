@@ -66,8 +66,10 @@ public class Excel_DefaultScript : ScriptBase
         Wait(startMenuWaitInSeconds);
 
         // =====================================================
-        // Launch new blank Excel workbook via ProcessStartInfo
+        // Launch new blank Excel workbook
         // =====================================================
+        ShellExecute("cmd /c start \"\" excel /s", waitForProcessEnd: true, timeout: 3, continueOnError: false);
+        /* This is an alternate start blank excel document function 
         try
         {
             ProcessStartInfo startInfo = new ProcessStartInfo
@@ -82,6 +84,8 @@ public class Excel_DefaultScript : ScriptBase
         {
             ABORT("Error starting process: " + ex.Message);
         }
+        */
+
         var newExcelWindow = FindWindow(title:"*Book*Excel*", processName:"EXCEL", continueOnError:false, timeout:globalTimeoutInSeconds);
         Wait(globalWaitInSeconds);
 
@@ -180,21 +184,35 @@ public class Excel_DefaultScript : ScriptBase
 
     void CloseExtraWindows(string processName, string titleMask)
     {
-        int loopCount = 2;
-        for (int i = 0; i < loopCount; i++)
+        // Maximum number of attempts to close extra windows including handling confirm dialogs
+        int maxAttempts = 1;
+        
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
             var extraWindow = FindWindow(title: titleMask, processName: processName, timeout: 3, continueOnError: true);
+            if (extraWindow == null)
+            {
+                // The window is already closed
+                break;
+            }
+    
+            // Give the window some focus and send initial close command
+            Wait(globalWaitInSeconds);
+            extraWindow.Focus();
+            extraWindow.Maximize();
+            Wait(globalWaitInSeconds);
+            extraWindow.Type("{ESC}", hideInLogging: false);
+            Wait(globalWaitInSeconds);
+            extraWindow.Type("{ALT+F4}", hideInLogging: false);
+            Wait(globalWaitInSeconds);
+    
+            // Check if the window still exists (a confirmation might have appeared)
+            extraWindow = FindWindow(title: titleMask, processName: processName, timeout: 3, continueOnError: true);
             if (extraWindow != null)
             {
+                // Wait a little longer and then send {ALT+N} for any confirmation popup
                 Wait(globalWaitInSeconds);
-                extraWindow.Focus();
-                extraWindow.Maximize();
-                Wait(globalWaitInSeconds);
-                extraWindow.Type("{ESC}", hideInLogging:false);
-                Wait(globalWaitInSeconds);
-                extraWindow.Type("{ALT+F4}", hideInLogging:false);
-                Wait(globalWaitInSeconds);
-                extraWindow.Type("n", hideInLogging:false);
+                extraWindow.Type("{ALT+N}", hideInLogging: false);
                 Wait(globalWaitInSeconds);
             }
         }
