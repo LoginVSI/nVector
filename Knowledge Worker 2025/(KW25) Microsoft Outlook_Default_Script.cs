@@ -8,7 +8,7 @@
 /////////////
 
 using LoginPI.Engine.ScriptBase;
-using LoginPI.Engine.ScriptBase.Components;  // Added to resolve IWindow
+using LoginPI.Engine.ScriptBase.Components; 
 using System.IO;
 using System;
 using System.Net;
@@ -89,7 +89,7 @@ public class Outlook_DefaultScript : ScriptBase
     }
 
     // Dismisses the Reminder popup if it appears.
-    private void DismissReminderPopup(LoginPI.Engine.ScriptBase.Components.IWindow mainWindow, int waitTime)
+    private void DismissReminderPopup(IWindow mainWindow, int waitTime)
     {
         var reminderWindow = FindWindow(className: "Win32 Window:#32770", title: "*Reminder(s)", processName: "OUTLOOK", timeout: 3, continueOnError: true);
         if (reminderWindow != null)
@@ -124,7 +124,6 @@ public class Outlook_DefaultScript : ScriptBase
         // =====================================================
         // Setup and File Download
         // =====================================================
-        // Retrieve TEMP directory and ensure the LoginEnterprise folder exists.
         var temp = GetEnvironmentVariable("TEMP");
         string outlookDir = Path.Combine(temp, "LoginEnterprise");
         if (!Directory.Exists(outlookDir))
@@ -140,9 +139,7 @@ public class Outlook_DefaultScript : ScriptBase
             Log("Downloading BMP file");
             try
             {
-                // Disable SSL certificate validation for the download.
                 ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-
                 using (WebClient client = new WebClient())
                 {
                     client.DownloadFile(bmpUrl, bmpFile);
@@ -164,23 +161,22 @@ public class Outlook_DefaultScript : ScriptBase
         // =====================================================
         Log("Simulating Start Menu interaction.");
         Wait(startMenuWaitInSeconds);
-        Type("{LWIN}",hideInLogging:false);
-        Wait(seconds: startMenuWaitInSeconds);
-        Type("{LWIN}",hideInLogging:false);
-        Wait(seconds: 1);
-        Type("{ESC}",hideInLogging:false);
+        Type("{LWIN}", hideInLogging: false);
+        Wait(startMenuWaitInSeconds);
+        Type("{LWIN}", hideInLogging: false);
+        Wait(1);
+        Type("{ESC}", hideInLogging: false);
         Wait(startMenuWaitInSeconds);
 
         // =====================================================
         // Bring Outlook to Focus and Dismiss Popups
         // =====================================================
-        // Wait(seconds: globalWaitInSeconds);
-        // SkipFirstRunDialogs();
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Dismiss any Outlook popups");
         var mainWindow = FindWindow(title: "Inbox -*", processName: "OUTLOOK", timeout: globalTimeoutInSeconds);
         mainWindow.Focus();
         mainWindow.Maximize();
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Focusing Outlook");
+
         // =====================================================
         // Refresh Outlook Main Window
         // =====================================================
@@ -245,17 +241,13 @@ public class Outlook_DefaultScript : ScriptBase
         var toField = newEmail.FindControl(className: "*RichEdit20WPT", title: "To", timeout: globalTimeoutInSeconds);
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Setting To field");
         toField.Type(toFieldText, cpm: typingTextCharacterPerMinute, hideInLogging: false);
-        // Switch focus to the subject field.
         newEmail.Type("{ALT+U}", cpm: keyboardShortcutsCPM, hideInLogging: false);
         Wait(seconds: waitInBetweenKeyboardShortcuts);
         newEmail.Type(emailSubject, cpm: typingTextCharacterPerMinute, hideInLogging: false);
-        newEmail.Type("{TAB}", cpm: keyboardShortcutsCPM, hideInLogging: false); // Move to email body.
+        newEmail.Type("{TAB}", cpm: keyboardShortcutsCPM, hideInLogging: false);
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Entering email body");
 
-        // =====================================================
-        // Type Email Body Content
-        // =====================================================
-        // Type each line separately with an {Enter} keypress after each line.
+        // Type each line of the email body.
         foreach (var line in emailBodyLines)
         {
             newEmail.Type(line, cpm: typingTextCharacterPerMinute, hideInLogging: false);
@@ -267,19 +259,18 @@ public class Outlook_DefaultScript : ScriptBase
         // Insert BMP Image into the Email Body
         // =====================================================
         Log("Inserting BMP image into email body");
-        newEmail.Type("{ALT}np", cpm: keyboardShortcutsCPM, hideInLogging: false); // e.g., Insert -> Picture
+        newEmail.Type("{ALT}np", cpm: keyboardShortcutsCPM, hideInLogging: false); // Insert -> Picture command.
         StartTimer("Insert_Picture_Dialog");
         var insertPictureDialog = FindWindow(className: "Win32 Window:#32770", title: "Insert Picture", processName: "OUTLOOK", timeout: globalTimeoutInSeconds);
         StopTimer("Insert_Picture_Dialog");
         var insertPictureDialogFileName = insertPictureDialog.FindControl(className: "Edit:Edit", title: "File name:", timeout: globalTimeoutInSeconds);
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Focusing file name box");
-        insertPictureDialog.Type("{alt+n}",hideInLogging:false);
+        insertPictureDialog.Type("{alt+n}", hideInLogging: false);
         insertPictureDialogFileName.Click();
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Typing BMP file path");
-        // Use the helper method to set text in the file name textbox reliably.
         ScriptHelpers.SetTextBoxText(this, insertPictureDialogFileName, bmpFile, cpm: typingTextCharacterPerMinute);
         Type("{ENTER}", hideInLogging: false);
-        Wait(globalWaitInSeconds);
+        Wait(seconds: globalWaitInSeconds);
 
         // =====================================================
         // Expand Email Content via Copy & Paste
@@ -294,17 +285,6 @@ public class Outlook_DefaultScript : ScriptBase
         }
 
         // =====================================================
-        // Helper: Scroll Function
-        // =====================================================
-        // Usage of Scroll():
-        //   - direction: "Down" to scroll down or "Up" to scroll up.
-        //   - scrollCount: Number of scroll events to send.
-        //   - notches: Number of notches per event (1 notch is typically 120).
-        //   - waitTime: Time in seconds to wait between each scroll event.
-        // Example:
-        //   Scroll("Down", 20, 1, 0.2);
-        //   Scroll("Up", 10, 2, 0.3);
-        // =====================================================
         // Scroll Within the New Email Window
         // =====================================================
         Log("Scrolling within the new email window");
@@ -316,16 +296,15 @@ public class Outlook_DefaultScript : ScriptBase
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Scrolling email");
         InlineScroll("Up", newEmailScrollUpCount, 1, 0.1);
         InlineScroll("Down", newEmailScrollDownCount, 1, 0.1);
-        // (Additional scrolling iterations can be added here if needed)
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Scrolling complete");
 
         // =====================================================
         // Attach BMP File to the Email
         // =====================================================
         Log("Attaching BMP file to email");
-        newEmail.Type("{ALT}naf", cpm: keyboardShortcutsCPM, hideInLogging: false); // Insert and Attach command
+        newEmail.Type("{ALT}naf", cpm: keyboardShortcutsCPM, hideInLogging: false); // Insert and Attach command.
         Wait(waitBeforePictureInsert);
-        newEmail.Type("b", cpm: keyboardShortcutsCPM, hideInLogging: false);           // 'b' for browse
+        newEmail.Type("b", cpm: keyboardShortcutsCPM, hideInLogging: false);           // 'b' for browse.
         StartTimer("Add_Attachment_Dialog");
         var addAttachmentDialog = FindWindow(className: "Win32 Window:#32770", title: "Insert File", processName: "OUTLOOK", timeout: globalTimeoutInSeconds);
         StopTimer("Add_Attachment_Dialog");
@@ -333,7 +312,6 @@ public class Outlook_DefaultScript : ScriptBase
         addAttachmentDialog.Focus();
         Type("{alt+n}", hideInLogging: false);
         Wait(globalWaitInSeconds);
-        // Use SetTextBoxText helper for the attachment dialog textbox.
         ScriptHelpers.SetTextBoxText(this, addAttachmentDialog.FindControl(className: "Edit:Edit", title: "File name:", timeout: globalTimeoutInSeconds), bmpFile, cpm: typingTextCharacterPerMinute);
         Type("{ENTER}", hideInLogging: false);
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Attachment added");
@@ -341,32 +319,33 @@ public class Outlook_DefaultScript : ScriptBase
         // =====================================================
         // Finalize Email and Clean Up
         // =====================================================
-        newEmail.Close();
-        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Closing new email");
-        Type("n", hideInLogging: false); // Dismiss confirmation dialog, if any.
-        Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Finalizing");
-
-        Log("Outlook prepared for next iteration. Main window persists; all other windows closed.");
-    }
-    /* // =====================================================
-    // Helper: Skip First-Run Dialogs
-    // =====================================================
-    private void SkipFirstRunDialogs()
-    {
-        int firstRunRetryCount = 2;
-        for (int i = 0; i < firstRunRetryCount; i++)
+        try
         {
-            var signinWindow = MainWindow.FindControlWithXPath(
-                "Win32 Window:NUIDialog", 
-                timeout: 5, 
-                continueOnError: true);
-            if (signinWindow != null)
+            newEmail.Close();
+            Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Finalizing email");
+        
+            // Check if the confirmation message window exists with title "*Message*"
+            var msgWindow = FindWindow(className: "Win32 Window:rctrl_renwnd32", title: "*Message*", processName: "OUTLOOK", timeout: 2, continueOnError: true);
+            if (msgWindow != null)
             {
-                signinWindow.Type("{ESC}", hideInLogging: false);
-                Log("Dismissed a first-run dialog.");
+                msgWindow.Type("{ALT+N}", hideInLogging: false);
+                Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Finalizing after confirmation");
+        
+                // Check again if the message window still exists
+                msgWindow = FindWindow(className: "Win32 Window:rctrl_renwnd32", title: "*Message*", processName: "OUTLOOK", timeout: 2, continueOnError: true);
+                if (msgWindow != null)
+                {
+                    ABORT("The New email Outlook window is still existing");
+                }
             }
         }
-    } */
+        catch (Exception ex)
+        {
+            ABORT("Error finalizing new email: " + ex.Message);
+        }
+        
+        Log("Outlook prepared for next iteration. Main window persists; all other windows closed.");
+    }
 }
 
 // =====================================================
@@ -374,7 +353,7 @@ public class Outlook_DefaultScript : ScriptBase
 // =====================================================
 public static class ScriptHelpers
 {
-    public static void SetTextBoxText(ScriptBase script, LoginPI.Engine.ScriptBase.Components.IWindow textBox, string text, int cpm = 600)
+    public static void SetTextBoxText(ScriptBase script, IWindow textBox, string text, int cpm = 600)
     {
         int globalWaitInSeconds = 3; // Wait time between actions
         var numTries = 1;
