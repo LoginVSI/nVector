@@ -14,13 +14,40 @@ using System.Diagnostics;
 
 public class M365PrivacyPrep_DefaultScript : ScriptBase
 {
-    private void Execute()
-    {           
-        int globalWaitInSeconds = 3; // Standard wait time between actions
+    private int globalWaitInSeconds = 3; // Standard wait time between actions
 
-        // Delete all Microsoft Word, Excel, PowerPoint AutoRecover, backup, 'loginvsi' and 'edited', and temporary files
-        Log("Deleting all Microsoft Office AutoRecover, backup, 'loginvsi' and 'edited', and temporary files...");
+    /// <summary>
+    /// Deletes all files in a given directory matching each provided pattern.
+    /// </summary>
+    /// <param name="folderPath">Directory to check for files</param>
+    /// <param name="patterns">One or more search patterns (e.g., "*.asd")</param>
+    private void DeleteFilesWithPatterns(string folderPath, params string[] patterns)
+    {
+        if (Directory.Exists(folderPath))
+        {
+            foreach (var pattern in patterns)
+            {
+                foreach (var file in Directory.GetFiles(folderPath, pattern))
+                {
+                    try
+                    {
+                        File.Delete(file);
+                        Log("Deleted file: " + file);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log("Failed to delete file: " + file + " - " + ex.Message);
+                    }
+                }
+            }
+        }
+    }
 
+    /// <summary>
+    /// Consolidates deletion of all Office temporary and backup files into one method.
+    /// </summary>
+    private void DeleteTemporaryFiles()
+    {
         string wordFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Word");
         string excelFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Excel");
         string pptUnsavedFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "Office", "UnsavedFiles");
@@ -28,379 +55,52 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         string tempEnv = GetEnvironmentVariable("TEMP");
         string loginEnterpriseDir = $"{tempEnv}\\LoginEnterprise";
 
-        try
+        // Delete files in Word folder (AutoRecover, Backup, and Word documents)
+        DeleteFilesWithPatterns(wordFolder, "*.asd", "*.wbk", "*.docx");
+
+        // Delete files in Excel folder (Excel Binary, Archive, Documents, and Temp files)
+        DeleteFilesWithPatterns(excelFolder, "*.xlsb", "*.xar", "*.xls*", "*.tmp");
+
+        // Delete files in PowerPoint unsaved folder (PowerPoint, Temp and AutoRecover files)
+        DeleteFilesWithPatterns(pptUnsavedFolder, "*.pptx", "*.tmp", "*.asd");
+
+        // Delete files in Temp folder (Word temp files, Excel and PowerPoint temp document caches, and PowerPoint temp files)
+        DeleteFilesWithPatterns(tempFolder, "~WRD*.tmp", "~$*.docx", "~$*.xls*", "ppt*.tmp");
+
+        // Delete files in LoginEnterprise directory that contain "loginvsi" or "edited"
+        if (Directory.Exists(loginEnterpriseDir))
         {
-            if (Directory.Exists(wordFolder))
+            foreach (var file in Directory.GetFiles(loginEnterpriseDir))
             {
-                foreach (var file in Directory.GetFiles(wordFolder, "*.asd"))  // AutoRecover files
+                try
                 {
-                    try
+                    string fileName = Path.GetFileName(file).ToLower();
+                    if (fileName.Contains("loginvsi") || fileName.Contains("edited"))
                     {
                         File.Delete(file);
                         Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
                     }
                 }
-
-                foreach (var file in Directory.GetFiles(wordFolder, "*.wbk")) // Backup files
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        File.Delete(file);
-                        Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
-
-                foreach (var file in Directory.GetFiles(wordFolder, "*.docx")) // Word documents
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
+                    Log("Failed to delete file: " + file + " - " + ex.Message);
                 }
             }
         }
-        catch (Exception ex)
-        {
-            Log("Error accessing Word directory: " + wordFolder + " - " + ex.Message);
-        }
+    }
 
-        try
-        {
-            if (Directory.Exists(excelFolder))
-            {
-                foreach (var file in Directory.GetFiles(excelFolder, "*.xlsb")) // Excel Binary files
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
+    private void Execute()
+    {
+        // =====================================================
+        // Pre-delete: Remove all Microsoft Office AutoRecover, backup,
+        // 'loginvsi' and 'edited', and temporary files.
+        // =====================================================
+        Log("Deleting all Microsoft Office AutoRecover, backup, 'loginvsi' and 'edited', and temporary files...");
+        DeleteTemporaryFiles();
 
-                foreach (var file in Directory.GetFiles(excelFolder, "*.xar")) // Excel Archive files
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
-
-                foreach (var file in Directory.GetFiles(excelFolder, "*.xls*")) // Excel documents
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
-
-                foreach (var file in Directory.GetFiles(excelFolder, "*.tmp")) // Excel temp files
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Log("Error accessing Excel directory: " + excelFolder + " - " + ex.Message);
-        }
-
-        try
-        {
-            if (Directory.Exists(pptUnsavedFolder))
-            {
-                foreach (var file in Directory.GetFiles(pptUnsavedFolder, "*.pptx")) // PowerPoint files
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
-
-                foreach (var file in Directory.GetFiles(pptUnsavedFolder, "*.tmp")) // PowerPoint temp files
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
-
-                foreach (var file in Directory.GetFiles(pptUnsavedFolder, "*.asd")) // PowerPoint AutoRecover
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Log("Error accessing PowerPoint directory: " + pptUnsavedFolder + " - " + ex.Message);
-        }
-
-        try
-        {
-            if (Directory.Exists(tempFolder))
-            {
-                foreach (var file in Directory.GetFiles(tempFolder, "~WRD*.tmp")) // Word temp files
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
-
-                foreach (var file in Directory.GetFiles(tempFolder, "~$*.docx")) // Word temp document cache
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
-
-                foreach (var file in Directory.GetFiles(tempFolder, "~$*.xls*")) // Excel temp document cache
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
-
-                foreach (var file in Directory.GetFiles(tempFolder, "ppt*.tmp")) // PowerPoint temp files
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Log("Error accessing Temp directory: " + tempFolder + " - " + ex.Message);
-        }
-
-        try
-        {
-            if (Directory.Exists(loginEnterpriseDir))
-            {
-                foreach (var file in Directory.GetFiles(loginEnterpriseDir))
-                {
-                    try
-                    {
-                        string fileName = Path.GetFileName(file).ToLower();
-                        if (fileName.Contains("loginvsi") || fileName.Contains("edited"))
-                        {
-                            File.Delete(file);
-                            Log("Deleted file: " + file);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Log("Error accessing LoginEnterprise directory: " + loginEnterpriseDir + " - " + ex.Message);
-        }
-        
-        /*
-        // Delete all Microsoft Word AutoRecover, backup, "loginvsi"/"edited", and temporary files
-        Log("Deleting all Microsoft Word AutoRecover, backup, "loginvsi"/"edited", and temporary files...");
-
-        string wordFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Word");
-        string tempFolder = Path.GetTempPath();
-        string temp = GetEnvironmentVariable("TEMP");
-        string tempEnv = GetEnvironmentVariable("TEMP");
-        string loginEnterpriseDir = $"{tempEnv}\\LoginEnterprise";
-
-        try
-        {
-            if (Directory.Exists(wordFolder))
-            {
-                foreach (var file in Directory.GetFiles(wordFolder, "*.asd"))  // AutoRecover files
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
-
-                foreach (var file in Directory.GetFiles(wordFolder, "*.wbk")) // Backup files
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
-
-                foreach (var file in Directory.GetFiles(wordFolder, "*.docx")) // Word documents
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Log("Error accessing Word directory: " + wordFolder + " - " + ex.Message);
-        }
-
-        try
-        {
-            if (Directory.Exists(tempFolder))
-            {
-                foreach (var file in Directory.GetFiles(tempFolder, "~WRD*.tmp")) // Temporary Word files
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
-
-                foreach (var file in Directory.GetFiles(tempFolder, "~$*.docx")) // Temporary Word document cache
-                {
-                    try
-                    {
-                        File.Delete(file);
-                        Log("Deleted file: " + file);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Log("Error accessing Temp directory: " + tempFolder + " - " + ex.Message);
-        }
-
-        try
-        {
-            if (Directory.Exists(loginEnterpriseDir))
-            {
-                foreach (var file in Directory.GetFiles(loginEnterpriseDir))
-                {
-                    try
-                    {
-                        string fileName = Path.GetFileName(file).ToLower();
-                        if (fileName.Contains("loginvsi") || fileName.Contains("edited"))
-                        {
-                            File.Delete(file);
-                            Log("Deleted file: " + file);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log("Failed to delete file: " + file + " - " + ex.Message);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Log("Error accessing LoginEnterprise directory: " + loginEnterpriseDir + " - " + ex.Message);
-        }
-        */
-
+        // =====================================================
         // Set registry values; this should be a run-once preparation
+        // =====================================================
         Wait(seconds:2, showOnScreen:true, onScreenText:"Setting Reg Values");
         RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Common\General", @"ShownFirstRunOptin", @"dword:00000001")); // Marks that the first run opt-in dialog has been shown.
         RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Common\Licensing", @"DisableActivationUI", @"dword:00000001")); // Disables the Office activation UI prompt.
@@ -424,9 +124,7 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
 
         RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Powerpoint\Options", @"SaveAutoRecoverInfoEvery", @"dword:00000000")); // Disables AutoRecover information saving in PowerPoint.
         RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\PowerPoint", @"AutoRecover", @"dword:00000000")); // Disables the AutoRecover feature in PowerPoint.
-        // RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\PowerPoint\Options", @"DisableAutoRecover", @"dword:00000001")); // Confirms disabling of AutoRecover in PowerPoint.
-        // RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Excel\Options", @"DisableAutoRecover", @"dword:00000001")); // Confirms disabling of AutoRecover in Excel.
-        // RegImport(create_regfile(@"HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Word\Options", @"DisableAutoRecover", @"dword:00000001")); // Confirms disabling of AutoRecover in Word.
+        
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\sharepointintegration", @"hidelearnmorelink", @"dword:00000001")); // Hides the "Learn More" link for SharePoint integration.
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\graphics", @"disablehardwareacceleration", @"dword:00000001")); // Disables hardware acceleration for Office graphics.
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\common\graphics", @"disableanimations", @"dword:00000001")); // Disables animations within Office applications.
@@ -443,12 +141,11 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
 
         RegImport(create_regfile(@"HKEY_CURRENT_USER\software\microsoft\office\16.0\Outlook\Preferences", @"ReopenWindowsOption", @"dword:00000001")); // Enables the option to reopen previous windows in Outlook.
 
-        // RegImport(create_regfile(@"HKEY_CURRENT_USER\software\Policies\Microsoft\Edge", @"RestoreOnStartup", @"dword:00000000")); // Would configure Microsoft Edge to not restore tabs on startup.
-        // RegImport(create_regfile(@"HKEY_CURRENT_USER\software\Policies\Microsoft\Edge", @"HideRestoreDialogEnabled", @"dword:00000001")); // Would hide the restore dialog in Microsoft Edge.
-
         // =====================================================
-        // Launch new blank Word document using ProcessStartInfo
+        // Launch new blank Word document
         // =====================================================
+        ShellExecute("cmd /c start \"\" winword /t", waitForProcessEnd: true, timeout: 3, continueOnError: false);
+        /* This is an alternate start blank word document function 
         try
         {
             ProcessStartInfo startInfo = new ProcessStartInfo
@@ -463,6 +160,7 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         {
             ABORT("Error starting process: " + ex.Message);
         }
+        */
 
         Wait(globalWaitInSeconds);
         var MainWindow = FindWindow(title:"*Word*", processName:"WINWORD", className:"Win32 Window:OpusApp", continueOnError:false, timeout:60);
@@ -473,94 +171,11 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         SkipFirstRunDialogs();
         Wait(globalWaitInSeconds);
         MainWindow.Close();          
-
-        /*
-        // Close Word
-        Log("Closing Word...");
-        try
-        {
-            foreach (var process in Process.GetProcessesByName("WINWORD"))
-            {
-                process.Kill();
-                process.WaitForExit(); // Ensure the process is terminated
-            }
-        }
-        catch (Exception ex)
-        {
-            ABORT("Error terminating Word process: " + ex.Message);
-        }   
-        
-        Wait(globalWaitInSeconds);
-
-        
-        // Open and close Excel and PowerPoint as a preparation
-        // =====================================================
-        // Launch new blank Excel document using ProcessStartInfo
-        // =====================================================
-        try
-        {
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
-                FileName = "excel.exe",
-                Arguments = "/s",
-                UseShellExecute = true
-            };
-            Process.Start(startInfo);
-        }
-        catch (Exception ex)
-        {
-            ABORT("Error starting Excel process: " + ex.Message);
-        }
-
-        // =====================================================
-        // Launch new blank PowerPoint presentation using ProcessStartInfo
-        // =====================================================
-        try
-        {
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
-                FileName = "powerpnt.exe",
-                Arguments = "/n",
-                UseShellExecute = true
-            };
-            Process.Start(startInfo);
-        }
-        catch (Exception ex)
-        {
-            ABORT("Error starting PowerPoint process: " + ex.Message);
-        }
-        FindWindow(title:"*Excel*", processName:"EXCEL", className:"Win32 Window:XLMAIN", continueOnError:false, timeout:60);
-        FindWindow(title:"*PowerPoint*", processName:"POWERPNT", className:"Win32 Window:PPTFrameClass", continueOnError:false, timeout:60);
-        Wait(globalWaitInSeconds);
-
-        // Close Excel and PowerPoint
-        Log("Closing Excel and PowerPoint...");
-        string[] processesToKill = { "EXCEL", "POWERPNT" };
-
-        try
-        {
-            foreach (var processName in processesToKill)
-            {
-                foreach (var process in Process.GetProcessesByName(processName))
-                {
-                    process.Kill();
-                    process.WaitForExit(); // Ensure the process is terminated
-                    Log($"Terminated process: {processName}");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            ABORT("Error terminating Office processes: " + ex.Message);
-        }
-        */
-
         Wait(globalWaitInSeconds);
     }
 
     private void SkipFirstRunDialogs()
     {
-        int globalWaitInSeconds = 3; // Standard wait time between actions
         int loopCount = 2; // configurable number of loops
         for (int i = 0; i < loopCount; i++)
         {
