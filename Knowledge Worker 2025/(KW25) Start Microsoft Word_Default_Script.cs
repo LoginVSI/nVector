@@ -32,46 +32,6 @@ public class Start_Word_DefaultScript : ScriptBase
         Wait(globalWaitInSeconds);
     }
     
-    /* 
-    private void DeleteTempFiles()
-    {
-        string wordFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Word");
-        string tempFolder = Path.GetTempPath();
-
-        if (Directory.Exists(wordFolder))
-        {
-            foreach (var file in Directory.GetFiles(wordFolder, "*.asd"))
-            {
-                File.Delete(file);
-                Log("Deleted file: " + file);
-            }
-            foreach (var file in Directory.GetFiles(wordFolder, "*.wbk"))
-            {
-                File.Delete(file);
-                Log("Deleted file: " + file);
-            }
-            foreach (var file in Directory.GetFiles(wordFolder, "*.docx"))
-            {
-                File.Delete(file);
-                Log("Deleted file: " + file);
-            }
-        }
-        if (Directory.Exists(tempFolder))
-        {
-            foreach (var file in Directory.GetFiles(tempFolder, "~WRD*.tmp"))
-            {
-                File.Delete(file);
-                Log("Deleted file: " + file);
-            }
-            foreach (var file in Directory.GetFiles(tempFolder, "~$*.docx"))
-            {
-                File.Delete(file);
-                Log("Deleted file: " + file);
-            }
-        }
-    }
-    */
-    
     private void DownloadWordDocument()
     {
         int waitMessageboxInSeconds = 2;

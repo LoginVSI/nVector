@@ -101,8 +101,10 @@ public class WordDefaultScript : ScriptBase
         Wait(startMenuWaitInSeconds);
 
         // =====================================================
-        // Launch new blank Word document using ProcessStartInfo
+        // Launch new blank Word document
         // =====================================================
+        ShellExecute("cmd /c start \"\" winword /t", waitForProcessEnd: true, timeout: 3, continueOnError: false);
+        /* Alternate start blank word document function:
         try
         {
             ProcessStartInfo startInfo = new ProcessStartInfo
@@ -117,6 +119,8 @@ public class WordDefaultScript : ScriptBase
         {
             ABORT("Error starting process: " + ex.Message);
         }
+        */
+
         var newExcelWindow = FindWindow(title:"*Document*Word*", processName:"WINWORD", continueOnError:false, timeout:globalTimeoutInSeconds);
         Wait(globalWaitInSeconds);
 
@@ -127,8 +131,13 @@ public class WordDefaultScript : ScriptBase
         CloseExtraWindows("WINWORD", "*edited*");
 
         // =====================================================
+        // Call new method to close a specific Microsoft Word confirmation window
+        // =====================================================
+        CloseMicrosoftWordDialog();
+
+        // =====================================================
         // Skip First-Run Dialogs before Bringing Word into Focus
-        // =====================================================)
+        // =====================================================
         Wait(globalWaitInSeconds);
         SkipFirstRunDialogs();
 
@@ -163,7 +172,7 @@ public class WordDefaultScript : ScriptBase
         StartTimer("Open_Word_Document");
         var newWord = FindWindow(className:"Win32 Window:OpusApp", title:"loginvsi*", processName:"WINWORD", timeout:globalTimeoutInSeconds);
         StopTimer("Open_Word_Document");
-        
+
         // Close any stray "Document" windows
         CloseExtraWindows("WINWORD", "*Document*");
         Wait(globalWaitInSeconds);
@@ -177,7 +186,7 @@ public class WordDefaultScript : ScriptBase
         SkipFirstRunDialogs();
 
         // =====================================================
-        // Typing content, inserting BMP, scrolling, Save As, etc.)
+        // Typing content, inserting BMP, scrolling, Save As, etc.
         // =====================================================
         // Type initial commands
         newWord.Type("{ALT}wi", cpm: keyboardShortcutsCPM, hideInLogging:false);
@@ -272,23 +281,50 @@ public class WordDefaultScript : ScriptBase
 
     void CloseExtraWindows(string processName, string titleMask)
     {
-        int loopCount = 2;
-        for (int i = 0; i < loopCount; i++)
+        int timeoutSeconds = 2;      // Timeout for re-checking the window
+        int maxAttempts = 1;         // Maximum number of attempts to close the window
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
             var extraWindow = FindWindow(title: titleMask, processName: processName, timeout: 3, continueOnError: true);
-            if (extraWindow != null)
+            if (extraWindow == null)
+            {
+                // Window is already closed
+                break;
+            }
+
+            Wait(globalWaitInSeconds);
+            extraWindow.Focus();
+            extraWindow.Maximize();
+            Wait(globalWaitInSeconds);
+            extraWindow.Type("{ESC}", hideInLogging: false);
+            Wait(globalWaitInSeconds);
+            extraWindow.Type("{ALT+F4}", hideInLogging: false);
+            Wait(globalWaitInSeconds);
+
+            // Check if the window is still present
+            var checkWindow = FindWindow(title: titleMask, processName: processName, timeout: timeoutSeconds, continueOnError: true);
+            if (checkWindow != null)
             {
                 Wait(globalWaitInSeconds);
-                extraWindow.Focus();
-                extraWindow.Maximize();
-                Wait(globalWaitInSeconds);
-                extraWindow.Type("{ESC}", hideInLogging:false);
-                Wait(globalWaitInSeconds);
-                extraWindow.Type("{ALT+F4}", hideInLogging:false);
-                Wait(globalWaitInSeconds);
-                extraWindow.Type("n", hideInLogging:false);
+                checkWindow.Type("{ALT+N}", hideInLogging: false);
                 Wait(globalWaitInSeconds);
             }
+        }
+    }
+
+    // Handling a specific Microsoft Word confirmation dialog: "Do you want to keep the last item you copied?"
+    void CloseMicrosoftWordDialog()
+    {
+        int timeoutSeconds = 2; 
+        var msWordWindow = FindWindow(className: "Win32 Window:#32770", title: "Microsoft Word", processName: "WINWORD", timeout: timeoutSeconds, continueOnError: true);
+        if (msWordWindow != null)
+        {
+            msWordWindow.Focus();
+            msWordWindow.Maximize();
+            Wait(globalWaitInSeconds);
+            msWordWindow.Type("{ALT+N}", hideInLogging: false);
+            Wait(globalWaitInSeconds);
         }
     }
 
