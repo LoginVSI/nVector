@@ -43,9 +43,35 @@ public class PowerPoint_DefaultScript : ScriptBase
         string loginEnterpriseDir = $"{temp}\\LoginEnterprise";
         string pptxFile = $"{loginEnterpriseDir}\\loginvsi.pptx";
 
+        // Download BMP file if needed
+        string bmpFile = Path.Combine(loginEnterpriseDir, "LoginVSI_BattlingRobots.bmp");
+        if (!FileExists(bmpFile))
+        {
+            Log("Downloading BMP file");
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+                using (WebClient client = new WebClient())
+                {
+                    client.DownloadFile(bmpUrl, bmpFile);
+                    Log("BMP file downloaded successfully to: " + bmpFile);
+                }
+            }
+            catch (Exception ex)
+            {
+                ABORT("Error downloading BMP file: " + ex.Message);
+            }
+        }
+        else
+        {
+            Log("BMP file already exists");
+        }
+
         // =====================================================
-        // Launch new blank PowerPoint presentation via ProcessStartInfo
+        // Launch new blank PowerPoint presentation 
         // =====================================================
+        ShellExecute("cmd /c start \"\" powerpnt /n", waitForProcessEnd: true, timeout: 3, continueOnError: false);
+        /* Alternate start blank PowerPoint presentation function:
         try
         {
             ProcessStartInfo startInfo = new ProcessStartInfo
@@ -60,6 +86,7 @@ public class PowerPoint_DefaultScript : ScriptBase
         {
             ABORT("Error starting process: " + ex.Message);
         }
+        */
         var newPowerpointWindow = FindWindow(title:"*Presentation*PowerPoint*", processName:"POWERPNT", continueOnError:false, timeout:globalTimeoutInSeconds);
         Wait(globalWaitInSeconds);
 
@@ -83,7 +110,7 @@ public class PowerPoint_DefaultScript : ScriptBase
 
         // =====================================================
         // Skip First-Run Dialogs before Bringing PowerPoint into Focus
-        // =====================================================)
+        // =====================================================
         Wait(globalWaitInSeconds);
         SkipFirstRunDialogs();
 
@@ -145,7 +172,7 @@ public class PowerPoint_DefaultScript : ScriptBase
         fileNameBox2.Click();
         newPowerpoint.Type("{ALT+N}", cpm: charactersPerMinuteToType, hideInLogging:false);
         Wait(waitInBetweenKeyboardShortcuts);
-        ScriptHelpers.SetTextBoxText(this, fileNameBox2, /*bmpFile*/ "", cpm: typingTextCharacterPerMinute); // Use bmpFile path if needed
+        ScriptHelpers.SetTextBoxText(this, fileNameBox2, bmpFile, cpm: typingTextCharacterPerMinute);
         fileNameBox2.Type("{ENTER}", cpm: charactersPerMinuteToType, hideInLogging:false);
         Wait(globalWaitInSeconds);
         var stillExists = FindWindow(className:"Win32 Window:#32770", title:"Insert Picture", processName:"POWERPNT", timeout:2, continueOnError:true);
@@ -229,21 +256,33 @@ public class PowerPoint_DefaultScript : ScriptBase
 
     void CloseExtraWindows(string processName, string titleMask)
     {
-        int loopCount = 2;
-        for (int i = 0; i < loopCount; i++)
+        int timeoutSeconds = 2;      // Timeout for re-checking the window
+        int maxAttempts = 1;         // Maximum number of attempts to close the window
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
             var extraWindow = FindWindow(title: titleMask, processName: processName, timeout: 3, continueOnError: true);
-            if (extraWindow != null)
+            if (extraWindow == null)
+            {
+                // Window is already closed
+                break;
+            }
+
+            Wait(globalWaitInSeconds);
+            extraWindow.Focus();
+            extraWindow.Maximize();
+            Wait(globalWaitInSeconds);
+            extraWindow.Type("{ESC}", hideInLogging: false);
+            Wait(globalWaitInSeconds);
+            extraWindow.Type("{ALT+F4}", hideInLogging: false);
+            Wait(globalWaitInSeconds);
+
+            // Check if the window is still present
+            var checkWindow = FindWindow(title: titleMask, processName: processName, timeout: timeoutSeconds, continueOnError: true);
+            if (checkWindow != null)
             {
                 Wait(globalWaitInSeconds);
-                extraWindow.Focus();
-                extraWindow.Maximize();
-                Wait(globalWaitInSeconds);
-                extraWindow.Type("{ESC}", hideInLogging:false);
-                Wait(globalWaitInSeconds);
-                extraWindow.Type("{ALT+F4}", hideInLogging:false);
-                Wait(globalWaitInSeconds);
-                extraWindow.Type("n", hideInLogging:false);
+                checkWindow.Type("{ALT+N}", hideInLogging: false);
                 Wait(globalWaitInSeconds);
             }
         }
@@ -268,7 +307,8 @@ public class PowerPoint_DefaultScript : ScriptBase
         if (currentText != text)
             ABORT($"Unable to set the correct text '{text}', got '{currentText}'");
     }
-        private void SkipFirstRunDialogs()
+    
+    private void SkipFirstRunDialogs()
     {
         int loopCount = 2;
         for (int i = 0; i < loopCount; i++)
@@ -283,7 +323,7 @@ public class PowerPoint_DefaultScript : ScriptBase
         }
     }
 }
- 
+
 // =====================================================
 // Helper Class for TextBox Operations
 // =====================================================
