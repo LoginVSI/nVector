@@ -39,7 +39,7 @@ public class Outlook_DefaultScript : ScriptBase
     int copyPasteRepetitions = 2;                   // Number of times to copy-paste email body content
     int startMenuWaitInSeconds = 5;                 // Duration for Start Menu wait between interactions
     int waitOpenExistingEmail = 8;                  // Wait time for opening an existing email after inbox scrolling
-    int waitBeforePictureInsert = 8;               // Wait time before inserting a picture in the email
+    int waitBeforePictureInsert = 8;                // Wait time before inserting a picture in the email
 
     // Scrolling parameters for navigating emails
     int inboxDownRepeat = 5;                        // How many times to press DOWN in the inbox list
@@ -116,6 +116,29 @@ public class Outlook_DefaultScript : ScriptBase
         }
     }
 
+    // Dismiss the modal Outlook dialog that asks "Outlook closed while you had items open. Reopen those items from your last session?".
+    void DismissOutlookClosedItemsDialog()
+    {
+        int timeoutSeconds = 2;
+        // Look for the dialog with the given class and title.
+        var outlookDialog = FindWindow(className: "Win32 Window:NUIDialog", title: "Microsoft Outlook", processName: "OUTLOOK", timeout: timeoutSeconds, continueOnError: true);
+        if (outlookDialog != null)
+        {
+            // Look for the No button in that dialog.
+            var noButton = outlookDialog.FindControl(className: "Button:NetUIButton", title: "No", timeout: timeoutSeconds, continueOnError: true);
+            if (noButton != null)
+            {
+                Wait(globalWaitInSeconds);
+                outlookDialog.Focus();
+                outlookDialog.Maximize();
+                Wait(globalWaitInSeconds);
+                // Send the Escape key to dismiss the dialog.
+                outlookDialog.Type("{ESC}", hideInLogging: false);
+                Wait(globalWaitInSeconds);
+            }
+        }
+    }
+
     // =====================================================
     // Execute Method
     // =====================================================
@@ -185,6 +208,9 @@ public class Outlook_DefaultScript : ScriptBase
         mainWindow.Maximize();
         mainWindow.Focus();
         Wait(seconds: globalWaitInSeconds, showOnScreen: true, onScreenText: "Maximizing Outlook");
+
+        // Dismiss the Outlook Closed Items dialog, if it appears.
+        DismissOutlookClosedItemsDialog();
 
         // Dismiss the Reminder popup if it exists.
         DismissReminderPopup(mainWindow, globalWaitInSeconds);

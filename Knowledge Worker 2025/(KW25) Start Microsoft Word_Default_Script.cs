@@ -18,7 +18,6 @@ public class Start_Word_DefaultScript : ScriptBase
         int globalWaitInSeconds = 3; // Standard wait time between actions
         int waitMessageboxInSeconds = 2; // Duration for onscreen wait messages
 
-        // DeleteTempFiles();
         DownloadWordDocument();
 
         // Running Word
