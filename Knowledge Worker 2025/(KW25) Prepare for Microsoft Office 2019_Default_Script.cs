@@ -120,9 +120,14 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
         }
 
         Wait(globalWaitInSeconds);
+        var mainWindow = FindWindow(title:"*Document*Word*", processName:"WINWORD", continueOnError:false, timeout:60);
+        Wait(globalWaitInSeconds);
+        mainWindow.Focus();
+        mainWindow.Maximize();
+        Wait(globalWaitInSeconds);
         
-        // Dismiss first run dialogs using the detailed logic
-        DismissFirstRunDialogs(MainWindow);
+        // Dismiss first run dialogs using detailed logic (passing the mainWord window)
+        DismissFirstRunDialogs(mainWindow);
         Wait(globalWaitInSeconds);
         
         // =====================================================
@@ -137,15 +142,15 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
     /// <summary>
     /// Dismisses first run dialogs for Word using detailed logic.
     /// </summary>
-    /// <param name="MainWindow">The main Word window.</param>
-    private void DismissFirstRunDialogs(IWindow MainWindow)
+    /// <param name="mainWindow">The main Word window.</param>
+    private void DismissFirstRunDialogs(IWindow mainWindow)
     {
         Log("Dismissing first run Word dialogs");
 
-        int loopCount = 3; // configurable number of loops
+        int loopCount = 2; // configurable number of loops
         for (int i = 0; i < loopCount; i++)
         {
-            var openDialog = MainWindow.FindControlWithXPath(
+            var openDialog = mainWindow.FindControlWithXPath(
                 xPath: "*:NUIDialog",
                 timeout: 3,
                 continueOnError: true);
@@ -166,7 +171,7 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
                         title: "Accept",
                         continueOnError: true)?.Click();
 
-                    openDialog = MainWindow.FindControlWithXPath(
+                    openDialog = mainWindow.FindControlWithXPath(
                         xPath: "Pane:NUIDialog",
                         timeout: 5,
                         continueOnError: true);
@@ -178,14 +183,14 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
                         openDialog.Type("{ALT+a}", hideInLogging: false);
                     }
 
-                    openDialog = MainWindow.FindControlWithXPath(
+                    openDialog = mainWindow.FindControlWithXPath(
                         xPath: "Pane:NUIDialog",
                         timeout: 5,
                         continueOnError: true);
 
                     if (openDialog != null)
                     {
-                        ABORT("Could not close Outlook's First things first dialog");
+                        ABORT("Could not close first things first dialog");
                     }
                 }
                 else
