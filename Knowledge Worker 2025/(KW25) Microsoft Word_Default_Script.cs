@@ -103,23 +103,22 @@ public class WordDefaultScript : ScriptBase
         // =====================================================
         // Launch new blank Word document
         // =====================================================
-        ShellExecute("cmd /c start \"\" winword /t", waitForProcessEnd: true, timeout: 3, continueOnError: false);
-        /* Alternate start blank word document function:
         try
         {
+            ShellExecute("winword /t", waitForProcessEnd: false, timeout: globalTimeoutInSeconds, continueOnError: true, forceKillOnExit: false);
+            /* Alternate start blank word document function:
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
                 FileName = "winword.exe",
                 Arguments = "/t",
                 UseShellExecute = true
             };
-            Process.Start(startInfo);
+            Process.Start(startInfo); */
         }
         catch (Exception ex)
         {
             ABORT("Error starting process: " + ex.Message);
         }
-        */
 
         var newExcelWindow = FindWindow(title:"*Document*Word*", processName:"WINWORD", continueOnError:false, timeout:globalTimeoutInSeconds);
         Wait(globalWaitInSeconds);

@@ -70,10 +70,10 @@ public class PowerPoint_DefaultScript : ScriptBase
         // =====================================================
         // Launch new blank PowerPoint presentation 
         // =====================================================
-        ShellExecute("cmd /c start \"\" powerpnt /n", waitForProcessEnd: true, timeout: 3, continueOnError: false);
-        /* Alternate start blank PowerPoint presentation function:
         try
         {
+            // ShellExecute("powerpnt /n", waitForProcessEnd: false, timeout: globalTimeoutInSeconds, continueOnError: true, forceKillOnExit: false);
+            // Alternate start blank PowerPoint document function:
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
                 FileName = "powerpnt.exe",
@@ -86,7 +86,8 @@ public class PowerPoint_DefaultScript : ScriptBase
         {
             ABORT("Error starting process: " + ex.Message);
         }
-        */
+        
+        Wait(globalWaitInSeconds);
         var newPowerpointWindow = FindWindow(title:"*Presentation*PowerPoint*", processName:"POWERPNT", continueOnError:false, timeout:globalTimeoutInSeconds);
         Wait(globalWaitInSeconds);
 

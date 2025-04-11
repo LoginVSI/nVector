@@ -96,29 +96,28 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
         // Pre-delete: Remove all Microsoft Office AutoRecover, backup,
         // 'loginvsi' and 'edited', and temporary files.
         // =====================================================
-        Log("Deleting all Microsoft Office AutoRecover, backup, 'loginvsi' and 'edited', and temporary files...");
-        DeleteTemporaryFiles();
+        // Log("Deleting all Microsoft Office AutoRecover, backup, 'loginvsi' and 'edited', and temporary files...");
+        // DeleteTemporaryFiles();
 
         // =====================================================
         // Launch new blank Word document
         // =====================================================
-        ShellExecute("cmd /c start \"\" winword /t", waitForProcessEnd: true, timeout: 3, continueOnError: false);
-        /* This is an alternate start blank word document function 
         try
         {
+            ShellExecute("winword /t", waitForProcessEnd: false, timeout: 60, continueOnError: true, forceKillOnExit: false);
+            /* Alternate start blank word document function:
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
                 FileName = "winword.exe",
                 Arguments = "/t",
                 UseShellExecute = true
             };
-            Process.Start(startInfo);
+            Process.Start(startInfo); */
         }
         catch (Exception ex)
         {
             ABORT("Error starting process: " + ex.Message);
         }
-        */
 
         var MainWindow = FindWindow(title: "*Word*", processName: "WINWORD", className: "Win32 Window:OpusApp", continueOnError: false, timeout: 60);
         Wait(globalWaitInSeconds);

@@ -55,7 +55,6 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         string tempEnv = GetEnvironmentVariable("TEMP");
         string loginEnterpriseDir = $"{tempEnv}\\LoginEnterprise";
 
-        /*
         // Delete files in Word folder (AutoRecover, Backup, and Word documents)
         DeleteFilesWithPatterns(wordFolder, "*.asd", "*.wbk", "*.docx");
 
@@ -88,7 +87,6 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
                 }
             }
         }
-        */
     }
 
     private void Execute()
@@ -97,8 +95,8 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         // Pre-delete: Remove all Microsoft Office AutoRecover, backup,
         // 'loginvsi' and 'edited', and temporary files.
         // =====================================================
-        //Log("Deleting all Microsoft Office AutoRecover, backup, 'loginvsi' and 'edited', and temporary files...");
-        DeleteTemporaryFiles();
+        // Log("Deleting all Microsoft Office AutoRecover, backup, 'loginvsi' and 'edited', and temporary files...");
+        // DeleteTemporaryFiles();
 
         // =====================================================
         // Set registry values; this should be a run-once preparation
@@ -146,23 +144,22 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         // =====================================================
         // Launch new blank Word document
         // =====================================================
-        ShellExecute("cmd /c start \"\" winword /t", waitForProcessEnd: true, timeout: 3, continueOnError: false);
-        /* This is an alternate start blank word document function 
         try
         {
+            ShellExecute("winword /t", waitForProcessEnd: false, timeout: 60, continueOnError: true, forceKillOnExit: false);
+            /* Alternate start blank word document function:
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
                 FileName = "winword.exe",
                 Arguments = "/t",
                 UseShellExecute = true
             };
-            Process.Start(startInfo);
+            Process.Start(startInfo); */
         }
         catch (Exception ex)
         {
             ABORT("Error starting process: " + ex.Message);
         }
-        */
 
         Wait(globalWaitInSeconds);
         var MainWindow = FindWindow(title:"*Word*", processName:"WINWORD", className:"Win32 Window:OpusApp", continueOnError:false, timeout:60);

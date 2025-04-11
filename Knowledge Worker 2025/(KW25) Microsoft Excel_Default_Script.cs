@@ -68,23 +68,22 @@ public class Excel_DefaultScript : ScriptBase
         // =====================================================
         // Launch new blank Excel workbook
         // =====================================================
-        ShellExecute("cmd /c start \"\" excel /s", waitForProcessEnd: true, timeout: 3, continueOnError: false);
-        /* This is an alternate start blank excel document function 
         try
         {
+            ShellExecute("excel /s", waitForProcessEnd: false, timeout: globalTimeoutInSeconds, continueOnError: true, forceKillOnExit: false);
+            /* Alternate start blank Excel document function:
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
                 FileName = "excel.exe",
                 Arguments = "/s",
                 UseShellExecute = true
             };
-            Process.Start(startInfo);
+            Process.Start(startInfo); */
         }
         catch (Exception ex)
         {
             ABORT("Error starting process: " + ex.Message);
-        }
-        */
+        } 
 
         var newExcelWindow = FindWindow(title:"*Book*Excel*", processName:"EXCEL", continueOnError:false, timeout:globalTimeoutInSeconds);
         Wait(globalWaitInSeconds);
