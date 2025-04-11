@@ -56,13 +56,13 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
         string tempEnv = GetEnvironmentVariable("TEMP");
         string loginEnterpriseDir = $"{tempEnv}\\LoginEnterprise";
 
-        // Delete files in Word folder
+        // Delete files in Word folder (AutoRecover, Backup, and Word documents)
         DeleteFilesWithPatterns(wordFolder, "*.asd", "*.wbk", "*.docx");
 
-        // Delete files in Excel folder
+        // Delete files in Excel folder (Excel Binary, Archive, Documents, and Temp files)
         DeleteFilesWithPatterns(excelFolder, "*.xlsb", "*.xar", "*.xls*", "*.tmp");
 
-        // Delete files in PowerPoint unsaved folder
+        // Delete files in PowerPoint unsaved folder (PowerPoint, Temp and AutoRecover files)
         DeleteFilesWithPatterns(pptUnsavedFolder, "*.pptx", "*.tmp", "*.asd");
 
         // Delete files in Temp folder for Word, Excel, and PowerPoint specific patterns
@@ -119,11 +119,32 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
             ABORT("Error starting process: " + ex.Message);
         }
 
-        var MainWindow = FindWindow(title: "*Word*", processName: "WINWORD", className: "Win32 Window:OpusApp", continueOnError: false, timeout: 60);
+        Wait(globalWaitInSeconds);
+        var MainWindow = FindWindow(title:"*Document*Word*", processName:"WINWORD", continueOnError:false, timeout:60);
         Wait(globalWaitInSeconds);
         MainWindow.Focus();
         MainWindow.Maximize();
         Wait(globalWaitInSeconds);
+        
+        // Dismiss first run dialogs using the detailed logic
+        DismissFirstRunDialogs(MainWindow);
+        Wait(globalWaitInSeconds);
+        
+        // =====================================================
+        // Close Word Windows
+        // =====================================================
+        int closeTimeoutSeconds = 2;
+        CloseExtraWindow("WINWORD", "*loginvsi*", closeTimeoutSeconds);
+        CloseExtraWindow("WINWORD", "*edited*", closeTimeoutSeconds);
+        CloseExtraWindow("WINWORD", "*Document*", closeTimeoutSeconds);
+    }
+
+    /// <summary>
+    /// Dismisses first run dialogs for Word using detailed logic.
+    /// </summary>
+    /// <param name="MainWindow">The main Word window.</param>
+    private void DismissFirstRunDialogs(IWindow MainWindow)
+    {
         Log("Dismissing first run Word dialogs");
 
         int loopCount = 2; // configurable number of loops
@@ -134,7 +155,7 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
                 timeout: 3,
                 continueOnError: true);
 
-            if (openDialog is object)
+            if (openDialog != null)
             {
                 if (openDialog.GetTitle().StartsWith("First things", StringComparison.CurrentCultureIgnoreCase))
                 {
@@ -155,7 +176,7 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
                         timeout: 5,
                         continueOnError: true);
 
-                    if (openDialog is object)
+                    if (openDialog != null)
                     {
                         openDialog.Type("{ALT+i}", hideInLogging: false);
                         Wait(globalWaitInSeconds);
@@ -167,7 +188,7 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
                         timeout: 5,
                         continueOnError: true);
 
-                    if (openDialog is object)
+                    if (openDialog != null)
                     {
                         ABORT("Could not close Outlook's First things first dialog");
                     }
@@ -179,8 +200,45 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
                 }
             }
         }
-        Wait(globalWaitInSeconds);
-        MainWindow.Close();
-        Wait(globalWaitInSeconds);
+    }
+
+    /// <summary>
+    /// Attempts to close a window matching the title mask (within the specified process) and
+    /// handles any confirmation dialogs by sending {ALT+N} if needed.
+    /// </summary>
+    /// <param name="processName">The process name (e.g., "WINWORD").</param>
+    /// <param name="titleMask">Window title mask to search for (e.g., "*loginvsi*").</param>
+    /// <param name="timeoutSeconds">Timeout for find operations in seconds.</param>
+    private void CloseExtraWindow(string processName, string titleMask, int timeoutSeconds)
+    {
+        int maxAttempts = 1; // Maximum number of attempts to close the window.
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            var extraWindow = FindWindow(title: titleMask, processName: processName, timeout: 2, continueOnError: true);
+            if (extraWindow == null)
+            {
+                // Window is already closed.
+                break;
+            }
+
+            Wait(globalWaitInSeconds);
+            extraWindow.Focus();
+            extraWindow.Maximize();
+            Wait(globalWaitInSeconds);
+            extraWindow.Type("{ESC}", hideInLogging: false);
+            Wait(globalWaitInSeconds);
+            extraWindow.Type("{ALT+F4}", hideInLogging: false);
+            Wait(globalWaitInSeconds);
+
+            // Check if the window still exists
+            var checkWindow = FindWindow(title: titleMask, processName: processName, timeout: timeoutSeconds, continueOnError: true);
+            if (checkWindow != null)
+            {
+                Wait(globalWaitInSeconds);
+                checkWindow.Type("{ALT+N}", hideInLogging: false);
+                Wait(globalWaitInSeconds);
+            }
+        }
     }
 }

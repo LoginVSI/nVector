@@ -162,15 +162,21 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         }
 
         Wait(globalWaitInSeconds);
-        var MainWindow = FindWindow(title:"*Word*", processName:"WINWORD", className:"Win32 Window:OpusApp", continueOnError:false, timeout:60);
+        var MainWindow = FindWindow(title:"*Document*Word*", processName:"WINWORD", continueOnError:false, timeout:60);
         Wait(globalWaitInSeconds);
         MainWindow.Focus();
         MainWindow.Maximize();
         Wait(globalWaitInSeconds);
         SkipFirstRunDialogs();
         Wait(globalWaitInSeconds);
-        MainWindow.Close();          
-        Wait(globalWaitInSeconds);
+        
+        // =====================================================
+        // Close Word Windows
+        // =====================================================
+        int closeTimeoutSeconds = 2;
+        CloseExtraWindow("WINWORD", "*loginvsi*", closeTimeoutSeconds);
+        CloseExtraWindow("WINWORD", "*edited*", closeTimeoutSeconds);
+        CloseExtraWindow("WINWORD", "*Document*", closeTimeoutSeconds);
     }
 
     private void SkipFirstRunDialogs()
@@ -217,5 +223,38 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         System.IO.File.WriteAllText(file, sb.ToString());
 
         return file;
+    }
+
+    private void CloseExtraWindow(string processName, string titleMask, int timeoutSeconds)
+    {
+        int maxAttempts = 1; // Maximum number of attempts to close the window.
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            var extraWindow = FindWindow(title: titleMask, processName: processName, timeout: 2, continueOnError: true);
+            if (extraWindow == null)
+            {
+                // Window is already closed.
+                break;
+            }
+
+            Wait(globalWaitInSeconds);
+            extraWindow.Focus();
+            extraWindow.Maximize();
+            Wait(globalWaitInSeconds);
+            extraWindow.Type("{ESC}", hideInLogging: false);
+            Wait(globalWaitInSeconds);
+            extraWindow.Type("{ALT+F4}", hideInLogging: false);
+            Wait(globalWaitInSeconds);
+
+            // Check if the window still exists
+            var checkWindow = FindWindow(title: titleMask, processName: processName, timeout: timeoutSeconds, continueOnError: true);
+            if (checkWindow != null)
+            {
+                Wait(globalWaitInSeconds);
+                checkWindow.Type("{ALT+N}", hideInLogging: false);
+                Wait(globalWaitInSeconds);
+            }
+        }
     }
 }
