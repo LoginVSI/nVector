@@ -97,7 +97,7 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         // Pre-delete: Remove all Microsoft Office AutoRecover, backup,
         // 'loginvsi' and 'edited', and temporary files.
         // =====================================================
-        Log("Deleting all Microsoft Office AutoRecover, backup, 'loginvsi' and 'edited', and temporary files...");
+        //Log("Deleting all Microsoft Office AutoRecover, backup, 'loginvsi' and 'edited', and temporary files...");
         DeleteTemporaryFiles();
 
         // =====================================================
