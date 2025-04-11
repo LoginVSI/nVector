@@ -162,11 +162,6 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         }
 
         Wait(globalWaitInSeconds);
-        var MainWindow = FindWindow(title:"*Document*Word*", processName:"WINWORD", continueOnError:false, timeout:60);
-        Wait(globalWaitInSeconds);
-        MainWindow.Focus();
-        MainWindow.Maximize();
-        Wait(globalWaitInSeconds);
         SkipFirstRunDialogs();
         Wait(globalWaitInSeconds);
         
@@ -181,7 +176,7 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
 
     private void SkipFirstRunDialogs()
     {
-        int loopCount = 2; // configurable number of loops
+        int loopCount = 3; // configurable number of loops
         for (int i = 0; i < loopCount; i++)
         {
             var dialog = FindWindow(

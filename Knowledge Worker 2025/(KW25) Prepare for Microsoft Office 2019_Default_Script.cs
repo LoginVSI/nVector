@@ -120,11 +120,6 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
         }
 
         Wait(globalWaitInSeconds);
-        var MainWindow = FindWindow(title:"*Document*Word*", processName:"WINWORD", continueOnError:false, timeout:60);
-        Wait(globalWaitInSeconds);
-        MainWindow.Focus();
-        MainWindow.Maximize();
-        Wait(globalWaitInSeconds);
         
         // Dismiss first run dialogs using the detailed logic
         DismissFirstRunDialogs(MainWindow);
@@ -147,7 +142,7 @@ public class PrepareOffice2019_DefaultScript : ScriptBase
     {
         Log("Dismissing first run Word dialogs");
 
-        int loopCount = 2; // configurable number of loops
+        int loopCount = 3; // configurable number of loops
         for (int i = 0; i < loopCount; i++)
         {
             var openDialog = MainWindow.FindControlWithXPath(
