@@ -55,14 +55,15 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         string tempEnv = GetEnvironmentVariable("TEMP");
         string loginEnterpriseDir = $"{tempEnv}\\LoginEnterprise";
 
+        /*
         // Delete files in Word folder (AutoRecover, Backup, and Word documents)
         DeleteFilesWithPatterns(wordFolder, "*.asd", "*.wbk", "*.docx");
 
         // Delete files in Excel folder (Excel Binary, Archive, Documents, and Temp files)
-        DeleteFilesWithPatterns(excelFolder, "*.xlsb", "*.xar", "*.xls*", "*.tmp");
+        DeleteFilesWithPatterns(excelFolder, "*.xlsb", "*.xar", "*.tmp", "*.xls*");
 
         // Delete files in PowerPoint unsaved folder (PowerPoint, Temp and AutoRecover files)
-        DeleteFilesWithPatterns(pptUnsavedFolder, "*.pptx", "*.tmp", "*.asd");
+        DeleteFilesWithPatterns(pptUnsavedFolder, "*.tmp", "*.asd", "*.pptx");
 
         // Delete files in Temp folder (Word temp files, Excel and PowerPoint temp document caches, and PowerPoint temp files)
         DeleteFilesWithPatterns(tempFolder, "~WRD*.tmp", "~$*.docx", "~$*.xls*", "ppt*.tmp");
@@ -87,6 +88,7 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
                 }
             }
         }
+        */
     }
 
     private void Execute()
