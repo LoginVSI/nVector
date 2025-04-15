@@ -138,7 +138,7 @@ Below you’ll find details on each script, including their purpose, main config
 To automatically start `nVector_Client_Prepare.ps1` at user login, create the following **CMD script**:
 
 ```@echo off
-powershell.exe -ExecutionPolicy Bypass -File "C:\Path\To\nVector_Client_Prepare.ps1"
+start "" /min powershell.exe -WindowStyle Minimized -ExecutionPolicy Bypass -File "C:\Path\To\nVector_Client_Prepare.ps1"
 ```
 
 #### **Save and Place:**
@@ -150,6 +150,7 @@ C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup
 #### **Automatic Invocation:**
 - When a user logs in, the CMD file runs and starts the **client integration** automatically.
 - Alternatively, configure it as a **Windows Task Scheduler job** for more control over execution timing.
+- Test to ensure the script starts manually as the logged in user. Configure the script to run with administrator credentials if needed.
 
 ## 4. get_nVectorMetrics.ps1
 
