@@ -69,8 +69,6 @@ public class Start_Browser_DefaultScript : ScriptBase
             pdfUrl + ";" +
             "https://images.nasa.gov/;" +
             "https://www.google.com/search?q=beautiful+mountains&udm=2;" +            
-            "https://www.google.com/search?q=nvidia&udm=2;" +
-            "https://www.bing.com/images/search?q=nvidia&lq=0&ghsh=0&ghacc=0&first=1;" +
             "https://www.google.com/search?q=login+vsi&udm=2;" +
             "https://www.bing.com/images/search?q=login%20vsi&lq=0&ghsh=0&ghacc=0&first=1;" +
             "https://www.microsoft.com;";
