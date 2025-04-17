@@ -24,6 +24,7 @@ Below you’ll find details on each script, including their purpose, main config
 - Invokes `nvector-agent.exe` with the **client role** to measure round-trip latency.
 - Terminates any running instances of `nvector-agent.exe` before restarting it with user-defined parameters.
 - Monitors a CSV file for new latency results and uploads them to the Login Enterprise API as **Platform Metrics**.
+- Note: for the nVector Agent to properly gather latency measurements, the target/desktop session that runs the nVector Agent in the desktop role and produces the watermark has to be in fullscreen
 
 ### Key Variables & Parameters
 
