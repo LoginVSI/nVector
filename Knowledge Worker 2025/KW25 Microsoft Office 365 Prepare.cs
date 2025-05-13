@@ -3,8 +3,8 @@
 
 /////////////
 // M365 Prepare
-// Workload: KnowledgeWorker 2025
-// Version: 1.0
+// Workload: Knowledge Worker 2025
+// Version: 0.1.0
 /////////////
 
 using LoginPI.Engine.ScriptBase;
@@ -12,15 +12,10 @@ using System;
 using System.IO;
 using System.Diagnostics;
 
-public class M365PrivacyPrep_DefaultScript : ScriptBase
+public class M365_Prepare : ScriptBase
 {
     private int globalWaitInSeconds = 3; // Standard wait time between actions
 
-    /// <summary>
-    /// Deletes all files in a given directory matching each provided pattern.
-    /// </summary>
-    /// <param name="folderPath">Directory to check for files</param>
-    /// <param name="patterns">One or more search patterns (e.g., "*.asd")</param>
     private void DeleteFilesWithPatterns(string folderPath, params string[] patterns)
     {
         if (Directory.Exists(folderPath))
@@ -43,9 +38,6 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         }
     }
 
-    /// <summary>
-    /// Consolidates deletion of all Office temporary and backup files into one method.
-    /// </summary>
     private void DeleteTemporaryFiles()
     {
         string wordFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Microsoft", "Word");
@@ -96,6 +88,8 @@ public class M365PrivacyPrep_DefaultScript : ScriptBase
         // 'loginvsi' and 'edited', and temporary files.
         // =====================================================
         // Log("Deleting all Microsoft Office AutoRecover, backup, 'loginvsi' and 'edited', and temporary files...");
+        
+        // To delete temp files in the temp Word, Excel, and PowerPoint folders, then uncomment the following line:
         // DeleteTemporaryFiles();
 
         // =====================================================

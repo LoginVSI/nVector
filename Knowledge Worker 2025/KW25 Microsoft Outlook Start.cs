@@ -3,15 +3,15 @@
 
 /////////////
 // Outlook Start
-// Workload: KnowledgeWorker 2025
-// Version: 1.0
+// Workload: Knowledge Worker 2025
+// Version: 0.1.0
 /////////////
 
 using LoginPI.Engine.ScriptBase;
 using System.IO;
 using System;
 
-public class M365Outlook_InvocationScript : ScriptBase
+public class Outlook_Start : ScriptBase
 {
     // =====================================================
     // Configurable Variables

@@ -2,9 +2,9 @@
 // START_IN:
 
 /////////////
-// PowerPoint Application
-// Workload: KnowledgeWorker 2025
-// Version: 1.0
+// PowerPoint Run
+// Workload: Knowledge Worker 2025
+// Version: 0.1.0
 /////////////
 
 using LoginPI.Engine.ScriptBase;
@@ -16,7 +16,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
 using System.Diagnostics;
 
-public class PowerPoint_DefaultScript : ScriptBase
+public class PowerPoint_Run : ScriptBase
 {
     // =====================================================
     // Configurable Variables
@@ -126,9 +126,9 @@ public class PowerPoint_DefaultScript : ScriptBase
         newPowerpointWindow.Type("{CTRL+O}", cpm: charactersPerMinuteToType, hideInLogging:false);
         Wait(waitInBetweenKeyboardShortcuts);
         newPowerpointWindow.Type("{ALT+O+O}", cpm: charactersPerMinuteToType, hideInLogging:false);
-        StartTimer("Open_PPTX_Dialog");
+        StartTimer("Open_Window");
         var openWindow = FindWindow(className:"Win32 Window:#32770", processName:"POWERPNT", continueOnError:false, timeout:globalTimeoutInSeconds);
-        StopTimer("Open_PPTX_Dialog");
+        StopTimer("Open_Window");
         Wait(globalWaitInSeconds);
         var fileNameBox = openWindow.FindControl(className:"Edit:Edit", title:"File name:", timeout:globalTimeoutInSeconds);
         Wait(globalWaitInSeconds);

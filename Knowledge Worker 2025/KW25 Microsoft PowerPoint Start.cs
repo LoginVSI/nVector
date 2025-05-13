@@ -1,40 +1,38 @@
-// TARGET:excel.exe %temp%\LoginEnterprise\loginvsi.xlsx
+// TARGET:powerpnt.exe %temp%\LoginEnterprise\loginvsi.pptx
 // START_IN:
 
 /////////////
-// Excel Start
-// Workload: KnowledgeWorker 2025
-// Version: 1.0
+// PowerPoint Start
+// Workload: Knowledge Worker 2025
+// Version: 0.1.0
 /////////////
 
 using LoginPI.Engine.ScriptBase;
 using System;
 using System.IO;
 
-public class Start_Excel_DefaultScript : ScriptBase
+public class PowerPoint_Start : ScriptBase
 {
-    const string ProcessName = "EXCEL";
     void Execute()
     {
         int globalWaitInSeconds = 3; // Standard wait time between actions
         int waitMessageboxInSeconds = 2; // Duration for onscreen wait messages
 
-        DownloadExcelFile();
+        DownloadPowerPointPresentation();
 
-        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Starting Excel");
-        Log("Starting Excel");
-        START(mainWindowTitle: "*loginvsi*Excel*", mainWindowClass: "*XLMAIN*", timeout: 60);
+        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Starting PowerPoint");
+        Log("Starting PowerPoint");
+        START(mainWindowTitle: "*loginvsi*PowerPoint*", mainWindowClass: "*PPTFrameClass*", timeout: 60);
         Wait(globalWaitInSeconds);
         SkipFirstRunDialogs();
         MainWindow.Maximize();
         MainWindow.Focus();
-        Wait(globalWaitInSeconds);
     }
     
-    private void DownloadExcelFile()
+    private void DownloadPowerPointPresentation()
     {
         int waitMessageboxInSeconds = 2;
-        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Downloading Excel file if it doesn't exist");
+        Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Downloading PowerPoint presentation file if it doesn't exist");
         var temp = GetEnvironmentVariable("TEMP");
         string loginEnterpriseDir = $"{temp}\\LoginEnterprise";
 
@@ -44,11 +42,12 @@ public class Start_Excel_DefaultScript : ScriptBase
             Log("Created directory: " + loginEnterpriseDir);
         }
 
-        string excelFile = $"{loginEnterpriseDir}\\loginvsi.xlsx";
+        string pptxFile = $"{loginEnterpriseDir}\\loginvsi.pptx";
         Wait(waitMessageboxInSeconds);
-        Log("Downloading Excel file if it doesn't exist");
-        CopyFile(KnownFiles.ExcelSheet, excelFile, overwrite: false, continueOnError: true);
+        Log("Downloading PowerPoint presentation file if it doesn't exist");
+        CopyFile(KnownFiles.PowerPointPresentation, pptxFile, overwrite: false, continueOnError: true);
     }
+    
     private void SkipFirstRunDialogs()
     {
         int loopCount = 2; // configurable number of loops
@@ -56,7 +55,7 @@ public class Start_Excel_DefaultScript : ScriptBase
         {
             var dialog = FindWindow(
                 className: "Win32 Window:NUIDialog",
-                processName: "EXCEL",
+                processName: "POWERPNT",
                 continueOnError: true,
                 timeout: 3);
             while (dialog != null)
@@ -65,7 +64,7 @@ public class Start_Excel_DefaultScript : ScriptBase
                 dialog.Close();
                 dialog = FindWindow(
                     className: "Win32 Window:NUIDialog",
-                    processName: "EXCEL",
+                    processName: "POWERPNT",
                     continueOnError: true,
                     timeout: 3);
             }

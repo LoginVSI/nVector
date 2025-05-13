@@ -2,9 +2,9 @@
 // START_IN:
 
 /////////////
-// Word Application
-// Workload: KnowledgeWorker 2025
-// Version: 1.0
+// Word Run
+// Workload: Knowledge Worker 2025
+// Version: 0.1.0
 /////////////
 
 using LoginPI.Engine.ScriptBase;
@@ -17,7 +17,7 @@ using System.Net.Security;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 
-public class WordDefaultScript : ScriptBase
+public class Word_Run : ScriptBase
 {
     // =====================================================
     // Import and Constants
@@ -157,9 +157,9 @@ public class WordDefaultScript : ScriptBase
         MainWindow.Type("{CTRL+O}", cpm: keyboardShortcutsCPM, hideInLogging:false);
         Wait(waitInBetweenKeyboardShortcuts);
         MainWindow.Type("{ALT+O+O}", cpm: keyboardShortcutsCPM, hideInLogging:false);
-        StartTimer("Open_DOCX_Dialog");
+        StartTimer("Open_Window");
         var openWindow = FindWindow(className:"Win32 Window:#32770", processName:"WINWORD", continueOnError:false, timeout:globalTimeoutInSeconds);
-        StopTimer("Open_DOCX_Dialog");
+        StopTimer("Open_Window");
         Wait(globalWaitInSeconds);
         var fileNameBox = openWindow.FindControl(className:"Edit:Edit", title:"File name:", timeout:globalTimeoutInSeconds);
         Wait(globalWaitInSeconds);

@@ -3,13 +3,13 @@
 
 /////////////
 // Outlook Close
-// Workload: KnowledgeWorker 2025
-// Version: 1.0
+// Workload: Knowledge Worker 2025
+// Version: 0.1.0
 /////////////
 
 using LoginPI.Engine.ScriptBase;
 
-public class Close_Outlook_DefaultScript : ScriptBase
+public class Outlook_Close : ScriptBase
 {
     void Execute()
     {

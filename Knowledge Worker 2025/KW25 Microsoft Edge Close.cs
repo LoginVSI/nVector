@@ -2,14 +2,14 @@
 // START_IN:
 
 /////////////
-// Browser Close
-// Workload: KnowledgeWorker 2025
-// Version: 1.0
+// Edge Close
+// Workload: Knowledge Worker 2025
+// Version: 0.1.0
 /////////////
 
 using LoginPI.Engine.ScriptBase;
 
-public class Close_Browser_DefaultScript : ScriptBase
+public class Edge_Close : ScriptBase
 {
     void Execute()
     {

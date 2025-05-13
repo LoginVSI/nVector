@@ -2,9 +2,9 @@
 // START_IN:
 
 /////////////
-// Excel Application
-// Workload: KnowledgeWorker 2025
-// Version: 1.0
+// Excel Run
+// Workload: Knowledge Worker 2025
+// Version: 0.1.0
 /////////////
 
 using System;
@@ -14,7 +14,7 @@ using System.Diagnostics;
 using LoginPI.Engine.ScriptBase;
 using LoginPI.Engine.ScriptBase.Components;
 
-public class Excel_DefaultScript : ScriptBase
+public class Excel_Run : ScriptBase
 {
     // =====================================================
     // Global Timings and Speeds
@@ -111,9 +111,9 @@ public class Excel_DefaultScript : ScriptBase
         newExcelWindow.Type("{CTRL+O}", cpm: keyboardShortcutsCPM, hideInLogging:false);
         Wait(globalWaitInSeconds);
         newExcelWindow.Type("{ALT+O+O}", cpm: keyboardShortcutsCPM, hideInLogging:false);
-        StartTimer("Open_Excel_Dialog");
+        StartTimer("Open_Window");
         var openWindow = FindWindow(className:"Win32 Window:#32770", processName:"EXCEL", continueOnError:false, timeout:globalTimeoutInSeconds);
-        StopTimer("Open_Excel_Dialog");
+        StopTimer("Open_Window");
         Wait(globalWaitInSeconds);
         var fileNameBox = openWindow.FindControl(className:"Edit:Edit", title:"File name:", timeout:globalTimeoutInSeconds);
         Wait(globalWaitInSeconds);
@@ -279,9 +279,9 @@ public class Excel_DefaultScript : ScriptBase
         Wait(globalWaitInSeconds);
         SetTextBoxText(fileNameBox, filename, cpm: charactersPerMinuteToType);
         saveAsDialog.Type("{ENTER}", hideInLogging:false);
-        StartTimer("Saving_Excel_file");
+        StartTimer("Saving_file");
         FindWindow(title: "edited*", processName:"EXCEL", timeout:globalTimeoutInSeconds);
-        StopTimer("Saving_Excel_file");
+        StopTimer("Saving_file");
     }
 
     IWindow GetFileDialog()

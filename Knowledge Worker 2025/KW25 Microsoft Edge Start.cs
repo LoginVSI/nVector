@@ -2,9 +2,9 @@
 // START_IN:
 
 /////////////
-// Browser Start
-// Workload: KnowledgeWorker 2025
-// Version: 1.0
+// Edge Start
+// Workload: Knowledge Worker 2025
+// Version: 0.1.0
 /////////////
 
 using LoginPI.Engine.ScriptBase;
@@ -12,7 +12,7 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 
-public class Start_Browser_DefaultScript : ScriptBase
+public class Edge_Start : ScriptBase
 {
     // =====================================================
     // Configurable Variables

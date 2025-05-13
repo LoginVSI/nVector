@@ -2,16 +2,16 @@
 // START_IN:
 
 /////////////
-// Browser Application
-// Workload: KnowledgeWorker 2025
-// Version: 1.0
+// Edge Run
+// Workload: Knowledge Worker 2025
+// Version: 0.1.0
 /////////////
 
 using LoginPI.Engine.ScriptBase;
 using System;
 using System.Runtime.InteropServices;
 
-public class Browser_MultipleTabs_DefaultScript : ScriptBase
+public class Edge_Run : ScriptBase
 {
     // =====================================================
     // Import and Constants for mouse scrolling

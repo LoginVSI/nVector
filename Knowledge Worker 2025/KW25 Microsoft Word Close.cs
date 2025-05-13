@@ -3,13 +3,13 @@
 
 /////////////
 // Word Close
-// Workload: KnowledgeWorker 2025
-// Version: 1.0
+// Workload: Knowledge Worker 2025
+// Version: 0.1.0
 /////////////
 
 using LoginPI.Engine.ScriptBase;
 
-public class Close_Word_DefaultScript : ScriptBase
+public class Word_Close : ScriptBase
 {
     // Global wait time between actions (in seconds). Modify as needed.
     private int globalWaitInSeconds = 3;
@@ -27,13 +27,6 @@ public class Close_Word_DefaultScript : ScriptBase
         CloseMicrosoftWordDialog();
     }
 
-    /// <summary>
-    /// Attempts to close a window matching the title mask (within the specified process) and
-    /// handles any confirmation dialogs by sending {ALT+N} if needed.
-    /// </summary>
-    /// <param name="processName">The process name (e.g., "WINWORD").</param>
-    /// <param name="titleMask">Window title mask to search for (e.g., "*loginvsi*").</param>
-    /// <param name="timeoutSeconds">Timeout for find operations in seconds.</param>
     void CloseExtraWindow(string processName, string titleMask, int timeoutSeconds)
     {
         int maxAttempts = 1; // Maximum attempts to close the window.

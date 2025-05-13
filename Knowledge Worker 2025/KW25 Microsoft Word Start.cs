@@ -3,15 +3,15 @@
 
 /////////////
 // Word Start
-// Workload: KnowledgeWorker 2025
-// Version: 1.0
+// Workload: Knowledge Worker 2025
+// Version: 0.1.0
 /////////////
 
 using LoginPI.Engine.ScriptBase;
 using System;
 using System.IO;
 
-public class Start_Word_DefaultScript : ScriptBase
+public class Word_Start : ScriptBase
 {
     void Execute()
     {

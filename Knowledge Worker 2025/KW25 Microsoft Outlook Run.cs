@@ -2,9 +2,9 @@
 // START_IN:
 
 /////////////
-// Outlook Running Script
-// Workload: KnowledgeWorker 2025
-// Version: 1.0
+// Outlook Run
+// Workload: Knowledge Worker 2025
+// Version: 0.1.0
 /////////////
 
 using LoginPI.Engine.ScriptBase;
@@ -16,7 +16,7 @@ using System.Net.Security;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 
-public class Outlook_DefaultScript : ScriptBase
+public class Run_Outlook : ScriptBase
 {
     // =====================================================
     // Import and Constants
