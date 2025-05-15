@@ -16,6 +16,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using LoginPI.Engine.ScriptBase.Constants;
 
 public class Word_Run : ScriptBase
 {
@@ -39,9 +40,6 @@ public class Word_Run : ScriptBase
     int waitForCopyPasteInSeconds = 5;        // Wait time after copy-paste actions
     int startMenuWaitInSeconds = 5;           // Duration for Start Menu wait
 
-    // File download for BMP remains in run script (if needed)
-    private string bmpUrl = "https://myAppliance.myOrg.com/contentDelivery/content/LoginVSI_BattlingRobots.bmp"; // Replace with your actual URL
-
     // Document content to be typed into Word, broken into separate lines.
     string[] documentContentLines = new string[] 
     {
@@ -61,27 +59,16 @@ public class Word_Run : ScriptBase
         var temp = GetEnvironmentVariable("TEMP");
         string loginEnterpriseDir = $"{temp}\\LoginEnterprise";
         string docxFile = $"{loginEnterpriseDir}\\loginvsi.docx";
-
-        // ----- Download BMP if needed -----
+        
+        // ----- Copy BMP from Appliance scriptcontent if needed -----
         string bmpFile = $"{loginEnterpriseDir}\\LoginVSI_BattlingRobots.bmp";
         if (!FileExists(bmpFile))
         {
-            Log("Downloading BMP file");
-            try
-            {
-                ServicePointManager.ServerCertificateValidationCallback =
-                    delegate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) 
-                    { return true; };
-                using (WebClient client = new WebClient())
-                {
-                    client.DownloadFile(bmpUrl, bmpFile);
-                    Log("BMP file downloaded successfully to: " + bmpFile);
-                }
-            }
-            catch (Exception ex)
-            {
-                ABORT("Error downloading BMP file: " + ex.Message);
-            }
+            Log("Copying BMP from Appliance ScriptContent");
+            CopyFile(
+                sourcePath      : UrnBaseForFiles.UrnBase + "LoginVSI_BattlingRobots.bmp",
+                destinationPath : bmpFile
+            );
         }
         else
         {

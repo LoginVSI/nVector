@@ -15,6 +15,7 @@ using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
 using System.Diagnostics;
+using LoginPI.Engine.ScriptBase.Constants;
 
 public class PowerPoint_Run : ScriptBase
 {
@@ -34,8 +35,6 @@ public class PowerPoint_Run : ScriptBase
     int typingTextCharacterPerMinute = 600;
     int startMenuWaitInSeconds = 5;
 
-    string bmpUrl = "https://myAppliance.myOrg.com/contentDelivery/content/LoginVSI_BattlingRobots.bmp"; // Replace with your actual URL
-
     private void Execute()
     {   
         // ----- (File download for pptx is handled by the Start script) -----
@@ -43,24 +42,15 @@ public class PowerPoint_Run : ScriptBase
         string loginEnterpriseDir = $"{temp}\\LoginEnterprise";
         string pptxFile = $"{loginEnterpriseDir}\\loginvsi.pptx";
 
-        // Download BMP file if needed
+        // ----- Copy BMP from Appliance scriptcontent if needed -----
         string bmpFile = Path.Combine(loginEnterpriseDir, "LoginVSI_BattlingRobots.bmp");
         if (!FileExists(bmpFile))
         {
-            Log("Downloading BMP file");
-            try
-            {
-                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-                using (WebClient client = new WebClient())
-                {
-                    client.DownloadFile(bmpUrl, bmpFile);
-                    Log("BMP file downloaded successfully to: " + bmpFile);
-                }
-            }
-            catch (Exception ex)
-            {
-                ABORT("Error downloading BMP file: " + ex.Message);
-            }
+            Log("Copying BMP from Appliance ScriptContent");
+            CopyFile(
+                sourcePath      : UrnBaseForFiles.UrnBase + "LoginVSI_BattlingRobots.bmp",
+                destinationPath : bmpFile
+            );
         }
         else
         {

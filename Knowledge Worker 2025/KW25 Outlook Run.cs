@@ -15,6 +15,7 @@ using System.Net;
 using System.Net.Security;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
+using LoginPI.Engine.ScriptBase.Constants;
 
 public class Run_Outlook : ScriptBase
 {
@@ -64,9 +65,6 @@ public class Run_Outlook : ScriptBase
         "Now more than ever, organizations rely on digital workspaces to function. We give our customers 360° insights into the entire stack of virtual desktops and applications – in production or delivery and across various settings and infrastructure.",
         "We aim to empower IT teams to take control of their virtual desktops and applications’ performance, cost, and capacity wherever they reside – traditional, hybrid, or cloud."
     };
-
-    // File download settings
-    string bmpUrl = "https://myAppliance.myOrg.com/contentDelivery/content/LoginVSI_BattlingRobots.bmp"; // Replace with your actual URL
 
     // =====================================================
     // Helper Methods
@@ -155,24 +153,15 @@ public class Run_Outlook : ScriptBase
             Log("Created directory: " + outlookDir);
         }
 
-        // Define BMP file path and download if necessary.
+        // ----- Copy BMP from Appliance scriptcontent if needed -----
         string bmpFile = Path.Combine(outlookDir, "LoginVSI_BattlingRobots.bmp");
         if (!FileExists(bmpFile))
         {
-            Log("Downloading BMP file");
-            try
-            {
-                ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-                using (WebClient client = new WebClient())
-                {
-                    client.DownloadFile(bmpUrl, bmpFile);
-                    Log("BMP file downloaded successfully to: " + bmpFile);
-                }
-            }
-            catch (Exception ex)
-            {
-                ABORT("Error downloading BMP file: " + ex.Message);
-            }
+            Log("Copying BMP from Appliance ScriptContent");
+            CopyFile(
+            sourcePath      : UrnBaseForFiles.UrnBase + "LoginVSI_BattlingRobots.bmp",
+            destinationPath : bmpFile
+            );
         }
         else
         {
