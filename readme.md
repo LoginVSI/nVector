@@ -1,1 +1,2 @@
-Please refer to the install guide (nVector_Agent_Installation_v0.4.pdf) in this repo.
+Please refer to the install guide (nVector_Agent_Installation_v0.4.pdf) in this repo. 
+The Confluence hub for the Nvidia nVector project is at: https://loginvsi.atlassian.net/wiki/spaces/FS1/pages/3109978113/Nvidia+nVector 
