@@ -71,20 +71,13 @@ public class Excel_Run : ScriptBase
         try
         {
             ShellExecute("excel /s", waitForProcessEnd: false, timeout: globalTimeoutInSeconds, continueOnError: true, forceKillOnExit: false);
-            /* Alternate start blank Excel document function:
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
-                FileName = "excel.exe",
-                Arguments = "/s",
-                UseShellExecute = true
-            };
-            Process.Start(startInfo); */
         }
         catch (Exception ex)
         {
             ABORT("Error starting process: " + ex.Message);
-        } 
+        }
 
+        Wait(globalWaitInSeconds);
         var newExcelWindow = FindWindow(title:"*Book*Excel*", processName:"EXCEL", continueOnError:false, timeout:globalTimeoutInSeconds);
         Wait(globalWaitInSeconds);
 

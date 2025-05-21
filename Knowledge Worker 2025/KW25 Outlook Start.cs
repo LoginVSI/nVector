@@ -56,7 +56,7 @@ public class Outlook_Start : ScriptBase
         }
         catch (Exception ex)
         {
-            // Optionally log the error: Log($"Error deleting file {prfFile}: {ex.Message}");
+            Log($"Error deleting file {prfFile}: {ex.Message}");
         }
 
         try
@@ -68,7 +68,7 @@ public class Outlook_Start : ScriptBase
         }
         catch (Exception ex)
         {
-            // Optionally log the error: Log($"Error deleting file {pstFile}: {ex.Message}");
+            Log($"Error deleting file {pstFile}: {ex.Message}");
         }
 
         Wait(seconds: waitMessageboxInSeconds, showOnScreen: true, onScreenText: "Get PRF & PST");

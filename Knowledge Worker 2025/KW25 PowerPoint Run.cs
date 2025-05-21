@@ -62,15 +62,7 @@ public class PowerPoint_Run : ScriptBase
         // =====================================================
         try
         {
-            // ShellExecute("powerpnt /n", waitForProcessEnd: false, timeout: globalTimeoutInSeconds, continueOnError: true, forceKillOnExit: false);
-            // Alternate start blank PowerPoint document function:
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
-                FileName = "powerpnt.exe",
-                Arguments = "/n",
-                UseShellExecute = true
-            };
-            Process.Start(startInfo);
+            ShellExecute("powerpnt /n", waitForProcessEnd: false, timeout: globalTimeoutInSeconds, continueOnError: true, forceKillOnExit: false);
         }
         catch (Exception ex)
         {

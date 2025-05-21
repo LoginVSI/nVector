@@ -93,14 +93,6 @@ public class Word_Run : ScriptBase
         try
         {
             ShellExecute("winword /t", waitForProcessEnd: false, timeout: globalTimeoutInSeconds, continueOnError: true, forceKillOnExit: false);
-            /* Alternate start blank word document function:
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
-                FileName = "winword.exe",
-                Arguments = "/t",
-                UseShellExecute = true
-            };
-            Process.Start(startInfo); */
         }
         catch (Exception ex)
         {

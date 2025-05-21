@@ -99,14 +99,6 @@ public class Office_2019_Prepare : ScriptBase
         try
         {
             ShellExecute("winword /t", waitForProcessEnd: false, timeout: 60, continueOnError: true, forceKillOnExit: false);
-            /* Alternate start blank word document function:
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
-                FileName = "winword.exe",
-                Arguments = "/t",
-                UseShellExecute = true
-            };
-            Process.Start(startInfo); */
         }
         catch (Exception ex)
         {
@@ -133,10 +125,6 @@ public class Office_2019_Prepare : ScriptBase
         CloseExtraWindow("WINWORD", "*Document*", closeTimeoutSeconds);
     }
 
-    /// <summary>
-    /// Dismisses first run dialogs for Word using detailed logic.
-    /// </summary>
-    /// <param name="mainWindow">The main Word window.</param>
     private void DismissFirstRunDialogs(IWindow mainWindow)
     {
         Log("Dismissing first run Word dialogs");
@@ -196,13 +184,6 @@ public class Office_2019_Prepare : ScriptBase
         }
     }
 
-    /// <summary>
-    /// Attempts to close a window matching the title mask (within the specified process) and
-    /// handles any confirmation dialogs by sending {ALT+N} if needed.
-    /// </summary>
-    /// <param name="processName">The process name (e.g., "WINWORD").</param>
-    /// <param name="titleMask">Window title mask to search for (e.g., "*loginvsi*").</param>
-    /// <param name="timeoutSeconds">Timeout for find operations in seconds.</param>
     private void CloseExtraWindow(string processName, string titleMask, int timeoutSeconds)
     {
         int maxAttempts = 1; // Maximum number of attempts to close the window.
