@@ -6,10 +6,19 @@
 $NvectorAgentCheckIntervalMs = 5000  
 
 # Full paths for CSV and logs
-$CsvFilePath        = "C:\temp\nvidia\latency_metrics.csv"
+$CsvFilePath         = "C:\temp\nvidia\latency_metrics.csv"
 $NvectorScreenshotDir = "C:\temp\nvidia\SSIM_screenshots"
-$NvectorLogFile       = "C:\temp\nvidia\agent.log"
-$ScriptLogFile        = "C:\temp\nvidia\nVector Prepare.txt"
+$NvectorLogFile        = "C:\temp\nvidia\agent.log"
+
+# --------------------------------------
+# Start a transcript to capture ALL streams
+# --------------------------------------
+$Timestamp            = (Get-Date).ToString('yyyyMMddTHHmmss')
+$TranscriptFile       = "C:\temp\nvidia\${Timestamp}nVector_Agent_Client.log"
+$ErrorActionPreference = 'Continue'
+$VerbosePreference     = 'Continue'
+$DebugPreference       = 'Continue'
+Start-Transcript -Path $TranscriptFile -Append
 
 # Arguments for nVector-agent (client mode)
 $Arguments = @(
@@ -20,243 +29,218 @@ $Arguments = @(
     "-l", $NvectorLogFile
 )
 
-# -----------------------------
-# Additional Variables
-# -----------------------------
-
 # nVector-agent executable path
-$NvectorAgentExePath = "" # Place the full path to the nvector-agent.exe here
+$NvectorAgentExePath = "" # Place full path to nvector-agent.exe here
 
 # Polling intervals and thresholds
-$PollingInterval       = 10     # How often this script checks for new CSV lines (in seconds)
-$MaxLatencyThreshold   = 1500  # Exclude latencies above 10s as spurious outliers
-
-# CSV existence check parameters
-$CsvCheckTimeoutSeconds = 5  # How many seconds we wait for the CSV file to appear
-$CsvCheckIntervalSeconds = 1 # How often we re-check (in seconds) within that time
-
-# Time offset configuration (UTC offset)
-$TimeOffset = "0:00"  # Offset from UTC in hours:minutes, e.g., "-7:00" (PST) or "+2:00" (CEST)
+$PollingInterval     = 10      # seconds between CSV scans
+$MaxLatencyThreshold = 1500    # ms, exclude outliers
 
 # Launcher process details
 $LauncherProcessName = "LoginEnterprise.Launcher.UI"
 $LauncherExePath     = "C:\Program Files\Login VSI\Login Enterprise Launcher\LoginEnterprise.Launcher.UI.exe"
 
 # API configuration
-$ConfigurationAccessToken = "abcd1234abcd1234abcd1234abcd1234abcd1234abc" # The Login Enterprise configuration access token goes here 
-$BaseUrl      = "https://myDomain.LoginEnterprise.com/" # The Login Enterprise base URL goes here
-$ApiEndpoint  = "publicApi/v7-preview/platform-metrics"
-$EnvironmentId= "abcd1234-abcd1234-abcd1234-abcd1"
-$MetricId     = "nVectorMetricId"
-$DisplayName  = "Endpoint Latency"
-$Unit         = "Latency (ms)"
-$Instance     = $env:COMPUTERNAME #"nVectorInstanceName"
-$Group        = "nVector"
-$ComponentType= "vm"
+$ConfigurationAccessToken = "abcd1234abcd1234abcd1234abcd1234abcd1234abc"
+$BaseUrl                = "https://myDomain.LoginEnterprise.com/"
+$ApiEndpoint            = "publicApi/v7-preview/platform-metrics"
+$EnvironmentId          = "abcd1234-abcd1234-abcd1234-abcd1"
+$MetricId               = "nVectorMetricId"
+$DisplayName            = "Endpoint Latency"
+$Unit                   = "Latency (ms)"
+$Instance               = $env:COMPUTERNAME
+$Group                  = "nVector"
+$ComponentType          = "vm"
 
-# -----------------------------
-# Helper Functions
-# -----------------------------
+# --------------------------------------
+# Time-offset: pull server clock + compute clock drift with RTT compensation
+# --------------------------------------
+function Get-ServerOffset {
+    param($BaseUrl, $ApiEndpoint, $Token)
+    $uri = $BaseUrl.TrimEnd('/') + '/' + $ApiEndpoint.TrimStart('/')
+    $hdr = @{ Authorization = "Bearer $Token" }
 
-function Log {
-    param([string]$Message)
-    $Timestamp   = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
-    $LogMessage  = "$Timestamp $Message"
-    Write-Host $LogMessage
-    Add-Content -Path $ScriptLogFile -Value $LogMessage
+    try {
+        $localBefore = [DateTimeOffset]::Now
+        $resp        = Invoke-WebRequest -Uri $uri -Headers $hdr -UseBasicParsing -TimeoutSec 5
+        $localAfter  = [DateTimeOffset]::Now
+
+        $serverDto = [DateTimeOffset]::Parse($resp.Headers['Date'])
+
+        # Compute half the round-trip
+        $roundtrip = $localAfter - $localBefore
+        $halfRt    = [TimeSpan]::FromTicks([Math]::Floor($roundtrip.Ticks / 2))
+
+        # Estimate local time at midpoint
+        $estimatedLocal = $localBefore + $halfRt
+
+        $serverUtc   = $serverDto.UtcDateTime
+        $localUtcEst = $estimatedLocal.UtcDateTime
+
+        Write-Host "Server time (UTC):      $($serverUtc.ToString('yyyy-MM-ddTHH:mm:ssZ'))"
+        Write-Host "Local before request:   $($localBefore.UtcDateTime.ToString('yyyy-MM-ddTHH:mm:ssZ'))"
+        Write-Host "Local after  request:   $($localAfter.UtcDateTime.ToString('yyyy-MM-ddTHH:mm:ssZ'))"
+        Write-Host "Estimated local (mid):  $($localUtcEst.ToString('yyyy-MM-ddTHH:mm:ssZ'))"
+
+        $drift = $localUtcEst - $serverUtc
+        Write-Host "Determined drift:       $($drift.ToString())"
+
+        return $drift
+    } catch {
+        Write-Error "Failed to fetch server time from ${uri}: $($_.Exception.Message)"
+        Stop-Transcript
+        exit 1
+    }
 }
 
+# Compute clock drift once at startup
+$TimeOffsetSpan = Get-ServerOffset `
+    -BaseUrl $BaseUrl `
+    -ApiEndpoint "v8-preview/system/version" `
+    -Token $ConfigurationAccessToken
+
+# --------------------------------------
+# Adjust each CSV timestamp and log details
+# --------------------------------------
 function Adjust-TimeOffset {
     param([string]$RawTimestamp)
     try {
-        $Datetime = [datetime]::Parse($RawTimestamp)
-        $Offset   = [timespan]::Parse($TimeOffset)
-        $Adjusted = $Datetime.Add($Offset)
-        return $Adjusted.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+        $dt       = [DateTime]::Parse($RawTimestamp)
+        $adjusted = $dt.Add(-$TimeOffsetSpan)
+        $finalStr = $adjusted.ToString("yyyy-MM-ddTHH:mm:ss") + "Z"
+
+        Write-Host "Adjust-Timestamp → Raw: $RawTimestamp | Drift: $TimeOffsetSpan | Adjusted: $finalStr"
+        return $finalStr
     } catch {
-        Log "Invalid timestamp format in line: $RawTimestamp"
+        Write-Host "Invalid timestamp format: $RawTimestamp"
         return $null
     }
 }
 
 function Terminate-nvector-agent {
-    $ProcessName = "nvector-agent"
-    $Running     = Get-Process -Name $ProcessName -ErrorAction SilentlyContinue
-    if ($Running) {
-        Log "Terminating all running '$ProcessName' processes."
-        $Running | Stop-Process -Force -ErrorAction SilentlyContinue
-    } else {
-        Log "'$ProcessName' is not running."
-    }
+    $p = Get-Process -Name "nvector-agent" -ErrorAction SilentlyContinue
+    if ($p) { Write-Host "Killing previous nvector-agent"; $p | Stop-Process -Force }
+    else  { Write-Host "nvector-agent not running" }
 }
 
 function Start-nvector-agent {
     if (-not (Test-Path $NvectorAgentExePath)) {
-        Log "Executable not found at path: $NvectorAgentExePath"
-        throw "Executable not found: $NvectorAgentExePath"
+        Write-Error "nvector-agent.exe not found at $NvectorAgentExePath"; exit 1
     }
-
-    try {
-        Start-Process -FilePath $NvectorAgentExePath -ArgumentList $Arguments -NoNewWindow -ErrorAction Stop
-        Log "'nvector-agent' started successfully."
-    } catch {
-        Log "Failed to start 'nvector-agent'. Error: $_"
-        throw
-    }
+    Start-Process -FilePath $NvectorAgentExePath -ArgumentList $Arguments -NoNewWindow -ErrorAction Stop
+    Write-Host "nvector-agent started"
 }
 
 function Upload-DataToApi {
-    param([array]$MetricsArray)
-
-    foreach ($m in $MetricsArray) {
-        if (-not $m.PSObject.Properties['componentType']) {
-            $m | Add-Member -MemberType NoteProperty -Name "componentType" -Value $ComponentType -Force
-            Log "Added missing 'componentType' to metric: $($m | ConvertTo-Json -Compress)"
-        }
+    param([array]$Metrics)
+    $json = $Metrics | ConvertTo-Json -Depth 10 -Compress
+    if (-not $json.TrimStart().StartsWith("[")) { $json = "[$json]" }
+    Write-Host "POST payload: $json"
+    $hdr = @{
+        Authorization = "Bearer $ConfigurationAccessToken"
+        "Content-Type" = "application/json"
     }
-
-    $PayloadJson = $MetricsArray | ConvertTo-Json -Depth 10 -Compress
-    if (-not ($PayloadJson.TrimStart().StartsWith("["))) {
-        $PayloadJson = "[$PayloadJson]"
-    }
-
-    Log "Payload JSON: $PayloadJson"
-
-    $Headers = @{ 
-        "Authorization" = "Bearer $ConfigurationAccessToken"
-        "Content-Type"  = "application/json" 
-    }
-
     try {
-        $FullUrl = "$($BaseUrl.TrimEnd('/'))/$($ApiEndpoint.TrimStart('/'))"
-        Log "Sending POST request to $FullUrl ..."
-        $Response = Invoke-RestMethod -Uri $FullUrl -Method Post -Headers $Headers -Body $PayloadJson
-        Log "Response: $($Response | ConvertTo-Json -Depth 10)"
+        Invoke-RestMethod -Uri ($BaseUrl.TrimEnd('/') + '/' + $ApiEndpoint.TrimStart('/')) `
+                          -Method Post -Headers $hdr -Body $json | Out-Null
+        Write-Host "Upload succeeded"
     } catch {
-        Log "Error during API request: $_"
+        Write-Host "Upload error: $_"
     }
 }
 
 # -----------------------------
 # Main Script Execution
 # -----------------------------
-
-Log "Starting nVector metrics uploader script."
+Write-Host "Starting nVector metrics uploader"
 Terminate-nvector-agent
 Start-nvector-agent
 
-# Ensure the Launcher is running
+# Ensure Launcher
 if (-not (Get-Process -Name $LauncherProcessName -ErrorAction SilentlyContinue)) {
-    try {
-        Start-Process -FilePath $LauncherExePath -NoNewWindow -ErrorAction Stop
-        Log "Launcher process '$LauncherProcessName' started successfully."
-    } catch {
-        Log "Failed to start launcher process '$LauncherProcessName'."
-    }
+    Start-Process -FilePath $LauncherExePath -NoNewWindow -ErrorAction SilentlyContinue
+    Write-Host "Launcher started"
 } else {
-    Log "Launcher process '$LauncherProcessName' is already running."
+    Write-Host "Launcher already running"
 }
 
-Log "Checking for CSV file existence and header..."
-
-# Wait up to $CsvCheckTimeoutSeconds for CSV file to appear (checking once per second)
-$csvExists = $false
-for ($i = 1; $i -le $CsvCheckTimeoutSeconds; $i++) {
-    if (Test-Path $CsvFilePath) {
-        $csvExists = $true
-        break
-    }
-    Start-Sleep -Seconds $CsvCheckIntervalSeconds
+# Await CSV and header
+$exists = $false
+for ($i = 0; $i -lt 5; $i++) {
+    if (Test-Path $CsvFilePath) { $exists = $true; break }
+    Start-Sleep -Seconds 1
 }
-
-if (-not $csvExists) {
-    Log "CSV file '$CsvFilePath' does not exist after waiting $CsvCheckTimeoutSeconds seconds."
+if (-not $exists) {
+    Write-Host "CSV not found after wait"
 } else {
-    # Check the first line is the expected header
-    $firstLine = (Get-Content -Path $CsvFilePath | Select-Object -First 1).Trim()
-    if ($firstLine -ne "timestamp,latency_ms") {
-        Log "Expected header 'timestamp,latency_ms' but found: '$firstLine'"
+    $headerLine = Get-Content $CsvFilePath -First 1
+    if (-not $headerLine) {
+        Write-Host "CSV exists but is empty"
+    } elseif ($headerLine.Trim() -ne "timestamp,latency_ms") {
+        Write-Host "Expected header 'timestamp,latency_ms' but found: '$headerLine'"
     } else {
-        Log "CSV file found and header is correct."
+        Write-Host "CSV ready"
     }
 }
 
-Log "Monitoring CSV file '$CsvFilePath' for new lines and uploading data to API..."
-
-# Initialize $LastLineCount
-if (Test-Path -Path $CsvFilePath) {
-    $Lines = Get-Content -Path $CsvFilePath
-    $LastLineCount = $Lines.Count - 1
+# Initialize line counter
+if (Test-Path $CsvFilePath) {
+    $LastLine = (Get-Content $CsvFilePath).Count - 1
 } else {
-    $LastLineCount = 0
-    Log "CSV file does not exist yet."
+    $LastLine = 0
 }
 
-# Continuous loop to watch for new data
+# Watch loop
 while ($true) {
     if (Test-Path $CsvFilePath) {
-        try {
-            # Small sleep to avoid partial line reads
-            Start-Sleep -Milliseconds 500
-            $Lines = Get-Content -Path $CsvFilePath -ErrorAction Stop
+        Start-Sleep -Milliseconds 500
+        $all = Get-Content $CsvFilePath
+        if ($all.Count -le 1) { Start-Sleep $PollingInterval; continue }
 
-            # If we only have the header (or zero lines), just wait and continue
-            if ($Lines.Count -le 1) {
-                Start-Sleep -Seconds $PollingInterval
-                continue
+        $current = $all.Count - 1
+        if ($current -gt $LastLine) {
+            $newLines = $all[($LastLine + 1)..$current]
+            $metrics  = @()
+
+            foreach ($line in $newLines) {
+                $parts = $line -split ','
+                if ($parts.Count -ne 2) {
+                    Write-Host "Bad CSV line: $line"
+                    continue
+                }
+                $tsRaw = $parts[0].Trim()
+                $lat   = $parts[1].Trim()
+
+                [double]$val = 0.0
+                if ([double]::TryParse($lat, [ref]$val) -and $val -lt $MaxLatencyThreshold) {
+                    $ts = Adjust-TimeOffset -RawTimestamp $tsRaw
+                    if (-not $ts) { continue }
+                    $metrics += [PSCustomObject]@{
+                        metricId       = $MetricId
+                        environmentKey = $EnvironmentId
+                        timestamp      = $ts
+                        displayName    = $DisplayName
+                        unit           = $Unit
+                        instance       = $Instance
+                        value          = $val
+                        group          = $Group
+                        componentType  = $ComponentType
+                    }
+                } else {
+                    Write-Host "Excluded or invalid latency: '$lat'"
+                }
             }
 
-            $CurrentDataCount = $Lines.Count - 1
-            if ($CurrentDataCount -gt $LastLineCount) {
-                $NewDataCount = $CurrentDataCount - $LastLineCount
-                $NewLines = $Lines[($LastLineCount + 1)..($LastLineCount + $NewDataCount)]
-                $MetricsArray = @()
-
-                foreach ($NewLine in $NewLines) {
-                    $Parts = $NewLine -split ','
-                    if ($Parts.Count -lt 2) {
-                        Log "Invalid line format: $NewLine"
-                        continue
-                    }
-
-                    $timeRaw = $Parts[0].Trim()
-                    $latStr  = $Parts[1].Trim()
-                    $UtcTime = Adjust-TimeOffset -RawTimestamp $timeRaw
-                    if (-not $UtcTime) { continue }
-
-                    [float]$latVal = 0.0
-                    if ([float]::TryParse($latStr, [ref]$latVal)) {
-                        if ($latVal -lt $MaxLatencyThreshold) {
-                            $Metric = [PSCustomObject]@{
-                                metricId       = $MetricId
-                                environmentKey = $EnvironmentId
-                                timestamp      = $UtcTime
-                                displayName    = $DisplayName
-                                unit           = $Unit
-                                instance       = $Instance
-                                value          = $latVal
-                                group          = $Group
-                                componentType  = $ComponentType
-                            }
-                            $MetricsArray += $Metric
-                        } else {
-                            Log "Excluded high latency: $latVal ms."
-                        }
-                    } else {
-                        Log "Invalid latency value in line: $NewLine"
-                    }
-                }
-
-                if ($MetricsArray.Count -gt 0) {
-                    Upload-DataToApi -MetricsArray $MetricsArray
-                }
-
-                $LastLineCount = $CurrentDataCount
+            if ($metrics.Count) {
+                Upload-DataToApi -Metrics $metrics
             }
-        } catch {
-            Log "Error processing CSV file: $_"
+            $LastLine = $current
         }
     }
-
     Start-Sleep -Seconds $PollingInterval
 }
+
+# -----------------------------
+# Clean up transcript
+# -----------------------------
+Stop-Transcript
