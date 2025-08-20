@@ -1,4 +1,5 @@
-<#
+<# 
+version 1.0.0
 .SYNOPSIS
 Retrieves metrics from the Login Enterprise v7-preview/platform-metrics endpoint and saves the JSON and CSV outputs to files in C:\temp, bypassing SSL/TLS certificate validation. All events are logged to both the console and a log file (default C:\temp\get_nVectorMetrics_Log.txt).
 

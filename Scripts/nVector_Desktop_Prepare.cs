@@ -11,6 +11,7 @@ public class nVector_Desktop_Prepare : ScriptBase
 {
     void Execute()
     {
+        // version 1.0.0
         // =====================================================
         // Configurable Variables
         // =====================================================
