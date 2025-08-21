@@ -13,7 +13,7 @@ Change log (high level):
 #>
 
 # -----------------------------
-# Config (edit as needed)
+# Config
 # -----------------------------
 $ScriptVersion = "1.0.7"
 $AdjustmentMode = "WallClock"   # "WallClock" (default), "RTT", or "RawUtc"
@@ -315,7 +315,7 @@ function Adjust-TimeOffset {
 }
 
 # -----------------------------
-# Agent helpers (unchanged)
+# Agent helpers
 # -----------------------------
 function Terminate-nvector-agent {
     $p = Get-Process -Name "nvector-agent" -ErrorAction SilentlyContinue
@@ -348,7 +348,7 @@ function Upload-DataToApi {
 }
 
 # -----------------------------
-# Main Execution (unchanged)
+# Main Execution
 # -----------------------------
 Write-Host "Starting nVector metrics uploader - version $ScriptVersion"
 Terminate-nvector-agent
