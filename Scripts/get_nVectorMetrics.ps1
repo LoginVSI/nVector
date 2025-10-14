@@ -1,34 +1,3 @@
-<# 
-CHANGELOG
-v1.0.1  (2025-09-08)
-- Added parameters: -ApiVersion (defaults to 'v7-preview'), -ImportServerCert, -KeepCert.
-- New cert-import flow:
-  • Get-RemoteCertificates now first tries SslStream then falls back to HttpWebRequest/ServicePoint.Certificate.
-  • Uses an ArrayList to avoid += overload issues when collecting X509Certificate2 objects.
-  • Import-ServerCertificates imports leaf + chain into CurrentUser\Root and returns imported thumbprints.
-  • Remove-ImportedCertificates cleans up temporary imports when -KeepCert is not set.
-- Robustness improvements:
-  • Built request URL with System.UriBuilder (safer escaping/paths).
-  • Forces TLS1.2 on PS5 where needed.
-  • Better error handling/logging around cert retrieval, import and GET requests.
-  • Avoids terminating errors when writing log files; Write-Log is non-terminating.
-- Compatibility:
-  • PS7: Invoke-RestMethod used with -SkipCertificateCheck.
-  • PS5: HttpWebRequest path preserved; StreamReader now uses UTF8 encoding.
-- CSV/JSON handling:
-  • Saves raw JSON to file if present; parses JSON for CSV conversion if valid.
-  • CSV export uses Export-Csv -NoTypeInformation with UTF8 encoding.
-- Bug fixes:
-  • Fixed earlier X509Certificate2 collection/concatenation error (op_Addition) by using ArrayList.
-  • Fixed cases where empty/missing EnvironmentId would fail in external test-runner (runner adjusted separately).
-- Notes / Security:
-  • Importing server certs writes to CurrentUser\Root — this is potentially sensitive; recommended only in trusted/test environments.
-  • Disabling certificate validation or importing certs is INSECURE; intended for lab/troubleshooting only.
-
-v1.0.0  (initial)
-- Original script: basic GET to /publicApi/v7-preview/platform-metrics, saved JSON/CSV, bypassed certificate validation for PS5 via ServicePointManager.
-#>
-
 param(
     [Parameter(Mandatory = $true)][string]$StartTime,
     [Parameter(Mandatory = $true)][string]$EndTime,
