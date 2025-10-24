@@ -6,35 +6,48 @@ using LoginPI.Engine.ScriptBase.Constants;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 public class nVector_Desktop_Prepare : ScriptBase
 {
     void Execute()
     {
-        // version 1.0.0
+        // version 1.0.1
         // =====================================================
-        // Configurable Variables
+        // Configurable
         // =====================================================
-        string tempDir         = Environment.GetEnvironmentVariable("TEMP");
-        string fileName        = "nvector-agent.exe";
-        string filePath        = Path.Combine(tempDir, fileName);
-        string processName     = "nvector-agent";
-        bool forceCopy         = true;  // Set to true to copy from appliance even if file exists
+        string tempDir = Environment.GetEnvironmentVariable("TEMP");
+        if (string.IsNullOrEmpty(tempDir))
+            tempDir = Path.GetTempPath();
+
+        string fileName    = "nvector-agent.exe";
+        string filePath    = Path.Combine(tempDir, fileName);
+        string processName = "nvector-agent";
+        bool forceCopy     = true;  // copy from appliance even if file exists
 
         // =====================================================
-        // Other Paths/Params (now using tempDir)
+        // Paths
         // =====================================================
-        string screenshotPath  = Path.Combine(tempDir, "nvidia", "SSIM_screenshots");
-        string logFilePath     = Path.Combine(tempDir, "nvidia", "agent.log");
+        string nvidiaRoot     = Path.Combine(tempDir, "nvidia");
+        string screenshotPath = Path.Combine(nvidiaRoot, "SSIM_screenshots");
+        string logFilePath    = Path.Combine(nvidiaRoot, "agent.log");
 
         try
         {
+            // ----- Skip launch if already running in THIS session -----
+            int mySession = Process.GetCurrentProcess().SessionId;
+            bool alreadyRunning = Process.GetProcessesByName(processName).Any(p => p.SessionId == mySession);
+            if (alreadyRunning)
+            {
+                Log($"{processName}.exe is already running in this session; skipping launch.");
+                return;
+            }
+
             // ----- Ensure needed directories exist -----
-            // Creates both the parent "nvidia" folder and the SSIM_screenshots subfolder
-            Directory.CreateDirectory(Path.GetDirectoryName(logFilePath));
+            Directory.CreateDirectory(nvidiaRoot);
             Directory.CreateDirectory(screenshotPath);
 
-            // ----- Copy nvector-agent.exe from Appliance scriptcontent if needed -----
+            // ----- Copy nvector-agent.exe from Appliance ScriptContent if needed -----
             if (forceCopy || !FileExists(filePath))
             {
                 Log("Copying nvector-agent.exe from Appliance ScriptContent");
@@ -48,32 +61,34 @@ public class nVector_Desktop_Prepare : ScriptBase
                 Log("nvector-agent.exe already exists and forceCopy is false");
             }
 
-            // ----- Skip launch if already running -----
-            if (Process.GetProcessesByName(processName).Length > 0)
+            if (!FileExists(filePath))
             {
-                Log($"{processName}.exe is already running; skipping launch.");
+                Log("nvector-agent.exe not found after copy; aborting.");
                 return;
             }
 
-            // ----- Launch the agent -----
-            var process = new Process();
-            process.StartInfo.FileName      = filePath;
-            process.StartInfo.Arguments     = $"-r desktop -s \"{screenshotPath}\" -l \"{logFilePath}\"";
-            process.StartInfo.WindowStyle   = ProcessWindowStyle.Minimized;   // start minimized
-            process.Start();
+            // ----- Launch the agent (quiet) -----
+            var psi = new ProcessStartInfo
+            {
+                FileName         = filePath,
+                Arguments        = $"-r desktop -s \"{screenshotPath}\" -l \"{logFilePath}\"",
+                WorkingDirectory = tempDir,
+                UseShellExecute  = false,
+                CreateNoWindow   = true,
+                WindowStyle      = ProcessWindowStyle.Minimized
+            };
 
+            Process.Start(psi);
             Log($"{fileName} started with '-r desktop', '-s {screenshotPath}', '-l {logFilePath}'.");
 
             // ----- Verify process -----
-            Wait(1);
-            bool isRunning = Process.GetProcessesByName(processName).Length > 0;
-            Log(isRunning
-                ? $"{processName}.exe is running."
-                : $"{processName}.exe is not running.");
+            Wait(3);
+            bool isRunning = Process.GetProcessesByName(processName).Any(p => p.SessionId == mySession);
+            Log(isRunning ? $"{processName}.exe is running." : $"{processName}.exe is not running.");
         }
         catch (Exception ex)
         {
-            Log($"An error occurred: {ex.Message}");
+            Log(ex.ToString());
         }
     }
 }
