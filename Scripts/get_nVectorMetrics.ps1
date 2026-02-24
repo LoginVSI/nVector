@@ -1,119 +1,216 @@
+<#
+.SYNOPSIS
+    Login Enterprise nVector Platform Metrics Retrieval Tool
+
+.DESCRIPTION
+    Retrieves nVector Platform Metrics data (latency, SSIM, etc.) from the Login Enterprise API.
+    Supports one or multiple Environment IDs in a single run.
+    Exports results to timestamped CSV and JSON files for analysis.
+
+.PARAMETER LEApiToken
+    REQUIRED. Login Enterprise API token (Configuration access level).
+
+.PARAMETER EnvironmentId
+    Single Environment UUID. Use this OR -EnvironmentIds, not both.
+
+.PARAMETER EnvironmentIds
+    Array of Environment UUIDs. Use this OR -EnvironmentId, not both.
+    Example: @("uuid-1", "uuid-2")
+
+.PARAMETER StartTime
+    Start of time range in ISO 8601 Zulu format. e.g. 2025-02-07T00:00:00.000Z
+    If omitted, -LastHours is used instead.
+
+.PARAMETER EndTime
+    End of time range in ISO 8601 Zulu format. e.g. 2025-02-07T23:59:59.999Z
+    If omitted, -LastHours is used instead.
+
+.PARAMETER LastHours
+    Convenience parameter. Retrieve metrics from the last N hours. Default: 1.
+    Ignored if -StartTime and -EndTime are provided.
+
+.PARAMETER BaseUrl
+    Base URL of the Login Enterprise appliance. e.g. https://myDomain.LoginEnterprise.com
+
+.PARAMETER ApiVersion
+    API version segment. Default: v8-preview.
+    Use v7-preview for older appliances.
+
+.PARAMETER MetricGroups
+    Optional array of metric group filters to narrow results.
+
+.PARAMETER OutputDir
+    Directory for output files. Defaults to script directory.
+    Output filenames are auto-generated with timestamps.
+
+.PARAMETER LogFilePath
+    Path for script log file. Defaults to OutputDir\get_nVectorMetrics_Log_<timestamp>.txt
+
+.PARAMETER ImportServerCert
+    Import the appliance certificate into CurrentUser\Root before the request.
+    Use for appliances with self-signed or private CA certificates.
+
+.PARAMETER KeepCert
+    Used with -ImportServerCert. Keeps imported certs after the run.
+    If omitted, any newly imported certs are removed on exit.
+
+.EXAMPLE
+    # Last 1 hour, single environment
+    .\get_nVectorMetrics.ps1 -LEApiToken "mytoken" -EnvironmentId "abcd-1234" -BaseUrl "https://my.le.com"
+
+.EXAMPLE
+    # Specific time range, multiple environments
+    .\get_nVectorMetrics.ps1 -LEApiToken "mytoken" -EnvironmentIds @("uuid-1","uuid-2") -StartTime "2025-02-07T00:00:00.000Z" -EndTime "2025-02-07T23:59:59.999Z" -BaseUrl "https://my.le.com"
+
+.EXAMPLE
+    # Self-signed cert, last 2 hours
+    .\get_nVectorMetrics.ps1 -LEApiToken "mytoken" -EnvironmentId "abcd-1234" -BaseUrl "https://appliance.local" -LastHours 2 -ImportServerCert
+
+.EXAMPLE
+    # Keep imported cert for future sessions
+    .\get_nVectorMetrics.ps1 -LEApiToken "mytoken" -EnvironmentId "abcd-1234" -BaseUrl "https://appliance.local" -ImportServerCert -KeepCert
+
+.NOTES
+    Version:    2.0.0
+    Author:     Login VSI
+    Updated:    February 2026
+
+    Security note: -ImportServerCert imports into CurrentUser\Root and -SkipCertificateCheck
+    (PS7) bypass certificate validation. Use only on trusted/test networks.
+
+    PS 5.x: Uses HttpWebRequest (cert validation not skipped). Use -ImportServerCert for
+    appliances with self-signed/private CA certs.
+    PS 7.x: Uses Invoke-RestMethod -SkipCertificateCheck (validation bypassed).
+#>
+
 param(
-    [Parameter(Mandatory = $true)][string]$StartTime,
-    [Parameter(Mandatory = $true)][string]$EndTime,
-    [Parameter(Mandatory = $true)][string]$EnvironmentId,
-    [string]$ApiAccessToken,
-    [string]$BaseUrl,
-    [string]$OutputCsvFilePath,
-    [string]$OutputJsonFilePath,
-    [string]$LogFilePath,
-    [string]$ApiVersion = 'v7-preview',
-    [switch]$ImportServerCert,
-    [switch]$KeepCert,
-    [switch]$Help
+    [Parameter(Mandatory = $true)][string]$LEApiToken,
+    [Parameter(Mandatory = $false)][string]$EnvironmentId,
+    [Parameter(Mandatory = $false)][string[]]$EnvironmentIds,
+    [Parameter(Mandatory = $false)][string]$StartTime,
+    [Parameter(Mandatory = $false)][string]$EndTime,
+    [Parameter(Mandatory = $false)][int]$LastHours = 1,
+    [Parameter(Mandatory = $false)][string]$BaseUrl = "https://your-le-appliance.example.com",
+    [Parameter(Mandatory = $false)][string]$ApiVersion = "v8-preview",
+    [Parameter(Mandatory = $false)][string[]]$MetricGroups,
+    [Parameter(Mandatory = $false)][string]$OutputDir,
+    [Parameter(Mandatory = $false)][string]$LogFilePath,
+    [Parameter(Mandatory = $false)][switch]$ImportServerCert,
+    [Parameter(Mandatory = $false)][switch]$KeepCert
 )
 
-# defaults
-$DefaultCsvFilePath  = "C:\temp\get_nVectorMetrics.csv"
-$DefaultJsonFilePath = "C:\temp\get_nVectorMetrics.json"
-$DefaultLogFilePath  = "C:\temp\get_nVectorMetrics_Log.txt"
+# =====================================================
+# Version & Output Setup
+# =====================================================
+$ScriptVersion = "2.0.0"
+$Timestamp = (Get-Date).ToString("yyyyMMdd_HHmmss")
 
-if (-not $OutputCsvFilePath)  { $OutputCsvFilePath  = $DefaultCsvFilePath }
-if (-not $OutputJsonFilePath) { $OutputJsonFilePath = $DefaultJsonFilePath }
-if (-not $LogFilePath)        { $LogFilePath        = $DefaultLogFilePath }
-$ScriptLogFile = $LogFilePath
+if (-not $OutputDir) { $OutputDir = $PSScriptRoot }
+if (-not (Test-Path $OutputDir)) { New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null }
 
-# safer Write-Log (non-terminating)
+$CsvPath  = Join-Path $OutputDir "get_nVectorMetrics_$Timestamp.csv"
+$JsonPath = Join-Path $OutputDir "get_nVectorMetrics_$Timestamp.json"
+if (-not $LogFilePath) { $LogFilePath = Join-Path $OutputDir "get_nVectorMetrics_Log_$Timestamp.txt" }
+
+$script:ImportedCertThumbs = @()
+
+# =====================================================
+# Logging
+# =====================================================
 function Write-Log {
-    param([string]$Message, [switch]$IsError)
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $formatted = "$timestamp - $Message"
+    param([string]$Message, [switch]$IsError, [switch]$IsWarning)
+    $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $formatted = "$ts - $Message"
     try {
-        $dir = Split-Path -Parent $ScriptLogFile
-        if ($dir -and -not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
-        Add-Content -Path $ScriptLogFile -Value $formatted
+        $logDir = Split-Path -Parent $LogFilePath
+        if ($logDir -and -not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir -Force | Out-Null }
+        Add-Content -Path $LogFilePath -Value $formatted
     } catch {
-        # swallow
-        try { Write-Host ("WARNING: failed to write to log file: {0}" -f $_.Exception.Message) -ForegroundColor Yellow } catch {}
+        try { Write-Host ("WARNING: could not write to log file: {0}" -f $_.Exception.Message) -ForegroundColor Yellow } catch {}
     }
-    if ($IsError) { Write-Host $formatted -ForegroundColor Red } else { Write-Host $formatted }
+    if ($IsError)   { Write-Host $formatted -ForegroundColor Red }
+    elseif ($IsWarning) { Write-Host $formatted -ForegroundColor Yellow }
+    else            { Write-Host $formatted }
 }
 
-Write-Log "==== Script invoked. ===="
+# =====================================================
+# Banner
+# =====================================================
+Write-Host "`n========================================================================" -ForegroundColor Cyan
+Write-Host "  Login Enterprise nVector Metrics Retrieval Tool v$ScriptVersion" -ForegroundColor Cyan
+Write-Host "========================================================================`n" -ForegroundColor Cyan
+Write-Log "==== Script started. Version $ScriptVersion ===="
+Write-Log ("Detected PowerShell version: {0}" -f $PSVersionTable.PSVersion.ToString())
 
-if ($Help) {
-    Write-Host "Usage: .\get_nVectorMetrics.ps1 -StartTime <ISO8601Z> -EndTime <ISO8601Z> -EnvironmentId <ID> [-ApiVersion <v7-preview>] [-ImportServerCert] [-KeepCert]"
-    return
-}
+# =====================================================
+# Resolve Environment IDs
+# =====================================================
+$ResolvedEnvironmentIds = @()
 
-# detect PS version
-$psVersion = $PSVersionTable.PSVersion
-Write-Log ("Detected PowerShell version: {0}" -f $psVersion.ToString())
-
-# defaults for token/baseurl if not provided
-$DefaultApiAccessToken = "YOUR-DEFAULT-TOKEN-GOES-HERE"
-$DefaultBaseUrl        = "https://myDomain.LoginEnterprise.com"
-
-if ($ApiAccessToken) {
-    $UsedApiAccessToken = $ApiAccessToken
-    Write-Log "Using user-provided API token."
+if ($EnvironmentId -and $EnvironmentIds) {
+    Write-Log "Both -EnvironmentId and -EnvironmentIds were provided. Using -EnvironmentIds." -IsWarning
+    $ResolvedEnvironmentIds = $EnvironmentIds
+} elseif ($EnvironmentIds) {
+    $ResolvedEnvironmentIds = $EnvironmentIds
+} elseif ($EnvironmentId) {
+    $ResolvedEnvironmentIds = @($EnvironmentId)
 } else {
-    $UsedApiAccessToken = $DefaultApiAccessToken
-    Write-Log "No -ApiAccessToken provided; using default token."
+    Write-Log "No environment ID provided. Please supply -EnvironmentId or -EnvironmentIds." -IsError
+    Write-Host "`nUsage example:" -ForegroundColor Yellow
+    Write-Host "  .\get_nVectorMetrics.ps1 -LEApiToken `"token`" -EnvironmentId `"your-env-uuid`" -BaseUrl `"https://my.le.com`"`n" -ForegroundColor Yellow
+    exit 1
 }
-if ($BaseUrl) {
-    $UsedBaseUrl = $BaseUrl.TrimEnd('/')
-    Write-Log ("Using user-provided BaseUrl: {0}" -f $UsedBaseUrl)
+
+Write-Log ("Resolved {0} environment ID(s) to query." -f $ResolvedEnvironmentIds.Count)
+
+# =====================================================
+# Resolve Time Range
+# =====================================================
+if ($StartTime -and $EndTime) {
+    Write-Log ("Using provided time range: {0} to {1}" -f $StartTime, $EndTime)
 } else {
-    $UsedBaseUrl = $DefaultBaseUrl.TrimEnd('/')
-    Write-Log ("No -BaseUrl provided; using default: {0}" -f $UsedBaseUrl)
+    $EndTime   = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+    $StartTime = (Get-Date).AddHours(-$LastHours).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+    Write-Log ("Using last {0} hour(s). Range: {1} to {2}" -f $LastHours, $StartTime, $EndTime)
 }
 
-Write-Log ("Using ApiVersion: {0}" -f $ApiVersion)
-Write-Log ("Using CSV path: {0}" -f $OutputCsvFilePath)
-Write-Log ("Using JSON path: {0}" -f $OutputJsonFilePath)
+Write-Host ("Time range : {0} to {1}" -f $StartTime, $EndTime) -ForegroundColor Cyan
+Write-Host ("Base URL   : {0}" -f $BaseUrl) -ForegroundColor Cyan
+Write-Host ("API version: {0}" -f $ApiVersion) -ForegroundColor Cyan
+Write-Host ("Output dir : {0}`n" -f $OutputDir) -ForegroundColor Cyan
 
-# Force TLS1.2 for PS5
-try { [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12 } catch {}
-
-# Build URL safely using UriBuilder
+# =====================================================
+# TLS
+# =====================================================
 try {
-    $ub = New-Object System.UriBuilder($UsedBaseUrl)
-    $basePath = $ub.Path
-    if ($basePath -eq $null) { $basePath = "" }
-    $ub.Path = ($basePath.TrimEnd('/') + "/publicApi/$ApiVersion/platform-metrics").TrimStart('/')
-    $ub.Query = "from=$([uri]::EscapeDataString($StartTime))&to=$([uri]::EscapeDataString($EndTime))&environmentIds=$([uri]::EscapeDataString($EnvironmentId))"
-    $FullUrl = $ub.Uri.AbsoluteUri
+    if ($PSVersionTable.PSVersion.Major -lt 7) {
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+        Write-Log "Forced TLS 1.2 (PS5)."
+    }
 } catch {
-    Write-Log ("Failed to construct URL from BaseUrl '{0}': {1}" -f $UsedBaseUrl, $_.Exception.Message) -IsError
-    return
+    Write-Log ("Could not set TLS 1.2: {0}" -f $_.Exception.Message) -IsWarning
 }
-Write-Log ("Constructed URL: {0}" -f $FullUrl)
 
-# helper: fetch remote cert chain and import into CurrentUser\Root (returns list of thumbprints imported)
-# Replace your existing Get-RemoteCertificates with this
+# =====================================================
+# Certificate Functions
+# =====================================================
 function Get-RemoteCertificates {
-    param(
-        [Parameter(Mandatory=$true)][string]$ServerHost,
-        [int]$ServerPort = 443
-    )
-
-    # Use ArrayList to avoid += overload issues with X509Certificate2 objects
+    param([Parameter(Mandatory=$true)][string]$ServerHost, [int]$ServerPort = 443)
     $certList = New-Object System.Collections.ArrayList
-
-    # Helper to build chain and add elements to the ArrayList
     function Add-ChainFromLeaf([System.Security.Cryptography.X509Certificates.X509Certificate2]$leaf) {
         $chain = New-Object System.Security.Cryptography.X509Certificates.X509Chain
         $chain.ChainPolicy.RevocationMode = [System.Security.Cryptography.X509Certificates.X509RevocationMode]::NoCheck
         $null = $chain.Build($leaf)
         foreach ($elem in $chain.ChainElements) {
-            # ensure X509Certificate2 in list
-            $certObj = if ($elem.Certificate -is [System.Security.Cryptography.X509Certificates.X509Certificate2]) { $elem.Certificate } else { New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($elem.Certificate) }
+            $certObj = if ($elem.Certificate -is [System.Security.Cryptography.X509Certificates.X509Certificate2]) {
+                $elem.Certificate
+            } else {
+                New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($elem.Certificate)
+            }
             [void]$certList.Add($certObj)
         }
     }
-
-    # First attempt: SslStream (best-effort)
+    # Primary: SslStream
     try {
         $client = $null; $ssl = $null
         $client = New-Object System.Net.Sockets.TcpClient
@@ -128,77 +225,56 @@ function Get-RemoteCertificates {
             try { $ssl.Close() } catch {}
             try { $client.Close() } catch {}
             return ,($certList.ToArray())
-        } else {
-            throw "SslStream returned no remote certificate."
         }
     } catch {
-        # cleanup and fall through to fallback approach
-        try { if ($ssl) { $ssl.Dispose() } } catch {}
+        try { if ($ssl)    { $ssl.Dispose() }  } catch {}
         try { if ($client) { $client.Close() } } catch {}
-        # swallow and continue to fallback
     }
-
-    # Fallback: HttpWebRequest -> ServicePoint.Certificate
+    # Fallback: HttpWebRequest / ServicePoint
     try {
         $oldCallback = [System.Net.ServicePointManager]::ServerCertificateValidationCallback
         [System.Net.ServicePointManager]::ServerCertificateValidationCallback = { param($s,$c,$ch,$e) return $true }
         try {
-            $uri = "https://$ServerHost/"
-            $req = [System.Net.HttpWebRequest]::Create($uri)
-            $req.Method = 'HEAD'
-            $req.Timeout = 15000
+            $req = [System.Net.HttpWebRequest]::Create("https://$ServerHost/")
+            $req.Method = "HEAD"; $req.Timeout = 15000
             try {
                 $resp = $req.GetResponse()
                 try { $resp.Close() } catch {}
             } catch [System.Net.WebException] {
-                # HEAD may be rejected; continue — ServicePoint.Certificate might still be populated.
                 if ($_.Exception.Response) { try { $_.Exception.Response.Close() } catch {} }
             }
             $svcCert = $req.ServicePoint.Certificate
             if ($svcCert) {
                 $leaf2 = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($svcCert)
                 Add-ChainFromLeaf -leaf $leaf2
-            } else {
-                throw "No certificate available from ServicePoint for $ServerHost"
-            }
+            } else { throw "No certificate available from ServicePoint for $ServerHost" }
         } finally {
             [System.Net.ServicePointManager]::ServerCertificateValidationCallback = $oldCallback
         }
-    } catch {
-        throw $_
-    }
-
+    } catch { throw $_ }
     return ,($certList.ToArray())
 }
 
 function Import-ServerCertificates {
-    param(
-        [Parameter(Mandatory=$true)][string]$ServerHost,
-        [int]$ServerPort = 443,
-        [switch]$Keep
-    )
-
-    Write-Log ("Attempting to fetch and import cert(s) from {0}:{1}" -f $ServerHost,$ServerPort)
+    param([Parameter(Mandatory=$true)][string]$ServerHost, [int]$ServerPort = 443)
+    Write-Log ("Fetching certificate from {0}:{1}..." -f $ServerHost, $ServerPort)
     $importedThumbs = @()
-
-    try {
-        $certs = Get-RemoteCertificates -ServerHost $ServerHost -ServerPort $ServerPort
-    } catch {
-        Write-Log ("Failed to obtain remote certificate from {0}:{1}: {2}" -f $ServerHost,$ServerPort,$_.Exception.Message) -IsError
+    try { $certs = Get-RemoteCertificates -ServerHost $ServerHost -ServerPort $ServerPort }
+    catch {
+        Write-Log ("Failed to obtain certificate: {0}" -f $_.Exception.Message) -IsError
         return ,@()
     }
-
     if (-not $certs -or $certs.Length -eq 0) {
-        Write-Log ("No certificates found for {0}:{1}" -f $ServerHost,$ServerPort) -IsError
+        Write-Log "No certificates found." -IsError
         return ,@()
     }
-
     $store = New-Object System.Security.Cryptography.X509Certificates.X509Store("Root","CurrentUser")
     try {
         $store.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
         foreach ($c in $certs) {
-            # ensure X509Certificate2
-            $x2 = if ($c -is [System.Security.Cryptography.X509Certificates.X509Certificate2]) { $c } else { New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($c) }
+            $x2 = if ($c -is [System.Security.Cryptography.X509Certificates.X509Certificate2]) { $c } else {
+                New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($c)
+            }
             $thumb = $x2.Thumbprint
             $exists = $false
             foreach ($ec in $store.Certificates) { if ($ec.Thumbprint -eq $thumb) { $exists = $true; break } }
@@ -215,13 +291,8 @@ function Import-ServerCertificates {
     } finally {
         try { $store.Close() } catch {}
     }
-
-    if ($importedThumbs.Count -eq 0) {
-        Write-Log ("Imported 0 cert(s)")
-    }
     return ,$importedThumbs
 }
-
 
 function Remove-ImportedCertificates {
     param([string[]]$Thumbprints)
@@ -239,128 +310,166 @@ function Remove-ImportedCertificates {
     } finally { $store.Close() }
 }
 
-# optionally import server certs
-$importedThumbs = @()
-if ($ImportServerCert) {
-    try {
-        $u = [uri]$UsedBaseUrl
-        $port = 443
-        if ($u.Port -ne -1 -and $u.Port -ne 0) { $port = $u.Port }
-        $importedThumbs = Import-ServerCertificates -ServerHost $u.Host -ServerPort $port -Keep:$KeepCert
-    } catch {
-        Write-Log ("ImportServerCert failed: {0}" -f $_.Exception.Message) -IsError
-    }
-}
+# =====================================================
+# Main
+# =====================================================
+try {
 
-# Prepare headers
-$Headers = @{
-    "Authorization" = "Bearer $UsedApiAccessToken"
-    "Accept"        = "application/json"
-}
-
-# perform request
-$jsonString = $null
-$JsonResponse = $null
-
-if ($psVersion.Major -ge 7) {
-    Write-Log "Using Invoke-RestMethod with -SkipCertificateCheck (PowerShell 7.x)."
-    try {
-        $jsonResult = Invoke-RestMethod -Uri $FullUrl -Method GET -Headers $Headers -SkipCertificateCheck -ErrorAction Stop
-        Write-Log "GET request succeeded."
-        if ($jsonResult -is [string]) { $jsonString = $jsonResult } else { $jsonString = $jsonResult | ConvertTo-Json -Depth 10 }
-        $JsonResponse = if ($jsonResult -is [string]) { $jsonResult | ConvertFrom-Json } else { $jsonResult }
-    } catch {
-        Write-Log ("Error during GET request: {0}" -f $_.Exception.Message) -IsError
-    }
-} else {
-    Write-Log "Using HttpWebRequest (PowerShell 5.x)."
-    try {
-        $request = [System.Net.HttpWebRequest]::Create($FullUrl)
-        $request.Method = "GET"
-        $request.Headers.Add("Authorization", "Bearer $UsedApiAccessToken")
-        $request.Accept = "application/json"
-        $request.Timeout = 60000
-        $response = $request.GetResponse()
-        $stream = $response.GetResponseStream()
-        $reader = New-Object System.IO.StreamReader($stream,[System.Text.Encoding]::UTF8)
-        $jsonString = $reader.ReadToEnd()
-        $reader.Close()
-        $response.Close()
-        Write-Log "GET request succeeded."
+    # Import cert if requested
+    if ($ImportServerCert) {
         try {
-            $JsonResponse = $jsonString | ConvertFrom-Json
-        } catch {
-            Write-Log ("Failed to parse JSON response: {0}" -f $_.Exception.Message) -IsError
-        }
-    } catch {
-        Write-Log ("Error during GET request: {0}" -f $_.Exception.Message) -IsError
-    }
-}
-
-# cleanup imported certs when requested (only if we imported and KeepCert not set)
-if ($ImportServerCert -and -not $KeepCert) {
-    try {
-        Remove-ImportedCertificates -Thumbprints $importedThumbs
-    } catch {
-        Write-Log ("Failed to remove imported cert(s): {0}" -f $_.Exception.Message) -IsError
-    }
-}
-
-# Save raw JSON if present
-if ($null -ne $jsonString) {
-    try {
-        $jsonString | Out-File -FilePath $OutputJsonFilePath -Encoding UTF8
-        Write-Log ("JSON saved to: {0}" -f $OutputJsonFilePath)
-    } catch {
-        Write-Log ("Failed to write JSON output: {0}" -f $_.Exception.Message) -IsError
-    }
-} else {
-    Write-Log "No JSON response to save."
-}
-
-# Convert to CSV
-Write-Log "Converting JSON to CSV..."
-$AllDataRows = @()
-if ($JsonResponse) {
-    foreach ($metric in $JsonResponse) {
-        $metricId       = $metric.metricId
-        $environmentKey = $metric.environmentKey
-        $displayName    = $metric.displayName
-        $unit           = $metric.unit
-        $instance       = $metric.instance
-        $group          = $metric.group
-        $componentType  = $metric.componentType
-
-        if ($metric.dataPoints -and $metric.dataPoints.Count -gt 0) {
-            foreach ($dp in $metric.dataPoints) {
-                $row = [PSCustomObject]@{
-                    timestamp      = [string]$dp.timestamp
-                    value          = $dp.value
-                    metricId       = $metricId
-                    environmentKey = $environmentKey
-                    displayName    = $displayName
-                    unit           = $unit
-                    instance       = $instance
-                    group          = $group
-                    componentType  = $componentType
-                }
-                $AllDataRows += $row
+            $leUri = [uri]$BaseUrl
+            $lePort = if ($leUri.Port -ne -1 -and $leUri.Port -ne 0) { $leUri.Port } else { 443 }
+            Write-Log "Importing Login Enterprise appliance certificate..."
+            $script:ImportedCertThumbs = Import-ServerCertificates -ServerHost $leUri.Host -ServerPort $lePort
+            if ($script:ImportedCertThumbs.Length -gt 0) {
+                Write-Log ("Imported {0} certificate(s)." -f $script:ImportedCertThumbs.Length)
             }
-        }
-    }
-
-    if ($AllDataRows.Count -eq 0) {
-        Write-Log "No metric data points found in the response."
-    } else {
-        try {
-            $AllDataRows | Export-Csv -NoTypeInformation -Path $OutputCsvFilePath -Encoding UTF8
-            Write-Log ("CSV saved to: {0}" -f $OutputCsvFilePath)
         } catch {
-            Write-Log ("Failed to write CSV output: {0}" -f $_.Exception.Message) -IsError
+            Write-Log ("Certificate import failed: {0}" -f $_.Exception.Message) -IsWarning
         }
     }
-} else {
-    Write-Log "No parsed JSON to convert to CSV."
-}
 
-Write-Log "Script completed."
+    $AllResults  = @()
+    $AllDataRows = @()
+
+    # Query each environment ID
+    foreach ($envId in $ResolvedEnvironmentIds) {
+        Write-Host ("`nQuerying environment: {0}" -f $envId) -ForegroundColor Yellow
+        Write-Log ("Querying environment ID: {0}" -f $envId)
+
+        # Build URL safely with UriBuilder
+        try {
+            $ub = New-Object System.UriBuilder($BaseUrl.TrimEnd("/"))
+            $ub.Path = ($ub.Path.TrimEnd("/") + "/publicApi/$ApiVersion/platform-metrics").TrimStart("/")
+            $queryParts = @(
+                "from=$([uri]::EscapeDataString($StartTime))",
+                "to=$([uri]::EscapeDataString($EndTime))",
+                "environmentIds=$([uri]::EscapeDataString($envId))"
+            )
+            if ($MetricGroups) {
+                foreach ($g in $MetricGroups) { $queryParts += "metricGroups=$([uri]::EscapeDataString($g))" }
+            }
+            $ub.Query = $queryParts -join "&"
+            $FullUrl = $ub.Uri.AbsoluteUri
+            Write-Log ("Constructed URL: {0}" -f $FullUrl)
+        } catch {
+            Write-Log ("Failed to construct URL for environment {0}: {1}" -f $envId, $_.Exception.Message) -IsError
+            continue
+        }
+
+        $headers = @{
+            "Authorization" = "Bearer $LEApiToken"
+            "Accept"        = "application/json"
+        }
+
+        # Perform request
+        $jsonResult = $null
+        try {
+            if ($PSVersionTable.PSVersion.Major -ge 7) {
+                Write-Log "Using Invoke-RestMethod with -SkipCertificateCheck (PS7)."
+                $jsonResult = Invoke-RestMethod -Uri $FullUrl -Method GET -Headers $headers -SkipCertificateCheck -ErrorAction Stop
+            } else {
+                Write-Log "Using HttpWebRequest (PS5)."
+                $request = [System.Net.HttpWebRequest]::Create($FullUrl)
+                $request.Method = "GET"
+                $request.Headers.Add("Authorization", "Bearer $LEApiToken")
+                $request.Accept = "application/json"
+                $request.Timeout = 60000
+                $response = $request.GetResponse()
+                $stream   = $response.GetResponseStream()
+                $reader   = New-Object System.IO.StreamReader($stream, [System.Text.Encoding]::UTF8)
+                $rawJson  = $reader.ReadToEnd()
+                $reader.Close(); $response.Close()
+                $jsonResult = $rawJson | ConvertFrom-Json
+            }
+            Write-Log ("GET succeeded for environment {0}." -f $envId)
+        } catch {
+            Write-Log ("GET failed for environment {0}: {1}" -f $envId, $_.Exception.Message) -IsError
+            continue
+        }
+
+        if ($jsonResult) {
+            $AllResults += $jsonResult
+            $seriesCount = 0
+            foreach ($metric in $jsonResult) {
+                $seriesCount++
+                if ($metric.dataPoints) {
+                    foreach ($dp in $metric.dataPoints) {
+                        $AllDataRows += [PSCustomObject]@{
+                            timestamp       = [string]$dp.timestamp
+                            value           = $dp.value
+                            metricId        = $metric.metricId
+                            environmentKey  = $metric.environmentKey
+                            displayName     = $metric.displayName
+                            unit            = $metric.unit
+                            instance        = $metric.instance
+                            group           = $metric.group
+                            componentType   = $metric.componentType
+                        }
+                    }
+                }
+            }
+            Write-Host ("  Retrieved {0} metric series" -f $seriesCount) -ForegroundColor Green
+            Write-Log ("Retrieved {0} metric series for environment {1}." -f $seriesCount, $envId)
+        } else {
+            Write-Log ("No data returned for environment {0}." -f $envId) -IsWarning
+        }
+    }
+
+    # =====================================================
+    # Summary
+    # =====================================================
+    Write-Host "`n========================================================================" -ForegroundColor Cyan
+    Write-Host "  SUMMARY" -ForegroundColor Cyan
+    Write-Host "========================================================================" -ForegroundColor Cyan
+
+    if ($AllDataRows.Count -gt 0) {
+        $AllDataRows | Group-Object -Property metricId | ForEach-Object {
+            $sample = $_.Group | Select-Object -First 1
+            Write-Host ("  {0} [{1}] — {2} data points" -f $sample.displayName, $sample.unit, $_.Count) -ForegroundColor White
+        }
+    } else {
+        Write-Host "  No metrics found for the specified time range and environment(s)." -ForegroundColor Yellow
+    }
+
+    Write-Host ("`n  Total data points : {0}" -f $AllDataRows.Count) -ForegroundColor Cyan
+    Write-Host ("  Environments queried: {0}" -f $ResolvedEnvironmentIds.Count) -ForegroundColor Cyan
+
+    # =====================================================
+    # Save Outputs
+    # =====================================================
+    if ($AllResults.Count -gt 0) {
+        try {
+            $AllResults | ConvertTo-Json -Depth 10 | Out-File $JsonPath -Encoding UTF8
+            Write-Host ("`n  JSON saved : {0}" -f $JsonPath) -ForegroundColor Green
+            Write-Log ("JSON saved to: {0}" -f $JsonPath)
+        } catch {
+            Write-Log ("Failed to write JSON: {0}" -f $_.Exception.Message) -IsError
+        }
+    }
+
+    if ($AllDataRows.Count -gt 0) {
+        try {
+            $AllDataRows | Export-Csv -NoTypeInformation -Path $CsvPath -Encoding UTF8
+            Write-Host ("  CSV saved  : {0}" -f $CsvPath) -ForegroundColor Green
+            Write-Log ("CSV saved to: {0}" -f $CsvPath)
+        } catch {
+            Write-Log ("Failed to write CSV: {0}" -f $_.Exception.Message) -IsError
+        }
+    }
+
+    Write-Host "`n========================================================================`n" -ForegroundColor Cyan
+    Write-Log "Script completed successfully."
+
+} finally {
+    # Clean up imported certs unless -KeepCert was specified
+    if ($ImportServerCert -and -not $KeepCert -and $script:ImportedCertThumbs.Length -gt 0) {
+        try {
+            Write-Log "Removing imported certificates..."
+            Remove-ImportedCertificates -Thumbprints $script:ImportedCertThumbs
+        } catch {
+            Write-Log ("Failed to remove imported cert(s): {0}" -f $_.Exception.Message) -IsWarning
+        }
+    }
+}

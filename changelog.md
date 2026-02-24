@@ -1,6 +1,22 @@
 # Changelog
-
 All notable changes to this project are documented in this file following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) conventions.
+
+## 2026-02-24
+
+### Changed
+- `get_nVectorMetrics.ps1` updated to v2.0.0 — merged best of both
+  `get_nVectorMetrics.ps1` and `Get-LEPlatformMetrics.ps1` into a single script:
+  - Renamed `-ApiAccessToken` to `-LEApiToken` for consistency
+  - Added `-EnvironmentIds` array parameter — supports one or multiple environment UUIDs in a single run
+  - Added `-LastHours` convenience parameter (default: 1) — no manual ISO timestamps required unless desired
+  - Added `-OutputDir` parameter — auto-generates timestamped CSV, JSON, and log filenames
+  - Updated default API version from `v7-preview` to `v8-preview`
+  - Added summary table at end of run showing metric names, units, and data point counts
+  - Per-environment error handling — one failing environment does not abort the entire run
+  - Added `-IsWarning` log level (yellow) separate from error (red)
+  - Output directory pre-creation check
+  - Exits with code 1 and usage hint if no environment ID is provided
+  - Version bumped to 2.0.0
 
 ## 2025-09-08
 
