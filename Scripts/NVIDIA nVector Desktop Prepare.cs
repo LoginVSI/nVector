@@ -1,4 +1,4 @@
-// TARGET:ping
+// TARGET:nvector-agent-prepare
 // START_IN:
 
 using LoginPI.Engine.ScriptBase;
