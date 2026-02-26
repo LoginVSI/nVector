@@ -1,6 +1,24 @@
 # Changelog
 All notable changes to this project are documented in this file following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) conventions.
 
+## 2026-02-26
+### Added
+- `Add-SessionMetrics.ps1` v1.0.0 — interactive PerfMon and WMI session metric discovery
+  and registration script for Login Enterprise:
+  - Searches PerfMon counter sets and WMI classes on the local machine by keyword
+  - Numbered list UI with grouped results — select counters and classes by number
+  - WMI property sub-selection — pick all or specific properties per class
+  - Per-property unit prompting with smart suggestions (ms, %, Frames/sec, Bytes/sec, etc.)
+  - Per-property summarizeOperation prompting (avg/sum/max/min/none) with smart defaults
+  - Confirmation step before any API calls
+  - Creates `PerformanceCounter` or `WmiQuery` metric definitions via LE API v8-preview
+  - Group assignment: add to existing group (by ID or fuzzy name search), create new, or skip
+  - Certificate handling ported from `get_nVectorMetrics.ps1` — `-ImportServerCert` / `-KeepCert`
+  - Timestamped log to `%TEMP%`, retry logic, CLI param overrides
+  - PowerShell 5 compatible
+  - Tested against LE appliance v8-preview API — PerfMon path, WMI path, create group,
+    add to existing group, and skip group flows all confirmed working
+
 ## 2026-02-24
 
 ### Changed
