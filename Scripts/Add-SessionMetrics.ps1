@@ -134,8 +134,6 @@ try {
     if ($PSVersionTable.PSVersion.Major -lt 7) {
         [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
         Write-Log "Forced TLS 1.2 (PS5)."
-        [System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
-        Write-Log "SSL validation bypass set (PS5)."
     }
 } catch {
     Write-Log ("Could not set TLS 1.2: {0}" -f $_.Exception.Message) "WARN"
@@ -267,6 +265,14 @@ if ($ImportServerCert) {
         $script:ImportedCertThumbs = Import-ServerCertificates -ServerHost $leUri.Host -ServerPort $lePort
         if ($script:ImportedCertThumbs.Length -gt 0) {
             Write-Log ("Imported {0} certificate(s)." -f $script:ImportedCertThumbs.Length)
+        }
+        # PS5 Invoke-WebRequest does not honour certs imported into CurrentUser\Root in the
+        # same session — set bypass callback so the imported cert takes effect immediately.
+        # Only set when -ImportServerCert is used (i.e. appliance has a self-signed cert).
+        # Appliances with CA-signed certs do not need this and should not use -ImportServerCert.
+        if ($PSVersionTable.PSVersion.Major -lt 7) {
+            [System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
+            Write-Log "SSL validation bypass set for self-signed cert (PS5)."
         }
     } catch {
         Write-Log ("Certificate import failed: {0}" -f $_.Exception.Message) "WARN"
