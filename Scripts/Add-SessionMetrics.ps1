@@ -134,6 +134,8 @@ try {
     if ($PSVersionTable.PSVersion.Major -lt 7) {
         [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
         Write-Log "Forced TLS 1.2 (PS5)."
+        [System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
+        Write-Log "SSL validation bypass set (PS5)."
     }
 } catch {
     Write-Log ("Could not set TLS 1.2: {0}" -f $_.Exception.Message) "WARN"
