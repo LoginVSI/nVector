@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project are documented in this file following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) conventions.
 
+## 2026-03-13
+
+### Fixed
+- `get_nVectorMetrics.ps1` v2.0.0 — two PS5 compatibility fixes:
+  - Replaced em dash character in summary output that caused a parse error on PS5
+  - `-EnvironmentIds` now correctly splits comma-separated strings passed from the PS5 command line (PS5 collapses `"a","b"` into a single string rather than a two-element array)
+  - Completion log message now correctly reflects warning state when no data is returned
+
 ## 2026-02-26
 ### Added
 - `Add-SessionMetrics.ps1` v1.0.0 — interactive PerfMon and WMI session metric discovery

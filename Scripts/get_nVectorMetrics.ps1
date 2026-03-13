@@ -149,11 +149,26 @@ $ResolvedEnvironmentIds = @()
 
 if ($EnvironmentId -and $EnvironmentIds) {
     Write-Log "Both -EnvironmentId and -EnvironmentIds were provided. Using -EnvironmentIds." -IsWarning
-    $ResolvedEnvironmentIds = $EnvironmentIds
+    # PS5: comma-separated string may arrive as single array element - split it
+    if ($EnvironmentIds.Count -eq 1 -and $EnvironmentIds[0] -match ',') {
+        $ResolvedEnvironmentIds = $EnvironmentIds[0] -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }
+    } else {
+        $ResolvedEnvironmentIds = $EnvironmentIds
+    }
 } elseif ($EnvironmentIds) {
-    $ResolvedEnvironmentIds = $EnvironmentIds
+    # PS5: comma-separated string may arrive as single array element - split it
+    if ($EnvironmentIds.Count -eq 1 -and $EnvironmentIds[0] -match ',') {
+        $ResolvedEnvironmentIds = $EnvironmentIds[0] -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }
+    } else {
+        $ResolvedEnvironmentIds = $EnvironmentIds
+    }
 } elseif ($EnvironmentId) {
-    $ResolvedEnvironmentIds = @($EnvironmentId)
+    # Handle comma-separated string passed as single -EnvironmentId value
+    if ($EnvironmentId -match ',') {
+        $ResolvedEnvironmentIds = $EnvironmentId -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }
+    } else {
+        $ResolvedEnvironmentIds = @($EnvironmentId)
+    }
 } else {
     Write-Log "No environment ID provided. Please supply -EnvironmentId or -EnvironmentIds." -IsError
     Write-Host "`nUsage example:" -ForegroundColor Yellow
@@ -427,7 +442,7 @@ try {
     if ($AllDataRows.Count -gt 0) {
         $AllDataRows | Group-Object -Property metricId | ForEach-Object {
             $sample = $_.Group | Select-Object -First 1
-            Write-Host ("  {0} [{1}] — {2} data points" -f $sample.displayName, $sample.unit, $_.Count) -ForegroundColor White
+            Write-Host ("  {0} [{1}] - {2} data points" -f $sample.displayName, $sample.unit, $_.Count) -ForegroundColor White
         }
     } else {
         Write-Host "  No metrics found for the specified time range and environment(s)." -ForegroundColor Yellow
@@ -460,7 +475,11 @@ try {
     }
 
     Write-Host "`n========================================================================`n" -ForegroundColor Cyan
-    Write-Log "Script completed successfully."
+    if ($AllDataRows.Count -gt 0) {
+        Write-Log "Script completed successfully."
+    } else {
+        Write-Log "Script completed - no data returned for the specified time range and environment(s)." -IsWarning
+    }
 
 } finally {
     # Clean up imported certs unless -KeepCert was specified
