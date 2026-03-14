@@ -3,10 +3,29 @@ All notable changes to this project are documented in this file following [Keep 
 
 ## 2026-03-13
 
+### Added
+- `nVector_SSIM_Daemon.ps1` v1.0.2 — new long-running SSIM processing daemon, replaces per-session worker architecture:
+  - Spawned once by `nVector_Client_Prepare.ps1` at startup; runs for the full script lifetime
+  - Owns all SSIM batch detection, queue management, ssim-tool invocation, heatmap archiving, and LE API upload
+  - Queue key derived from batch folder name + newest file timestamp (second precision) — survives batch folder reuse across sessions without session boundary awareness
+  - Startup behavior configurable: wipe (default), archive, or keep existing queue
+  - Heatmap archiving to timestamped subfolders under `-HeatmapArchiveFolder`
+  - Graceful handling of batch folders deleted mid-loop at session boundaries
+  - PS5 process object guard on `HasExited` to prevent unhandled null ref after ssim-tool exit
+  - Tested across Scenarios 1-4: latency only, both modes, heatmaps, and rapid close/reopen
+
+### Changed
+- `nVector_Client_Prepare.ps1` updated to v2.5.0:
+  - Refactored from per-batch worker processes to daemon model — spawns `nVector_SSIM_Daemon.ps1` once at startup
+  - Daemon terminated in `finally` block on script shutdown
+  - Fixed stale `perf.csv` race condition on session restart: CSV deleted after latency drain so next session's polling loop starts clean
+  - HWND tracking confirmed working across rapid close/reopen — different HWND detected, agent restarted cleanly each time
+- `nVector_SSIM_Worker.ps1` retired — superseded by daemon architecture
+
 ### Fixed
-- `get_nVectorMetrics.ps1` v2.0.0 — two PS5 compatibility fixes:
+- `get_nVectorMetrics.ps1` v2.0.0 — PS5 compatibility fixes:
   - Replaced em dash character in summary output that caused a parse error on PS5
-  - `-EnvironmentIds` now correctly splits comma-separated strings passed from the PS5 command line (PS5 collapses `"a","b"` into a single string rather than a two-element array)
+  - `-EnvironmentIds` now correctly splits comma-separated strings passed from the PS5 command line
   - Completion log message now correctly reflects warning state when no data is returned
 
 ## 2026-02-26
