@@ -13,20 +13,6 @@ public class nVector_Desktop_Prepare : ScriptBase
     void Execute()
     {
         // version 1.1.0
-        // -----------------------------------------------------
-        // NOTE ON RELEASE STATUS
-        // nVector latency measurement is a production feature of
-        // Login Enterprise, supported by nvector-agent 1.0 which
-        // is bundled with the current LE release.
-        //
-        // This workload (v1.1.0) upgrades the agent to version 2.0,
-        // which adds SSIM-based visual quality scoring. SSIM is a
-        // preview / interim feature — functional and customer-usable
-        // but not yet an official built-in LE feature.
-        //
-        // Refer to github.com/LoginVSI/nVector and docs.loginvsi.com
-        // for documentation.
-        // -----------------------------------------------------
 
         // =====================================================
         // Configurable
@@ -42,19 +28,18 @@ public class nVector_Desktop_Prepare : ScriptBase
         //
         // NOTE: If the target session user cannot write to C:\ProgramData\
         // due to environment policy (FSLogix, Citrix UPM, GPO restrictions),
-        // update nvidiaRoot to an accessible path and re-upload this workload
+        // update nvidiaRoot to an accessible, static path and re-upload this workload
         // to the Login Enterprise appliance.
-        // Alternatives: use a %TEMP%-based path or a UNC path accessible
-        // from the target session.
+
         // =====================================================
         string nvidiaRoot     = @"C:\ProgramData\NVIDIA Corporation\nVector";
         string filePath       = Path.Combine(nvidiaRoot, fileName);
         string logFilePath    = Path.Combine(nvidiaRoot, "agent.log");
 
-        // Screenshots dir: agent 2.0 automatically creates batch1, batch2...
+        // Screenshots dir: agent 2.0+ automatically creates batch1, batch2...
         // subfolders here per screenshot round. Point at the root dir only —
-        // do not point at a subfolder. The launcher PS1 watches for these
-        // batch subfolders to trigger SSIM processing.
+        // do not point at a subfolder. The nVector Client Role integration watches
+        // for these batch subfolders to trigger SSIM processing.
         string screenshotPath = nvidiaRoot;
 
         try
@@ -99,7 +84,7 @@ public class nVector_Desktop_Prepare : ScriptBase
             // All flags set explicitly so values are easy to find and adjust.
             //
             // IMPORTANT: --screenshots-per-batch and --max-screenshot-rounds
-            // MUST match the values set in nVector_Client_Prepare.ps1 on the
+            // MUST match the values set in the nVector Agent Client role on the
             // Login Enterprise Launcher. Mismatched values will cause screenshot
             // synchronization failures and unreliable SSIM scores.
             var psi = new ProcessStartInfo
